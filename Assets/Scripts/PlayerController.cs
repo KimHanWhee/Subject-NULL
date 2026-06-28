@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,6 +7,8 @@ public class PlayerController : MonoBehaviour
     
     public float speed = 8;
     public GameObject bulletPrefab;
+    public Material flashMaterial;
+    public Material defaultMaterial;
     
     Vector3 move;
     private SpriteRenderer sr;
@@ -15,6 +18,7 @@ public class PlayerController : MonoBehaviour
     {
         sr = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+        GetComponent<Character>().Initialize();
     }
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -94,5 +98,43 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         transform.Translate(move * (speed * Time.fixedDeltaTime));
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            
+            if (GetComponent<Character>().Hit(1))
+            {
+                Flash();
+            }
+            else
+            {
+                Die();
+            }
+        }
+    }
+    
+    void Flash()
+    {
+        sr.material = flashMaterial;
+        Invoke("AfterFlash", 0.5f);
+    }
+
+    void AfterFlash()
+    {
+        sr.material = defaultMaterial;
+    }
+
+    void Die()
+    {
+        anim.SetTrigger("Die");
+        Invoke("AfterDying", 0.875f);
+    }
+
+    void AfterDying()
+    {
+        
     }
 }
