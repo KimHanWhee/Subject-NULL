@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05272d510a3c1b2448fa1b6298015240, type: 3}
+  m_Name: DefaultData
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponData
+  weaponName: Default
+  bulletPrefab: {fileID: 2531471628427593085, guid: 16bf5d1230c2f7c4b8c856bd78cc4d7c, type: 3}
+  shotSound: {fileID: 8300000, guid: 8b20f89742d0a544f89ebd4662c63b84, type: 3}
+  damage: 1
+  fireRate: 1
+  bulletSpeed: 8

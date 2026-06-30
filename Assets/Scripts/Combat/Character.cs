@@ -3,7 +3,7 @@ using UnityEngine;
 public class Character : MonoBehaviour
 {
     public float maxHp = 3;
-    public GameObject hpGauge;
+    public HeartPoint heartPoint;
 
     private float hp;
 
@@ -16,8 +16,9 @@ public class Character : MonoBehaviour
     public void Initialize()
     {
         hp = maxHp;
-        if(hpGauge != null) {
-            hpMaxWidth = hpGauge.GetComponent<RectTransform>().sizeDelta.x;
+        if (heartPoint != null)
+        {
+            heartPoint.UpdateHeart(hp, maxHp);
         }
     }
     /**
@@ -26,15 +27,11 @@ public class Character : MonoBehaviour
     public bool Hit(float damage)
     {
         hp -= damage;
-        if (hp <= 0)
-        {
-            hp = 0;
-        }
+        if (hp <= 0) hp = 0;
 
-        if (hpGauge != null)
+        if (heartPoint != null)
         {
-            hpGauge.GetComponent<RectTransform>().sizeDelta = new Vector2(hp / maxHp * hpMaxWidth,
-                hpGauge.GetComponent<RectTransform>().sizeDelta.y);
+            heartPoint.UpdateHeart(hp, maxHp);
         }
 
         return hp > 0;

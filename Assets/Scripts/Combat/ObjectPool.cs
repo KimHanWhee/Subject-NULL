@@ -7,8 +7,8 @@ public class ObjectPool : MonoBehaviour
     public Transform parent;
     public int maxObject = 30;
     List<GameObject> pool;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+
+    public void Initialize()
     {
         pool = new List<GameObject>();
 
