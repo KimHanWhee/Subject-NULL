@@ -25,6 +25,10 @@ public class EnemyController : MonoBehaviour
     {
         sr = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+
+        // 충돌 토크로 적이 회전(삐뚤어짐)하는 것 방지
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null) rb.freezeRotation = true;
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -36,6 +40,7 @@ public class EnemyController : MonoBehaviour
         this.target = target;
         Debug.Log("Spawn called, target: " + target);
         state = State.Spawning;
+        transform.rotation = Quaternion.identity; // 풀 재사용 시 남은 회전값 초기화
         GetComponent<Character>().Initialize();
         GetComponent<Animator>().SetTrigger("Spawn");
         Invoke("StartMoving", 1);

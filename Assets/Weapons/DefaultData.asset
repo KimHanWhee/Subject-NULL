@@ -17,4 +17,4 @@ MonoBehaviour:
   shotSound: {fileID: 8300000, guid: 8b20f89742d0a544f89ebd4662c63b84, type: 3}
   damage: 1
   fireRate: 1
-  bulletSpeed: 8
+  bulletSpeed: 15
