@@ -26,6 +26,9 @@ public class PlayerController : MonoBehaviour
     public float staminaRegenRate = 25f;   // 초당 회복량
     public float staminaRegenDelay = 0.5f; // 대시 후 회복 시작 지연(초)
 
+    [Header("Dash Near-Miss")] // Design Ref: §2.1 — 니어미스 슬로우모션 판정용
+    public float dashGrace = 0.1f;   // 대시 종료 후 니어미스 인정 유예(초)
+
     Vector3 move;
     private SpriteRenderer sr;
     private Animator anim;
@@ -44,8 +47,14 @@ public class PlayerController : MonoBehaviour
     private float currentStamina;   // 현재 스태미너
     private float staminaRegenTime; // 이 시각 이후부터 회복 시작 (대시 후 지연)
 
+    // Design Ref: §2.1 — 니어미스 유예: 이 시각까지 대시 판정 유지
+    private float dashGraceUntil;
+
     // UI 연동용 (스태미너 바에서 0~1 비율로 사용) — 대시 v2 UI 사이클에서 연결
     public float StaminaRatio => maxStamina > 0f ? currentStamina / maxStamina : 0f;
+
+    // Plan SC: FR-01 — 대시 중 또는 대시 직후 유예 내면 true (NearMissDetector가 읽음)
+    public bool IsDashActive => isDashing || Time.time <= dashGraceUntil;
 
     void Awake()
     {
@@ -166,6 +175,7 @@ public class PlayerController : MonoBehaviour
         if (Time.time >= dashEndTime)
         {
             isDashing = false;
+            dashGraceUntil = Time.time + dashGrace; // Design Ref: §2.1 — 대시 직후 니어미스 유예
             return false;
         }
 
@@ -218,6 +228,7 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.tag == "EnemyBullet")
         {
+            if (IsDashActive) return; // 대시 무적 프레임 — 원거리 총알 데미지 무시(닷지롤)
             float d = collision.GetComponent<EnemyBullet>().damage;
             TakeHit(d); // 총알은 스스로 소멸(EnemyBullet), 여기선 데미지만
         }

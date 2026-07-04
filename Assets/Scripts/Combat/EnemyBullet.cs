@@ -33,6 +33,13 @@ public class EnemyBullet : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        // 대시 중(닷지롤 무적)인 플레이어는 총알이 통과 — 소멸/데미지 없음
+        if (collision.tag == "Player")
+        {
+            PlayerController pc = collision.GetComponent<PlayerController>();
+            if (pc != null && pc.IsDashActive) return; // 대시 무적 프레임 → 통과
+        }
+
         // Plan SC: FR-04/FR-05 — 플레이어/벽에만 반응. 데미지는 PlayerController가 처리(TakeHit).
         if (collision.tag == "Player" || collision.tag == "Wall")
         {

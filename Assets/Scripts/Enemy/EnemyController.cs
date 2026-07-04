@@ -106,6 +106,7 @@ public class EnemyController : MonoBehaviour
     void Die()
     {
         state = State.Dying;
+        GetComponent<Collider2D>().enabled = false; // 사망 애니메이션 중 접촉 데미지/중복 피격 방지
         anim.SetTrigger("Die");
         Invoke("AfterDying", 0.6f);
     }

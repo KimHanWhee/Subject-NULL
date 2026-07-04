@@ -144,6 +144,27 @@ public class SlowMotion : MonoBehaviour
 }
 ```
 
+### 2.2b `SlowMotion.cs` — 카메라 줌인 펀치 (FR-09, Do 확장)
+
+슬로우와 동기화되는 줌인 연출. `orthographicSize`를 `zoomFactor` 배율로 당기고, 복구 시 원복. **매 프레임 `unscaledDeltaTime` 보간**이라 슬로우 중에도 부드럽고, 복구도 자연스럽다.
+
+```csharp
+[Header("Camera Zoom")]
+public Camera targetCamera;      // 비우면 Camera.main 자동
+public float zoomFactor = 0.9f;  // orthographicSize 배율 (작을수록 확대)
+public float zoomLerpSpeed = 8f; // 줌 보간 속도(unscaled)
+
+private float defaultOrthoSize;  // 원래 사이즈
+private float targetOrthoSize;   // 보간 목표
+
+// Trigger(): targetOrthoSize = defaultOrthoSize * zoomFactor; (줌인)
+// Restore(): targetOrthoSize = defaultOrthoSize;              (줌아웃)
+// Update():  orthographicSize = Lerp(현재, target, zoomLerpSpeed * unscaledDeltaTime); // 항상 수행
+// OnDisable(): orthographicSize = defaultOrthoSize;           // 안전망
+```
+
+> Awake에서 `Camera.main`을 자동 참조하고 `defaultOrthoSize`를 캡처하므로 에디터 배선 불필요. 원근 카메라 방어(`orthographic` 체크) 포함.
+
 ### 2.3 신규 `NearMissDetector.cs` — 감지 + 대시 판정
 
 ```csharp
@@ -174,15 +195,40 @@ public class NearMissDetector : MonoBehaviour
 }
 ```
 
+### 2.4 대시 무적 프레임 (FR-08, Do 확장) — `EnemyBullet.cs` + `PlayerController.cs`
+
+대시 중(`IsDashActive`)에는 적 총알이 **소멸도 데미지도 없이 통과**(닷지롤). 두 지점에서 대칭 처리.
+
+```csharp
+// EnemyBullet.OnTriggerEnter2D — 대시 중 플레이어는 통과(소멸 안 함)
+if (collision.tag == "Player")
+{
+    PlayerController pc = collision.GetComponent<PlayerController>();
+    if (pc != null && pc.IsDashActive) return; // 무적 → 통과
+}
+// (이후 기존 "Player"/"Wall" 소멸 로직)
+
+// PlayerController.OnTriggerEnter2D — 대시 중 총알 데미지 무시
+if (collision.tag == "EnemyBullet")
+{
+    if (IsDashActive) return; // 무적 프레임
+    ...기존 TakeHit...
+}
+```
+
+> 무적 판정도 `IsDashActive`(대시 + 유예)를 재사용 → 니어미스 슬로우와 무적이 같은 상태로 일관되게 묶인다. 근접 슬라임은 물리 충돌(`OnCollisionStay2D`)이라 무관.
+
 ---
 
 ## 3. Data & Project Settings
 
 | 항목 | 값/방식 |
 |------|---------|
-| NearMissZone 오브젝트 | Player의 **자식** GameObject, `CircleCollider2D(isTrigger=true, radius=감지반경)`, 태그는 `"Player"`가 **아닌** 것(Untagged 등) + `NearMissDetector` |
+| NearMissZone 오브젝트 | Player의 **자식** GameObject, `CircleCollider2D(isTrigger=true, radius=감지반경≈0.75)`, 태그는 `"Player"`가 **아닌** 것(Untagged) + `NearMissDetector` + **`Rigidbody2D(Kinematic)` 필수** |
 | SlowMotion 오브젝트 | 씬에 1개 (예: GameManager와 같은 오브젝트나 별도 빈 오브젝트) |
-| 튜닝 | `dashGrace`(Player), `slowScale/duration/cooldown`(SlowMotion), 감지 반경(콜라이더) |
+| 튜닝 | `dashGrace`(Player), `slowScale/duration/cooldown/zoomFactor/zoomLerpSpeed`(SlowMotion), 감지 반경(콜라이더) |
+
+> ⚠️ **NearMissZone에 Kinematic Rigidbody2D가 반드시 필요**하다. 자식 콜라이더에 자기 RB가 없으면 트리거 콜백이 **부모(Player)의 Rigidbody2D로 라우팅**되어 (a) `NearMissDetector`가 콜백을 못 받아 슬로우 미발동, (b) `PlayerController.OnTriggerEnter2D`가 감지 존 반경에서 총알에 반응해 **넓은 반경 데미지**가 발생한다. 자식에 Kinematic RB를 주면 독립 바디가 되어 콜백이 자식으로 가고 감지·피격이 실제로 분리된다.
 
 ---
 
@@ -215,6 +261,7 @@ SlowMotion.Trigger → timeScale 0.3 → (unscaled 0.35s) → 1.0 복구 → 쿨
 | E5 | 감지 존을 총알이 소멸시킴 | 존이 `"Player"` 아님 → `EnemyBullet`이 무시 → 소멸 없음 |
 | E6 | 총알이 감지 없이 바로 명중 | 실제 콜라이더 피격(FR-05), 슬로우 없음 |
 | E7 | timeScale이 대시 타이머(Time.time)에 영향 | 의도된 불릿타임 — 대시가 실시간으로 약간 길어짐(허용) |
+| E8 | 자식 감지 콜라이더 콜백이 부모로 라우팅 | NearMissZone에 **Kinematic Rigidbody2D** 부여 → 독립 바디로 콜백 분리 (§3 경고) |
 
 ---
 
@@ -229,6 +276,8 @@ SlowMotion.Trigger → timeScale 0.3 → (unscaled 0.35s) → 1.0 복구 → 쿨
 | FR-05 명중 시 기존 피격 | §4 실제 콜라이더 경로 유지 |
 | FR-06 데이터 튜닝 | §2.2/§3 Inspector 필드 |
 | FR-07 확실한 복구 | §2.2 unscaled 복구 + `OnDisable` 안전망 |
+| FR-08 대시 무적 통과 | §2.4 `EnemyBullet`/`PlayerController` `IsDashActive` 가드 |
+| FR-09 줌인 연출 | §2.2b `SlowMotion` orthographicSize unscaled 보간 |
 
 ---
 
@@ -257,9 +306,10 @@ SlowMotion.Trigger → timeScale 0.3 → (unscaled 0.35s) → 1.0 복구 → 쿨
 
 | 파일 | 유형 | 변경 |
 |------|------|------|
-| `Assets/Scripts/Player/PlayerController.cs` | 수정 | `IsDashActive` 프로퍼티 + `dashGrace` + 유예 세팅 |
-| `Assets/Scripts/Combat/SlowMotion.cs` | 신규 | timeScale/fixedDeltaTime 제어 + 복구 + 쿨다운 |
+| `Assets/Scripts/Player/PlayerController.cs` | 수정 | `IsDashActive` 프로퍼티 + `dashGrace` + 유예 세팅 + 대시 중 총알 데미지 무시(FR-08) |
+| `Assets/Scripts/Combat/SlowMotion.cs` | 신규 | timeScale/fixedDeltaTime 제어 + 복구 + 쿨다운 + 카메라 줌인(FR-09) |
 | `Assets/Scripts/Player/NearMissDetector.cs` | 신규 | 자식 트리거 감지 + 대시 판정 → 슬로우 호출 |
+| `Assets/Scripts/Combat/EnemyBullet.cs` | 수정 | 대시 중 플레이어 통과(소멸 안 함) — FR-08 |
 | NearMissZone 자식 / SlowMotion 오브젝트 | 에디터 | 콜라이더·컴포넌트 배선 (안내 제공) |
 
 ---
