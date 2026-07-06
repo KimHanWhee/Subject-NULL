@@ -50,6 +50,11 @@ public class PlayerController : MonoBehaviour
     // Design Ref: §2.1 — 니어미스 유예: 이 시각까지 대시 판정 유지
     private float dashGraceUntil;
 
+    // spell-marble Design §11.1 — ♦ 방어(SelfBuff 실드) 훅. 이 시각까지 데미지 무시.
+    private float shieldUntil;
+    public bool IsShieldActive => Time.time <= shieldUntil;
+    public void GrantShield(float duration) => shieldUntil = Mathf.Max(shieldUntil, Time.time + duration);
+
     // UI 연동용 (스태미너 바에서 0~1 비율로 사용) — 대시 v2 UI 사이클에서 연결
     public float StaminaRatio => maxStamina > 0f ? currentStamina / maxStamina : 0f;
 
@@ -237,6 +242,7 @@ public class PlayerController : MonoBehaviour
     // Design Ref: §3.1 — 접촉/총알 공통 피격 처리 (Flash/Die 소유)
     void TakeHit(float damage)
     {
+        if (IsShieldActive) return; // 스펠 마블 ♦ 실드 — 데미지 무시 (SelfBuffShieldAbility)
         if (GetComponent<Character>().Hit(damage))
             Flash();
         else

@@ -2566,6 +2566,7 @@ GameObject:
   - component: {fileID: 1707632270}
   - component: {fileID: 1707632269}
   - component: {fileID: 1707632272}
+  - component: {fileID: 1707632273}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2641,6 +2642,18 @@ MonoBehaviour:
   targetCamera: {fileID: 0}
   zoomFactor: 0.9
   zoomLerpSpeed: 8
+--- !u!114 &1707632273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707632268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 000ce692b9dfd554288df80161e394b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeController
 --- !u!1 &1784521465
 GameObject:
   m_ObjectHideFlags: 0

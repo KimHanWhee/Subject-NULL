@@ -39,9 +39,18 @@ public class SlowMotion : MonoBehaviour
     {
         if (active || Time.unscaledTime < nextAllowedUnscaled) return;
 
-        Time.timeScale = slowScale;
-        Time.fixedDeltaTime = defaultFixedDelta * slowScale; // 물리도 비례 (끊김 방지)
-        endUnscaled = Time.unscaledTime + duration;          // Plan SC: FR-02 — 실시간 기준
+        // spell-marble Design §4.1 — 시간 제어는 TimeController 단일 진실원 경유(선택 슬로우와 공존).
+        // TimeController 미배치 씬에서는 레거시 직접 제어로 폴백(니어미스 회귀 방지).
+        if (TimeController.Instance != null)
+        {
+            TimeController.Instance.Pulse(slowScale, duration);
+        }
+        else
+        {
+            Time.timeScale = slowScale;
+            Time.fixedDeltaTime = defaultFixedDelta * slowScale; // 물리도 비례 (끊김 방지)
+        }
+        endUnscaled = Time.unscaledTime + duration;          // Plan SC: FR-02 — 실시간 기준(카메라 줌 타이밍)
         active = true;
 
         targetOrthoSize = defaultOrthoSize * zoomFactor;     // 줌인 시작
@@ -67,18 +76,27 @@ public class SlowMotion : MonoBehaviour
 
     void Restore()
     {
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDelta;
+        // TimeController 경유 시 시간 복구는 펄스 만료로 자동 처리됨(여기서 timeScale을 만지면 선택 홀드를 덮어씀).
+        // 폴백(TimeController 미배치)일 때만 직접 복구.
+        if (TimeController.Instance == null)
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDelta;
+        }
         active = false;
 
         targetOrthoSize = defaultOrthoSize; // 줌아웃 (Update가 보간으로 복귀)
     }
 
-    // Plan SC: FR-07 — 안전망: 씬 종료/비활성 시 시간·카메라 정상화 (잔존 방지)
+    // Plan SC: FR-07 — 안전망: 씬 종료/비활성 시 카메라 정상화 (잔존 방지)
+    // 시간 복구는 TimeController가 소유(있을 때). 폴백일 때만 직접 정상화.
     void OnDisable()
     {
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDelta;
+        if (TimeController.Instance == null)
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDelta;
+        }
         if (targetCamera != null) targetCamera.orthographicSize = defaultOrthoSize;
     }
 }
