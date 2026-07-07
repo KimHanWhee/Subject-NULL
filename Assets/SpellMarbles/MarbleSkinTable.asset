@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d34f0139dab27824d9f8015495d5d2c5, type: 3}
+  m_Name: MarbleSkinTable
+  m_EditorClassIdentifier: Assembly-CSharp::MarbleSkinTable
+  entries:
+  - suit: 0
+    grade: 0
+    sprite: {fileID: 1798820250772401639, guid: cecbd48085c5d9c4484fd916aad982e9, type: 3}
+  - suit: 0
+    grade: 1
+    sprite: {fileID: 3173388953059692428, guid: 32ad7b9b5dcf57746957a0d7d7c3957c, type: 3}
+  - suit: 0
+    grade: 2
+    sprite: {fileID: 33827938064613069, guid: 8e80b0316b2d5a146a2aa0649cde0234, type: 3}
+  - suit: 0
+    grade: 3
+    sprite: {fileID: 7433116038859828341, guid: e1c4430c3a923c748a5c7f15296d6c72, type: 3}
+  - suit: 1
+    grade: 0
+    sprite: {fileID: -598958591914781280, guid: 5f8fe6f7d97cbd344b0a5744a1c9c6d4, type: 3}
+  - suit: 1
+    grade: 1
+    sprite: {fileID: -4008628089371066763, guid: bebc68bf803ac274d8ba5ea0f3ae8436, type: 3}
+  - suit: 1
+    grade: 2
+    sprite: {fileID: -2598296589153791781, guid: 359f23581e28d72448ff7dbc8dfc5519, type: 3}
+  - suit: 1
+    grade: 3
+    sprite: {fileID: -5139221471605741827, guid: 871ee0d46c3da674ba0d485e4d0bd197, type: 3}
+  - suit: 2
+    grade: 0
+    sprite: {fileID: 5443513450625568644, guid: 393d3d89a4a979a4d859e2e5d25ffbed, type: 3}
+  - suit: 2
+    grade: 1
+    sprite: {fileID: -8088003820828319314, guid: c8ea31bf69c6c0e4996c994e303f3230, type: 3}
+  - suit: 2
+    grade: 2
+    sprite: {fileID: -3219867143668369368, guid: 3d5648f5413061a48ade16ca4f0b7c62, type: 3}
+  - suit: 2
+    grade: 3
+    sprite: {fileID: -6968812615910464947, guid: 7c142b8256e25f943af2359ef65802f6, type: 3}
+  - suit: 3
+    grade: 0
+    sprite: {fileID: -5155648556707689570, guid: 21e29add44581934a84c87775d55b163, type: 3}
+  - suit: 3
+    grade: 1
+    sprite: {fileID: -7411690119594817657, guid: c8190762890e2d2489b3311e36600fd3, type: 3}
+  - suit: 3
+    grade: 2
+    sprite: {fileID: 7476437330829096668, guid: 1f6210cbf41aa4b4381ff3fb72479f9d, type: 3}
+  - suit: 3
+    grade: 3
+    sprite: {fileID: 8412742425997789195, guid: aa105bad34054f44fa19e1b49007eaf0, type: 3}
+  fallback: {fileID: 0}

@@ -132,7 +132,8 @@ public class PlayerController : MonoBehaviour
 
         if (Mouse.current.leftButton.isPressed
             && currentWeapon != null
-            && Time.time >= nextFireTime)
+            && Time.time >= nextFireTime
+            && !IsSpellSelecting()) // Ctrl 선택 모드 중엔 기본 공격 억제(드래그로 마블만 사용)
         {
             Shoot();
             float rate = Mathf.Max(currentWeapon.fireRate, 0.0001f); // fireRate <= 0 방어 (0 나눗셈 방지)
@@ -191,6 +192,13 @@ public class PlayerController : MonoBehaviour
         else
             transform.Translate(delta);
         return true;
+    }
+
+    // 스펠 마블 선택 모드(Ctrl 홀드) 여부 — 이 동안 기본 공격 억제
+    bool IsSpellSelecting()
+    {
+        return Keyboard.current != null &&
+               (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
     }
 
     void Shoot()

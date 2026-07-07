@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Design Ref: §2.2 — 원거리 적. 사거리 유지(히스테리시스) + 주기 사격.
-public class RangedEnemyController : MonoBehaviour
+public class RangedEnemyController : MonoBehaviour, IDamageable
 {
     enum State { Spawning, Moving, Dying }
 
@@ -117,12 +117,18 @@ public class RangedEnemyController : MonoBehaviour
         if (collision.tag == "Bullet")
         {
             float d = collision.gameObject.GetComponent<Bullet>().damage;
-
-            if (GetComponent<Character>().Hit(d))
-                Flash();
-            else
-                Die();
+            ApplyHit(d); // 총알/스펠 공통 경로
         }
+    }
+
+    // 스펠 등 외부 데미지 소스 공통 진입점 — 사망 시 Die() 애니메이션 보존
+    public void ApplyHit(float damage)
+    {
+        if (state == State.Dying) return; // 이미 죽는 중이면 중복 처리 방지
+        if (GetComponent<Character>().Hit(damage))
+            Flash();
+        else
+            Die();
     }
 
     void Flash()

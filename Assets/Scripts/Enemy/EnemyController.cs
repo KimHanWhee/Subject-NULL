@@ -2,7 +2,7 @@ using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IDamageable
 {
     enum State
     {
@@ -78,18 +78,18 @@ public class EnemyController : MonoBehaviour
         if (collision.tag == "Bullet")
         {
             float d = collision.gameObject.GetComponent<Bullet>().damage;
-
-            if (GetComponent<Character>().Hit(d))
-            {
-                // 살아있을 때
-                Flash();
-            }
-            else
-            {
-                // 죽었을 떄
-                Die();
-            }
+            ApplyHit(d); // 총알/스펠 공통 경로
         }
+    }
+
+    // 스펠 등 외부 데미지 소스 공통 진입점 — 사망 시 Die() 애니메이션 보존
+    public void ApplyHit(float damage)
+    {
+        if (state == State.Dying) return; // 이미 죽는 중이면 중복 처리 방지
+        if (GetComponent<Character>().Hit(damage))
+            Flash();   // 살아있음
+        else
+            Die();     // 사망 애니메이션
     }
 
     void Flash()

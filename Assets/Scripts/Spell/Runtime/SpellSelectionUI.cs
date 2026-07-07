@@ -5,12 +5,14 @@ using UnityEngine.InputSystem;
 // Plan SC: FR-07(선택 모드) / FR-08(슬로우)
 public class SpellSelectionUI : MonoBehaviour
 {
-    public RectTransform handRoot;                       // 상승 대상(HUD 컨테이너)
+    public RectTransform handRoot;                       // 상승/확대 대상(HUD 컨테이너)
     public Vector2 raisedOffset = new Vector2(0f, 120f); // 위로 올라오는 양(px)
-    public float raiseSpeed = 10f;                       // unscaled 보간 속도
+    public float raisedScale = 5f;                     // 선택 중 확대 배율(1=확대 없음)
+    public float raiseSpeed = 10f;                       // unscaled 보간 속도(위치·스케일 공용)
     public float slowScale = 0.3f;                       // Plan SC: FR-08
 
     private Vector2 basePos;
+    private Vector3 baseScale = Vector3.one;
     private bool selecting;
     private int slowHandle = -1;
 
@@ -18,7 +20,11 @@ public class SpellSelectionUI : MonoBehaviour
 
     void Awake()
     {
-        if (handRoot != null) basePos = handRoot.anchoredPosition;
+        if (handRoot != null)
+        {
+            basePos = handRoot.anchoredPosition;
+            baseScale = handRoot.localScale;
+        }
     }
 
     void Update()
@@ -31,9 +37,14 @@ public class SpellSelectionUI : MonoBehaviour
 
         if (handRoot != null)
         {
-            Vector2 target = selecting ? basePos + raisedOffset : basePos;
-            handRoot.anchoredPosition = Vector2.Lerp(
-                handRoot.anchoredPosition, target, raiseSpeed * Time.unscaledDeltaTime);
+            float t = raiseSpeed * Time.unscaledDeltaTime; // 슬로우와 무관하게 부드럽게
+
+            Vector2 targetPos = selecting ? basePos + raisedOffset : basePos;
+            handRoot.anchoredPosition = Vector2.Lerp(handRoot.anchoredPosition, targetPos, t);
+
+            // 부모 SpellHand를 확대 → 벨트·구슬 5개 모두 함께 확대
+            Vector3 targetScale = selecting ? baseScale * raisedScale : baseScale;
+            handRoot.localScale = Vector3.Lerp(handRoot.localScale, targetScale, t);
         }
     }
 
