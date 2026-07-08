@@ -10,5 +10,5 @@ public class SpellMarble : ScriptableObject
     public Suit suit;
     public Grade grade;         // 능력에 따라 부여
     public SpellAbility ability; // 다형성 진입점
-    public Sprite icon;
+    public Sprite icon;         // 스킬 고유 아이콘(호버 툴팁용). 벨트 구슬은 MarbleSkinTable(슈트×등급)에서 결정.
 }

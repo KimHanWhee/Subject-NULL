@@ -29,6 +29,9 @@ public class Bullet : MonoBehaviour
     {
         if (collision.tag == "Wall" || collision.tag == "Enemy")
         {
+            // 스펠 마블 ♥ Lifesteal — 적 명중 통지(데미지 적용 자체는 적 쪽 ApplyHit이 처리)
+            if (collision.tag == "Enemy")
+                LifestealStatus.NotifyBulletHit(damage);
             gameObject.SetActive(false);
         }
     }

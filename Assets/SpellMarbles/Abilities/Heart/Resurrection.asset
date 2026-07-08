@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65fc4bca666dc8a41a0e41c48c949544, type: 3}
+  m_Name: Resurrection
+  m_EditorClassIdentifier: Assembly-CSharp::ResurrectionAbility
+  id: Resurrection
+  abilityName: Resurrection
+  description: "\uB2E4\uC74C \uC0AC\uB9DD \uC2DC \uCCB4\uB825 50%\uB85C \uBD80\uD65C\uD55C\uB2E4
+    (1\uD68C)."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  reviveRatio: 0.5
+  vfxColor: {r: 1, g: 0.95, b: 0.5, a: 1}
+  vfxRadius: 0.9
+  vfxDuration: 1

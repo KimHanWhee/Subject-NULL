@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cf0f18475cc5e554ba305d8f7b200a24, type: 3}
-  m_Name: Grenade
+  m_Name: Heal
   m_EditorClassIdentifier: Assembly-CSharp::SpellMarble
-  marbleName: 
-  suit: 0
+  marbleName: heal
+  suit: 1
   grade: 0
-  ability: {fileID: 11400000, guid: e5d3c8523a1edce4caff6d38b78bec24, type: 2}
-  icon: {fileID: 1798820250772401639, guid: cecbd48085c5d9c4484fd916aad982e9, type: 3}
+  ability: {fileID: 11400000, guid: ccd80b88c0adcdc4594a20019d311a2a, type: 2}
+  icon: {fileID: 0}

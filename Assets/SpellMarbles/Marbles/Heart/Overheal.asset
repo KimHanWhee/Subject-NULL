@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cf0f18475cc5e554ba305d8f7b200a24, type: 3}
-  m_Name: Shield
+  m_Name: Overheal
   m_EditorClassIdentifier: Assembly-CSharp::SpellMarble
-  marbleName: 
-  suit: 3
-  grade: 0
-  ability: {fileID: 11400000, guid: 2399f482e17d2e546a5f4923dda39023, type: 2}
-  icon: {fileID: -598958591914781280, guid: 5f8fe6f7d97cbd344b0a5744a1c9c6d4, type: 3}
+  marbleName: overheal
+  suit: 1
+  grade: 1
+  ability: {fileID: 11400000, guid: 8845ef6ccd7933842ab239dce4f7cabf, type: 2}
+  icon: {fileID: 0}

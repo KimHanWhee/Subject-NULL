@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89aa5ef4bc8e0e247ac60bc20e3e23e4, type: 3}
+  m_Name: Adrenaline
+  m_EditorClassIdentifier: Assembly-CSharp::AdrenalineAbility
+  id: Adrenaline
+  abilityName: Adrenaline
+  description: "10\uCD08\uAC04 \uCCB4\uB825\uC774 \uB0AE\uC744\uC218\uB85D \uC774\uB3D9\uC18D\uB3C4\uC640
+    \uACF5\uACA9\uC18D\uB3C4\uAC00 \uC99D\uAC00\uD55C\uB2E4."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  maxBonus: 0.5
+  duration: 10
+  vfxColor: {r: 1, g: 0.55, b: 0.15, a: 1}
+  vfxRadius: 0.75

@@ -4272,7 +4272,7 @@ MonoBehaviour:
     border: {fileID: 0}
     flash: {fileID: 671211493}
     group: {fileID: 0}
-  skinTable: {fileID: 0}
+  skinTable: {fileID: 11400000, guid: 9dee00da7011cdf4fa7c4f0a0cb23781, type: 2}
   spawnDuration: 0.5
   spawnStartScale: 0.3
 --- !u!1 &1880309343
@@ -4493,7 +4493,7 @@ GameObject:
   - component: {fileID: 2096693953}
   m_Layer: 0
   m_Name: Floor
-  m_TagString: Enemy
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

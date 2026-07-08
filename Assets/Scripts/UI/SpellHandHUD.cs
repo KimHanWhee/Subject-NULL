@@ -18,7 +18,7 @@ public class SpellHandHUD : MonoBehaviour
 
     public SpellCaster caster;
     public SlotView[] slots;        // 인스펙터에 5개 배치
-    public MarbleSkinTable skinTable; // 슈트×등급 → 벨트 구슬 스프라이트(비우면 marble.icon 사용)
+    public MarbleSkinTable skinTable; // 슈트×등급 → 벨트 구슬 스프라이트(필수 연결)
 
     [Header("Spawn Anim (리필 생성 연출)")]
     public float spawnDuration = 0.25f;                     // 생성 애니 길이(초, unscaled)
@@ -29,11 +29,11 @@ public class SpellHandHUD : MonoBehaviour
     private float[] spawnStart;  // 생성 애니 시작 시각(unscaled), <0=비활성
     private bool[] flashAuto;    // 해당 슬롯 flash를 코드가 자동 생성했는지
 
-    // 벨트에 뜰 구슬 스프라이트 결정: 마블 개별 icon 우선, 없으면 테이블(슈트×등급).
+    // 벨트에 뜰 구슬 스프라이트: 슈트×등급으로 SkinTable에서 결정(단일 진실원).
+    // (SpellMarble.icon은 벨트가 아니라 호버 툴팁의 '스킬 고유 아이콘'용)
     public Sprite ResolveIcon(SpellMarble m)
     {
         if (m == null) return null;
-        if (m.icon != null) return m.icon;                 // 개별 오버라이드 우선
         return skinTable != null ? skinTable.Get(m.suit, m.grade) : null;
     }
 

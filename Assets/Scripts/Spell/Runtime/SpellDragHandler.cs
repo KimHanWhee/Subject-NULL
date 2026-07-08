@@ -305,10 +305,13 @@ public class SpellDragHandler : MonoBehaviour
 
         tooltipRoot.SetActive(true);
         if (tooltipText != null)
-            tooltipText.text = "<b>" + m.ability.abilityName + "</b>  <color=#FFD24A>[" + m.grade + "]</color>\n" + m.ability.description;
+            tooltipText.text =
+                "<b>" + m.ability.abilityName + "</b>\n" +
+                SuitInfo.RichLabel(m.suit) + "  <color=#FFD24A>[" + m.grade + "]</color>\n" +
+                m.ability.description;
         if (tooltipIcon != null)
         {
-            Sprite ic = m.ability.icon != null ? m.ability.icon : m.icon; // 능력 아이콘 우선, 없으면 마블(슈트) 아이콘 폴백
+            Sprite ic = m.icon != null ? m.icon : m.ability.icon; // 스킬 고유 아이콘(SpellMarble.icon) 우선, 없으면 능력 아이콘 폴백
             tooltipIcon.sprite = ic;
             tooltipIcon.enabled = ic != null;
         }

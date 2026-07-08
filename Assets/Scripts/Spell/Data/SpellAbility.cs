@@ -18,7 +18,7 @@ public abstract class SpellAbility : ScriptableObject
 
     public string abilityName;
     [TextArea] public string description;
-    public Sprite icon;               // 능력 고유 아이콘(툴팁/상세용). 벨트 구슬은 SpellMarble.icon
+    public Sprite icon;               // (선택) 능력 아이콘 폴백. 툴팁 주 아이콘은 SpellMarble.icon, 벨트는 MarbleSkinTable.
     public TargetMode targetMode = TargetMode.Targeted;
     public GameObject effectPrefab;   // 풀링될 이펙트/투사체(선택)
 

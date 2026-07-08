@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1857b9577bd37d42bae5d843c31df0a, type: 3}
+  m_Name: IronSkin
+  m_EditorClassIdentifier: Assembly-CSharp::IronSkinAbility
+  id: IronSkin
+  abilityName: Iron Skin
+  description: "10\uCD08\uAC04 \uBC1B\uB294 \uD53C\uD574\uAC00 50% \uAC10\uC18C\uD55C\uB2E4."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  reduction: 0.5
+  duration: 10
+  vfxColor: {r: 0.75, g: 0.75, b: 0.8, a: 1}
+  vfxRadius: 0.75

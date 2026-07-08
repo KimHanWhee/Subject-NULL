@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e272bd8944ee53b43b7bd585bf1bf7c3, type: 3}
+  m_Name: SpellMarbleRegistry
+  m_EditorClassIdentifier: Assembly-CSharp::SpellMarbleRegistry
+  allMarbles:
+  - {fileID: 11400000, guid: c3ab81ac8c8b7314dbd7b420d55de71b, type: 2}
+  - {fileID: 11400000, guid: 364d4dd92f4787447a5cda2ab3ae6cb7, type: 2}
+  - {fileID: 11400000, guid: 0a07df7de3b663b48aa652b6c02fb7ff, type: 2}
+  - {fileID: 11400000, guid: 20072e6683814d64b8cf646c4bae1e51, type: 2}
+  - {fileID: 11400000, guid: 3a776a8281444cc43933e81ae85a14c1, type: 2}
+  - {fileID: 11400000, guid: baee452109937d34ab46ca974e451140, type: 2}
+  - {fileID: 11400000, guid: 6fb8c9a0385ac10488fa5fd13771c876, type: 2}
+  - {fileID: 11400000, guid: 490348ef3770fb44cbec06c1c1834b79, type: 2}
+  - {fileID: 11400000, guid: 2653455cc2168744598e321a0ec65db1, type: 2}
+  - {fileID: 11400000, guid: c14cdbaca462acb4e91ffb8a3d1911c1, type: 2}
+  - {fileID: 11400000, guid: 016734527b0b806428b533889ff63041, type: 2}
+  - {fileID: 11400000, guid: 3e778d215d2184543b4255f20eb01a3b, type: 2}
+  - {fileID: 11400000, guid: 5561f9bfd20dc434e9186e8e3d1e6d84, type: 2}
+  - {fileID: 11400000, guid: 5a8c1712f68ae994ab8f6b364f66e109, type: 2}
+  - {fileID: 11400000, guid: 300ce4c30b55b07449512a44d5e34835, type: 2}
+  - {fileID: 11400000, guid: 74b97617c84a57f478546041608ac608, type: 2}
+  - {fileID: 11400000, guid: 72c65a6a7ea2eed4d8d4ba31b865bc02, type: 2}
+  - {fileID: 11400000, guid: df59d3bb87dd6074bb768d198eb9235b, type: 2}

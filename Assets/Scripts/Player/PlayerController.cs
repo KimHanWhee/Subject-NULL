@@ -50,6 +50,12 @@ public class PlayerController : MonoBehaviour
     // Design Ref: §2.1 — 니어미스 유예: 이 시각까지 대시 판정 유지
     private float dashGraceUntil;
 
+    // 스펠 마블 ♦ Fortress — true면 이동/대시 불가(피해 무효는 FortressStatus가 처리)
+    [NonSerialized] public bool movementLocked;
+
+    // 스펠 마블 ♥ Adrenaline 등 — 발사 속도 배율(1=기본). 상태 컴포넌트가 관리.
+    [NonSerialized] public float fireRateMultiplier = 1f;
+
     // spell-marble Design §11.1 — ♦ 방어(SelfBuff 실드) 훅. 이 시각까지 데미지 무시.
     private float shieldUntil;
     public bool IsShieldActive => Time.time <= shieldUntil;
@@ -136,7 +142,7 @@ public class PlayerController : MonoBehaviour
             && !IsSpellSelecting()) // Ctrl 선택 모드 중엔 기본 공격 억제(드래그로 마블만 사용)
         {
             Shoot();
-            float rate = Mathf.Max(currentWeapon.fireRate, 0.0001f); // fireRate <= 0 방어 (0 나눗셈 방지)
+            float rate = Mathf.Max(currentWeapon.fireRate * Mathf.Max(fireRateMultiplier, 0.01f), 0.0001f); // 스펠 마블 공속 배율 반영
             nextFireTime = Time.time + 1f / rate;
         }
 
@@ -148,6 +154,7 @@ public class PlayerController : MonoBehaviour
     void TryStartDash()
     {
         if (Keyboard.current.spaceKey.wasPressedThisFrame
+            && !movementLocked                   // 스펠 마블 ♦ Fortress — 대시도 불가
             && !isDashing                        // Plan SC: FR-05 — 대시 중 재입력 무시
             && Time.time >= nextDashTime          // Plan SC: FR-04 — 쿨다운
             && currentStamina >= dashStaminaCost) // 대시 v2: 스태미너 충분해야 대시
@@ -216,13 +223,19 @@ public class PlayerController : MonoBehaviour
             Bullet bulletScript = newBullet.GetComponent<Bullet>();
             newBullet.transform.position = transform.position + new Vector3(0, -0.5f);
             bulletScript.Direction = worldPosition;
-            bulletScript.damage = currentWeapon.damage;
+            float dmg = currentWeapon.damage;
+            // 스펠 마블 주는 피해 수정(Counter 반격 배율 등) — 발사 시점 적용
+            IPlayerOutgoingModifier[] outMods = GetComponents<IPlayerOutgoingModifier>();
+            for (int i = 0; i < outMods.Length; i++)
+                dmg = outMods[i].ModifyOutgoingDamage(dmg);
+            bulletScript.damage = dmg;
             bulletScript.speed = currentWeapon.bulletSpeed;
         }
     }
 
     private void FixedUpdate()
     {
+        if (movementLocked) return; // 스펠 마블 ♦ Fortress — 이동 불가
         if (TickDash()) return; // Plan SC: FR-05 — 대시 중엔 일반 이동 스킵
         transform.Translate(move * (speed * Time.fixedDeltaTime));
     }
@@ -232,7 +245,7 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.tag == "Enemy" && Time.time >= nextDamageTime)
         {
             nextDamageTime = Time.time + damageInterval;
-            TakeHit(1); // 적 접촉 데미지
+            TakeHit(1, collision.gameObject); // 적 접촉 데미지(공격자 전달 — Reflect 반사 대상)
         }
     }
 
@@ -248,13 +261,34 @@ public class PlayerController : MonoBehaviour
     }
 
     // Design Ref: §3.1 — 접촉/총알 공통 피격 처리 (Flash/Die 소유)
-    void TakeHit(float damage)
+    // attacker: 접촉 피격 시 해당 적(반사 대상), 총알 등 불명이면 null
+    void TakeHit(float damage, GameObject attacker = null)
     {
         if (IsShieldActive) return; // 스펠 마블 ♦ 실드 — 데미지 무시 (SelfBuffShieldAbility)
+
+        // 스펠 마블 피해 수정 체인(Iron Skin 감소 / Fortress 무효 / Reflect 반사 / Mirror World 분산)
+        IPlayerDamageModifier[] mods = GetComponents<IPlayerDamageModifier>();
+        for (int i = 0; i < mods.Length; i++)
+            damage = mods[i].ModifyIncomingDamage(damage, attacker);
+        if (damage <= 0f) return; // 무효화됨 — 피격 아님
+
+        // 피격 통지(Counter 반격 윈도우 등)
+        IPlayerHitListener[] listeners = GetComponents<IPlayerHitListener>();
+        for (int i = 0; i < listeners.Length; i++)
+            listeners[i].OnPlayerHit(damage);
+
         if (GetComponent<Character>().Hit(damage))
+        {
             Flash();
+        }
         else
+        {
+            // 사망 가로채기(Resurrection) — 성공 시 사망 취소(부활 처리는 인터셉터 책임)
+            IPlayerDeathInterceptor[] savers = GetComponents<IPlayerDeathInterceptor>();
+            for (int i = 0; i < savers.Length; i++)
+                if (savers[i].TryInterceptDeath()) { Flash(); return; }
             Die();
+        }
     }
     
     void Flash()

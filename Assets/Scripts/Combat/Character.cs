@@ -33,6 +33,31 @@ public class Character : MonoBehaviour
             heartPoint.UpdateHeart(hp, maxHp);
         }
     }
+    // 현재 HP 비율(0~1) — 스펠 마블 ♥ Adrenaline 등 저체력 조건용
+    public float HpRatio => maxHp > 0f ? Mathf.Clamp01(hp / maxHp) : 0f;
+
+    /**
+     * 부활(사망 인터셉트 전용) — HP를 maxHp×ratio로 설정. 스펠 마블 ♥ Resurrection.
+     */
+    public void Revive(float ratio)
+    {
+        hp = Mathf.Clamp(maxHp * Mathf.Clamp01(ratio), 1f, maxHp);
+        if (heartPoint != null) heartPoint.UpdateHeart(hp, maxHp);
+    }
+
+    /**
+     * HP 회복(maxHp 초과 불가). 스펠 마블 ♥회복 등에서 사용.
+     */
+    public void Heal(float amount)
+    {
+        if (hp <= 0f || amount <= 0f) return; // 사망 상태는 회복 불가
+        hp = Mathf.Min(hp + amount, maxHp);
+        if (heartPoint != null)
+        {
+            heartPoint.UpdateHeart(hp, maxHp);
+        }
+    }
+
     /**
      * 살아있으면 true 리턴
      */
