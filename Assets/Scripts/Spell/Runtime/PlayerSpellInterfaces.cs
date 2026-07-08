@@ -28,3 +28,21 @@ public interface IPlayerDeathInterceptor
 {
     bool TryInterceptDeath();
 }
+
+// 발사되는 총알 속성 수정(Piercing 관통, Sniper 탄속 등) — Shoot에서 발사 직후 적용
+public interface IPlayerBulletModifier
+{
+    void ModifyBullet(Bullet bullet);
+}
+
+// 플레이어 총알의 적 명중 알림 허브 — Bullet이 호출, Lifesteal/Chain Lightning 등이 구독.
+// (static 이벤트: 플레이어 1인 전제. 구독 해제는 상태 컴포넌트 OnDisable 책임)
+public static class PlayerBulletEvents
+{
+    public static System.Action<GameObject, float> EnemyHit; // (맞은 적, 데미지)
+
+    public static void NotifyEnemyHit(GameObject enemy, float damage)
+    {
+        if (EnemyHit != null) EnemyHit(enemy, damage);
+    }
+}

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fedfec61e5207f42b4acf38f81e7895, type: 3}
+  m_Name: TimeStop
+  m_EditorClassIdentifier: Assembly-CSharp::TimeStopAbility
+  id: TimeStop
+  abilityName: Time Stop
+  description: "3\uCD08\uAC04 \uBAA8\uB4E0 \uC801\uACFC \uC801\uC758 \uCD1D\uC54C\uC774
+    \uC644\uC804\uD788 \uC815\uC9C0\uD55C\uB2E4."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  duration: 3
+  vfxColor: {r: 0.8, g: 0.95, b: 1, a: 1}

@@ -45,6 +45,12 @@ public class RangedEnemyController : MonoBehaviour, IDamageable
             bulletPoolManager = FindObjectOfType<BulletPoolManager>();
     }
 
+    // 스펠 마블 ♣ Decoy — 추적 대상 변경(분신 어그로). null 금지.
+    public void SetTarget(GameObject newTarget)
+    {
+        if (newTarget != null) target = newTarget;
+    }
+
     // 기존 EnemyController.Spawn과 동일한 스폰 흐름
     public void Spawn(GameObject target)
     {

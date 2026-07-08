@@ -35,6 +35,12 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
     }
 
+    // 스펠 마블 ♣ Decoy — 추적 대상 변경(분신 어그로). null 금지(FixedUpdate 방어 있음).
+    public void SetTarget(GameObject newTarget)
+    {
+        if (newTarget != null) target = newTarget;
+    }
+
     public void Spawn(GameObject target)
     {
         this.target = target;

@@ -230,6 +230,11 @@ public class PlayerController : MonoBehaviour
                 dmg = outMods[i].ModifyOutgoingDamage(dmg);
             bulletScript.damage = dmg;
             bulletScript.speed = currentWeapon.bulletSpeed;
+            bulletScript.pierce = false; // 풀 재사용 대비 리셋 — 아래 수정자가 필요 시 켬
+            // 스펠 마블 총알 속성 수정(Piercing 관통, Sniper 탄속 등)
+            IPlayerBulletModifier[] bMods = GetComponents<IPlayerBulletModifier>();
+            for (int i = 0; i < bMods.Length; i++)
+                bMods[i].ModifyBullet(bulletScript);
         }
     }
 

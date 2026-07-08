@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a19289bc30692434e98e5f4d8f3a9f2c, type: 3}
+  m_Name: ChainLightning
+  m_EditorClassIdentifier: Assembly-CSharp::ChainLightningAbility
+  id: ChainLightning
+  abilityName: Chain Lightning
+  description: "10\uCD08\uAC04 \uCD1D\uC54C\uC774 \uC801\uC5D0\uAC8C \uBA85\uC911\uD558\uBA74
+    \uC8FC\uBCC0 \uC801\uC5D0\uAC8C \uBC88\uAC1C\uAC00 \uC5F0\uC1C4\uC801\uC73C\uB85C
+    \uD284\uB2E4."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  chainDamage: 1
+  jumpRadius: 2.5
+  maxJumps: 3
+  duration: 10
+  vfxColor: {r: 0.6, g: 0.85, b: 1, a: 1}
+  vfxRadius: 0.7
