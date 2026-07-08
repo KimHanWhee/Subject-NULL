@@ -312,6 +312,8 @@ public class SpellDragHandler : MonoBehaviour
             tooltipIcon.sprite = ic;
             tooltipIcon.enabled = ic != null;
         }
-        ((RectTransform)tooltipRoot.transform).position = mouse;
+        RectTransform rrt = (RectTransform)tooltipRoot.transform;
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(rrt); // 설명 길이에 맞춰 박스 높이 즉시 반영
+        rrt.position = mouse;
     }
 }
