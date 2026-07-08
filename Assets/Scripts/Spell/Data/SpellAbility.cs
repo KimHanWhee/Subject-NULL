@@ -12,12 +12,26 @@ public enum TargetMode
 // Plan SC: FR-02 — 능력 추상화 + 타겟 모드
 public abstract class SpellAbility : ScriptableObject
 {
+    [Header("Identity")]
+    [Tooltip("안정적 식별 key. 훗날 로컬라이제이션/스프레드시트 연동 시 훅으로 사용. 비우면 에셋 이름으로 자동 채움.")]
+    public string id;
+
     public string abilityName;
     [TextArea] public string description;
     public Sprite icon;               // 능력 고유 아이콘(툴팁/상세용). 벨트 구슬은 SpellMarble.icon
     public TargetMode targetMode = TargetMode.Targeted;
     public GameObject effectPrefab;   // 풀링될 이펙트/투사체(선택)
 
+    [Header("Audio")]
+    public AudioClip activationSound;             // 발동 시 재생하는 능력 고유 효과음(선택). SpellCaster가 재생.
+    [Range(0f, 1f)] public float soundVolume = 1f;
+
     // 등급별 위력은 마블 고유 속성이므로 ctx.grade를 참조해 구현체가 자유롭게 반영
     public abstract void Activate(SpellContext ctx);
+
+    // 에디터에서 id가 비어 있으면 에셋 이름으로 기본값(수정 가능). 안정적 key 확보용.
+    void OnValidate()
+    {
+        if (string.IsNullOrEmpty(id)) id = name;
+    }
 }

@@ -15,6 +15,13 @@ public class SpellCaster : MonoBehaviour
     public GameObject player;          // 시전자(비우면 "Player" 태그 탐색)
     public ObjectPool effectPool;      // 능력 이펙트용 풀(선택)
 
+    [Header("Audio")]
+    public AudioSource audioSource;    // 비우면 자동 생성. 능력 activationSound 재생(프로젝트 PlayOneShot 관례).
+
+    [Header("Cast (시전 딜레이)")]
+    public float castDelay = 0.5f;      // 드롭 후 능력 발동까지(초, unscaled). 그동안 등급색 시전 고리가 수렴.
+    public float castRingRadius = 1.2f; // 시전 고리 시작 반경(중심으로 수렴)
+
     public event Action OnHandChanged;
 
     private SpellMarble[] slots;
@@ -32,6 +39,9 @@ public class SpellCaster : MonoBehaviour
             GameObject p = GameObject.FindWithTag("Player");
             if (p != null) player = p;
         }
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
     }
 
     void Start()
@@ -62,9 +72,8 @@ public class SpellCaster : MonoBehaviour
         SpellMarble marble = slots[slotIndex];
         if (marble == null || marble.ability == null) return false;
 
-        Vector2 pos = (marble.ability.targetMode == TargetMode.SelfBuff && player != null)
-            ? (Vector2)player.transform.position
-            : dropWorldPos;
+        bool self = marble.ability.targetMode == TargetMode.SelfBuff && player != null;
+        Vector2 pos = self ? (Vector2)player.transform.position : dropWorldPos;
 
         SpellContext ctx = new SpellContext
         {
@@ -73,12 +82,29 @@ public class SpellCaster : MonoBehaviour
             grade = marble.grade,
             effectPool = effectPool
         };
-        marble.ability.Activate(ctx);
 
-        slots[slotIndex] = null;                                  // 소비
+        // 시전 텔레그래프: 등급색 고리가 castDelay 동안 중심으로 수렴 → 이후 실제 발동.
+        // Targeted=드롭 위치 고정, SelfBuff=플레이어 추종. 레전드는 무지개.
+        Color ringColor = GradePalette.ColorOf(marble.grade);
+        Transform follow = self ? player.transform : null;
+        SpellVfx.SpawnConverge(pos, castRingRadius, ringColor, castDelay, marble.grade == Grade.Legend, follow);
+
+        // castDelay 후 능력 발동 + 발동음(고리 애니메이션 뒤에 실제 효과). 사용음은 드롭 시(SpellDragHandler).
+        StartCoroutine(CastAndActivate(marble.ability, ctx, castDelay));
+
+        slots[slotIndex] = null;                                  // 소비(드롭 즉시)
         refillReadyTime[slotIndex] = Time.unscaledTime + refillCooldown;
         OnHandChanged?.Invoke();
         return true;
+    }
+
+    // castDelay(unscaled) 후 능력 발동 + 발동음. WaitForSecondsRealtime로 슬로우 무관 일정한 시전 시간.
+    private System.Collections.IEnumerator CastAndActivate(SpellAbility ability, SpellContext ctx, float delay)
+    {
+        if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+        ability.Activate(ctx);
+        if (audioSource != null && ability.activationSound != null)
+            audioSource.PlayOneShot(ability.activationSound, ability.soundVolume);
     }
 
     SpellMarble DrawNext()

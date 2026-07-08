@@ -5,7 +5,7 @@ using UnityEngine;
 // 실제 아트가 생기면 각 Ability의 effectPrefab 경로로 자연스럽게 교체.
 public class SpellVfx : MonoBehaviour
 {
-    enum Mode { Ring, Aura }
+    enum Mode { Ring, Aura, Converge }
 
     private SpriteRenderer sr;
     private Mode mode;
@@ -14,7 +14,8 @@ public class SpellVfx : MonoBehaviour
     private float startRadius;
     private float endRadius;
     private Color color;
-    private Transform follow;      // Aura: 대상(플레이어) 추종
+    private Transform follow;      // Aura/Converge: 대상 추종(SelfBuff는 플레이어)
+    private bool rainbow;          // Converge: 레전드 등급 무지개 색상 순환
 
     private static Sprite ringSprite;
 
@@ -45,6 +46,24 @@ public class SpellVfx : MonoBehaviour
         return fx;
     }
 
+    // 시전 텔레그래프: startRadius에서 중심으로 수렴하며 사라지는 고리. 등급색(레전드는 무지개 순환).
+    // follow != null이면 대상(SelfBuff=플레이어)을 추종, null이면 드롭 위치에 고정(Targeted).
+    public static SpellVfx SpawnConverge(Vector2 pos, float startRadius, Color color, float duration, bool rainbow = false, Transform follow = null)
+    {
+        SpellVfx fx = Create(color);
+        fx.mode = Mode.Converge;
+        fx.rainbow = rainbow;
+        fx.follow = follow;
+        fx.startRadius = Mathf.Max(0.1f, startRadius);
+        fx.endRadius = 0.08f;
+        fx.duration = Mathf.Max(0.05f, duration);
+        fx.transform.position = follow != null
+            ? new Vector3(follow.position.x, follow.position.y, 0f)
+            : new Vector3(pos.x, pos.y, 0f);
+        fx.Begin();
+        return fx;
+    }
+
     static SpellVfx Create(Color color)
     {
         GameObject go = new GameObject("SpellVfx");
@@ -55,7 +74,15 @@ public class SpellVfx : MonoBehaviour
 
     void Awake()
     {
-        sr = gameObject.AddComponent<SpriteRenderer>();
+        EnsureRenderer();
+    }
+
+    // SpriteRenderer 1회 준비. Awake 미실행 순서(에디터/스폰 직후)에도 안전.
+    void EnsureRenderer()
+    {
+        if (sr != null) return;
+        sr = gameObject.GetComponent<SpriteRenderer>();
+        if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
         sr.sprite = RingSprite();
 
         // 프로젝트의 '최상단' Sorting Layer에 + 매우 높은 order → 어떤 월드 스프라이트에도 안 가려짐
@@ -67,6 +94,7 @@ public class SpellVfx : MonoBehaviour
 
     void Begin()
     {
+        EnsureRenderer();
         startTime = Time.unscaledTime;
         sr.color = color;
         SetDiameter(startRadius * 2f);
@@ -77,11 +105,25 @@ public class SpellVfx : MonoBehaviour
         float p = (Time.unscaledTime - startTime) / duration; // 슬로우와 무관하게 실시간 재생
         if (p >= 1f) { Destroy(gameObject); return; }
 
+        if (rainbow) // 레전드: Hue 순환. 알파는 각 모드의 SetAlpha가 관리.
+        {
+            Color rc = Color.HSVToRGB(Mathf.Repeat(Time.unscaledTime * 0.9f, 1f), 0.85f, 1f);
+            color = new Color(rc.r, rc.g, rc.b, color.a);
+        }
+
         if (mode == Mode.Ring)
         {
             float ease = 1f - (1f - p) * (1f - p);            // easeOut 확장
             SetDiameter(Mathf.Lerp(startRadius, endRadius, ease) * 2f);
             SetAlpha(1f - p);                                 // 점점 투명
+        }
+        else if (mode == Mode.Converge)                        // 시전 텔레그래프: 중심으로 수렴
+        {
+            if (follow != null) transform.position = new Vector3(follow.position.x, follow.position.y, 0f);
+            float ease = p * p;                               // easeIn(끝으로 갈수록 빠르게 수렴)
+            SetDiameter(Mathf.Lerp(startRadius, endRadius, ease) * 2f);
+            transform.Rotate(0f, 0f, 180f * Time.unscaledDeltaTime); // 살짝 회전 → 시전 느낌
+            SetAlpha(p < 0.85f ? 1f : Mathf.InverseLerp(1f, 0.85f, p)); // 끝 15% 페이드
         }
         else // Aura
         {

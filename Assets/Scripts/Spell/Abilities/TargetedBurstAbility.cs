@@ -21,13 +21,18 @@ public class TargetedBurstAbility : SpellAbility
         // 이펙트: 프리팹 있으면 그쪽(풀 우선), 없으면 코드 VFX(확장 링)
         if (effectPrefab != null)
         {
-            GameObject fx = ctx.effectPool != null ? ctx.effectPool.Get() : null;
-            if (fx == null) fx = Object.Instantiate(effectPrefab);
+            bool pooled = ctx.effectPool != null;
+            GameObject fx = pooled ? ctx.effectPool.Get() : null;
+            if (fx == null) { fx = Object.Instantiate(effectPrefab); pooled = false; }
             if (fx != null)
             {
                 fx.transform.position = pos;
                 fx.SetActive(true);
-                if (ctx.effectPool == null) Object.Destroy(fx, effectLifetime); // 풀 오브젝트는 자체 반환 가정
+                // blast radius에 맞춰 폭발 재생. ExplosionVfx가 스케일·재생·정리를 담당.
+                ExplosionVfx explosion = fx.GetComponent<ExplosionVfx>();
+                if (explosion != null) explosion.Play(radius);
+                // 비풀은 수명 후 파괴(누수 방지). 풀 오브젝트는 ExplosionVfx(SetActive false)/자체 반환에 맡김.
+                if (!pooled) Object.Destroy(fx, effectLifetime);
             }
         }
         else

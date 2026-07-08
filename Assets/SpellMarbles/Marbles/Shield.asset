@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Shield
   m_EditorClassIdentifier: Assembly-CSharp::SpellMarble
   marbleName: 
-  suit: 1
+  suit: 3
   grade: 0
   ability: {fileID: 11400000, guid: 2399f482e17d2e546a5f4923dda39023, type: 2}
   icon: {fileID: -598958591914781280, guid: 5f8fe6f7d97cbd344b0a5744a1c9c6d4, type: 3}

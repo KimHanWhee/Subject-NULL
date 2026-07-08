@@ -10,13 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3144ef5a7bd5ff64db8bf9370a79032e, type: 3}
-  m_Name: SelfBuffShield
+  m_Name: Shield
   m_EditorClassIdentifier: Assembly-CSharp::SelfBuffShieldAbility
-  abilityName: 
-  description: 
+  id: Shield
+  abilityName: "\uBCF4\uD638\uB9C9"
+  description: "\uC9E7\uC740 \uC2DC\uAC04 \uD53C\uD574\uB97C \uB9C9\uB294 \uBCF4\uD638\uB9C9\uC744
+    \uBAB8\uC5D0 \uB450\uB978\uB2E4. \uC544\uBB34 \uACF3\uC5D0 \uB4DC\uB86D\uD574\uB3C4
+    \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C \uC801\uC6A9\uB41C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}
+  activationSound: {fileID: 8300000, guid: 56d1d14cf42403644972869d07192a05, type: 3}
+  soundVolume: 1
   baseDuration: 2
   vfxColor: {r: 0.3, g: 0.8, b: 1, a: 1}
   vfxRadius: 0.8

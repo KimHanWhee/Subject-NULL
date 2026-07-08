@@ -30,7 +30,8 @@ public class SpellDragHandler : MonoBehaviour
     public AudioSource audioSource;     // 비우면 자동 생성
     public AudioClip hoverSound;        // 마우스 올릴 때(슬롯 진입 1회)
     public AudioClip clickSound;        // 드래그 시작(집을 때)
-    public AudioClip useSound;          // 발동 성공 시
+    public AudioClip useSound;          // 발동 성공 시(공통 베이스음). 능력별 SpellAbility.activationSound 아래에 깔림.
+    [Range(0f, 1f)] public float useVolume = 0.5f; // 공통 베이스음 음량(메인=능력별 음 대비 낮게)
 
     [Header("Pick-up Pop (선택)")]
     public float dragPopScale = 1.3f;   // 집어들 때 시작 확대 배율
@@ -122,7 +123,7 @@ public class SpellDragHandler : MonoBehaviour
                         : Vector3.zero;
                     world.z = 0f;
                     bool ok = caster.Activate(dragSlot, new Vector2(world.x, world.y)); // Plan SC: FR-09
-                    if (ok) PlaySound(useSound);
+                    if (ok) PlaySound(useSound, useVolume); // 공통 베이스음(능력별 음은 SpellCaster가 재생)
                     EndDrag();
                 }
             }
@@ -207,9 +208,9 @@ public class SpellDragHandler : MonoBehaviour
         ResetHoverScales(); // 선택 모드 벗어나면 슬롯 크기 원복
     }
 
-    void PlaySound(AudioClip clip)
+    void PlaySound(AudioClip clip, float volume = 1f)
     {
-        if (clip != null && audioSource != null) audioSource.PlayOneShot(clip);
+        if (clip != null && audioSource != null) audioSource.PlayOneShot(clip, volume);
     }
 
     // 해당 슬롯에 마블이 실제로 있는지(빈 슬롯 호버 사운드 방지용)
@@ -304,11 +305,12 @@ public class SpellDragHandler : MonoBehaviour
 
         tooltipRoot.SetActive(true);
         if (tooltipText != null)
-            tooltipText.text = m.ability.abilityName + " [" + m.grade + "]\n" + m.ability.description;
+            tooltipText.text = "<b>" + m.ability.abilityName + "</b>  <color=#FFD24A>[" + m.grade + "]</color>\n" + m.ability.description;
         if (tooltipIcon != null)
         {
-            tooltipIcon.sprite = m.ability.icon;      // 능력 고유 아이콘(화염공격 등)
-            tooltipIcon.enabled = m.ability.icon != null;
+            Sprite ic = m.ability.icon != null ? m.ability.icon : m.icon; // 능력 아이콘 우선, 없으면 마블(슈트) 아이콘 폴백
+            tooltipIcon.sprite = ic;
+            tooltipIcon.enabled = ic != null;
         }
         ((RectTransform)tooltipRoot.transform).position = mouse;
     }
