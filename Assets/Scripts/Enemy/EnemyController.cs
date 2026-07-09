@@ -20,6 +20,7 @@ public class EnemyController : MonoBehaviour, IDamageable
     
     private SpriteRenderer sr;
     private Animator anim;
+    private Rigidbody2D rb;
 
     void Awake()
     {
@@ -27,7 +28,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         anim = GetComponent<Animator>();
 
         // 충돌 토크로 적이 회전(삐뚤어짐)하는 것 방지
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>();
         if (rb != null) rb.freezeRotation = true;
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -62,6 +63,10 @@ public class EnemyController : MonoBehaviour, IDamageable
     // Update is called once per frame
     private void FixedUpdate()
     {
+        // 이동은 Translate 전담 — 충돌(플레이어 대시 등)로 물리 엔진이 준 밀림 속도가
+        // 잔류하면 멀리 날아가므로 매 프레임 제거
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
         if (state == State.Moving)
         {
             Vector2 direction = target.transform.position - transform.position;

@@ -21,15 +21,16 @@ public class SelfBuffShieldAbility : SpellAbility
         if (pc != null) pc.GrantShield(duration);
 
         // 프리팹 있으면 그쪽, 없으면 코드 VFX(플레이어 추종 오라 — 실드 지속 동안)
+        Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)
         {
-            GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
+            GameObject fx = Object.Instantiate(effectPrefab, anchor.position, Quaternion.identity, anchor);
             Object.Destroy(fx, duration);
         }
         else
         {
-            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration, vfxWidth);
-            SpellParticleVfx.SpawnOrbit(ctx.caster.transform, vfxRadius, vfxColor, duration); // 하늘색 궤도 입자(실드 지속 표시)
+            SpellVfx.SpawnAura(anchor, vfxRadius, vfxColor, duration, vfxWidth);
+            SpellParticleVfx.SpawnOrbit(anchor, vfxRadius, vfxColor, duration); // 하늘색 궤도 입자(실드 지속 표시)
         }
     }
 

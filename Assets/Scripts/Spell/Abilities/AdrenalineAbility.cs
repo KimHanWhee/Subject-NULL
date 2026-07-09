@@ -16,15 +16,16 @@ public class AdrenalineAbility : SpellAbility
     {
         if (ctx.caster == null) return;
         AdrenalineStatus.Apply(ctx.caster, maxBonus, duration);
+        Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)
         {
-            GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
+            GameObject fx = Object.Instantiate(effectPrefab, anchor.position, Quaternion.identity, anchor);
             Object.Destroy(fx, duration);
         }
         else
         {
-            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration);
-            SpellParticleVfx.SpawnOrbit(ctx.caster.transform, vfxRadius, vfxColor, duration); // 주황 궤도 입자(버프 지속 표시)
+            SpellVfx.SpawnAura(anchor, vfxRadius, vfxColor, duration);
+            SpellParticleVfx.SpawnOrbit(anchor, vfxRadius, vfxColor, duration); // 주황 궤도 입자(버프 지속 표시)
         }
     }
 }

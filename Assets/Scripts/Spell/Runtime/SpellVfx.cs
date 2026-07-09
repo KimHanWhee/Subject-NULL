@@ -19,6 +19,27 @@ public class SpellVfx : MonoBehaviour
 
     private static Sprite ringSprite;
 
+    // 셀프버프 VFX 기준점. 플레이어 스프라이트는 상단 여백이 커서 transform 원점이 몸통보다 위에 있음 —
+    // 비-트리거 콜라이더 중심(몸통 위치)에 앵커 자식을 만들어 캐싱하고, VFX 추종/부착 기준으로 쓴다.
+    public static Transform VisualAnchor(GameObject owner)
+    {
+        if (owner == null) return null;
+        Transform anchor = owner.transform.Find("SpellVfxAnchor");
+        if (anchor == null)
+        {
+            anchor = new GameObject("SpellVfxAnchor").transform;
+            anchor.SetParent(owner.transform, false);
+            Collider2D[] cols = owner.GetComponents<Collider2D>();
+            for (int i = 0; i < cols.Length; i++)
+            {
+                if (cols[i].isTrigger) continue;
+                anchor.position = cols[i].bounds.center;
+                break;
+            }
+        }
+        return anchor;
+    }
+
     // 드롭 위치에서 확장하며 사라지는 링 — 공격/폭발 느낌 (lineWidth는 호환용, 미사용)
     public static SpellVfx SpawnRing(Vector2 pos, float radius, Color color, float duration, float lineWidth = 0.12f)
     {

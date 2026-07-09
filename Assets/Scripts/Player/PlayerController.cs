@@ -29,6 +29,10 @@ public class PlayerController : MonoBehaviour
     [Header("Dash Near-Miss")] // Design Ref: §2.1 — 니어미스 슬로우모션 판정용
     public float dashGrace = 0.1f;   // 대시 종료 후 니어미스 인정 유예(초)
 
+    [Header("Dash VFX")] // 대시 가시성: 잔상 트레일 + 시작 버스트
+    public Color dashGhostTint = new Color(0.55f, 0.85f, 1f, 0.55f); // 청백 잔상
+    public float dashGhostInterval = 0.035f; // 잔상 생성 간격(초) — 대시 0.2초 동안 5~6장
+
     Vector3 move;
     private SpriteRenderer sr;
     private Animator anim;
@@ -38,6 +42,8 @@ public class PlayerController : MonoBehaviour
 
     // Design Ref: §3.2 — 대시 내부 상태
     private bool isDashing;
+    private float nextGhostTime;        // 대시 잔상 다음 생성 시각
+    private SpriteRenderer bodySprite;  // 대시 잔상 원본(지연 캐싱)
     private float dashEndTime;   // 대시 종료 시각
     private float nextDashTime;  // 다음 대시 허용 시각 (쿨다운)
     private Vector3 dashDir;
@@ -169,6 +175,12 @@ public class PlayerController : MonoBehaviour
 
             if (dashSound != null)
                 GetComponent<AudioSource>().PlayOneShot(dashSound); // 대시 시작음
+
+            // 대시 가시성: 시작 버스트 + 잔상 트레일 시작
+            if (bodySprite == null) bodySprite = GetComponent<SpriteRenderer>();
+            DashGhost.Spawn(bodySprite, dashGhostTint);
+            nextGhostTime = Time.time + dashGhostInterval;
+            SpellParticleVfx.SpawnBurst(SpellVfx.VisualAnchor(gameObject).position, 0.55f, dashGhostTint, 12, 0.25f);
         }
     }
 
@@ -190,6 +202,14 @@ public class PlayerController : MonoBehaviour
             isDashing = false;
             dashGraceUntil = Time.time + dashGrace; // Design Ref: §2.1 — 대시 직후 니어미스 유예
             return false;
+        }
+
+        // 대시 경로를 따라 일정 간격으로 잔상 생성(트레일)
+        if (Time.time >= nextGhostTime)
+        {
+            if (bodySprite == null) bodySprite = GetComponent<SpriteRenderer>();
+            DashGhost.Spawn(bodySprite, dashGhostTint);
+            nextGhostTime = Time.time + dashGhostInterval;
         }
 
         // Plan SC: FR-03 — MovePosition으로 물리 충돌 존중 (transform.Translate는 벽 관통)

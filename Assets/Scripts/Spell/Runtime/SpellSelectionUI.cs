@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class SpellSelectionUI : MonoBehaviour
 {
     public RectTransform handRoot;                       // 상승/확대 대상(HUD 컨테이너)
+    public CanvasGroup ctrlHint;                         // "▲ Ctrl" 안내 탭 — 평소 표시, 선택 중 페이드아웃
     public Vector2 raisedOffset = new Vector2(0f, 120f); // 위로 올라오는 양(px)
     public float raisedScale = 5f;                     // 선택 중 확대 배율(1=확대 없음)
     public float raiseSpeed = 10f;                       // unscaled 보간 속도(위치·스케일 공용)
@@ -46,6 +47,10 @@ public class SpellSelectionUI : MonoBehaviour
             Vector3 targetScale = selecting ? baseScale * raisedScale : baseScale;
             handRoot.localScale = Vector3.Lerp(handRoot.localScale, targetScale, t);
         }
+
+        // "▲ Ctrl" 안내 탭: 선택 중엔 사라지고 평소엔 표시
+        if (ctrlHint != null)
+            ctrlHint.alpha = Mathf.MoveTowards(ctrlHint.alpha, selecting ? 0f : 1f, 6f * Time.unscaledDeltaTime);
     }
 
     void Enter()

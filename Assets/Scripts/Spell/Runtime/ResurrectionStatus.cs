@@ -25,9 +25,10 @@ public class ResurrectionStatus : MonoBehaviour, IPlayerDeathInterceptor
         PlayerController pc = GetComponent<PlayerController>();
         if (pc != null) pc.GrantShield(postShield); // 연속 피격 즉사 방지
         Color gold = new Color(1f, 0.95f, 0.5f, 1f);
-        SpellVfx.SpawnRing(transform.position, 1.5f, gold, 0.8f);                // 부활 섬광
-        SpellParticleVfx.SpawnBurst(transform.position, 1.5f, gold, 36, 0.6f);   // 금빛 파편 폭발
-        SpellParticleVfx.SpawnRise(transform, gold, 1.2f);                       // 승천하는 금빛 입자
+        Transform anchor = SpellVfx.VisualAnchor(gameObject); // 몸통 시각 중심(스프라이트 상단 여백 보정)
+        SpellVfx.SpawnRing(anchor.position, 1.5f, gold, 0.8f);                // 부활 섬광
+        SpellParticleVfx.SpawnBurst(anchor.position, 1.5f, gold, 36, 0.6f);   // 금빛 파편 폭발
+        SpellParticleVfx.SpawnRise(anchor, gold, 1.2f);                       // 승천하는 금빛 입자
         Destroy(this); // 1회 소비
         return true;
     }

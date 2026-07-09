@@ -29,6 +29,7 @@ public class RangedEnemyController : MonoBehaviour, IDamageable
     private State state;
     private SpriteRenderer sr;
     private Animator anim;
+    private Rigidbody2D rb;
     private float nextFireTime;
 
     void Awake()
@@ -37,7 +38,7 @@ public class RangedEnemyController : MonoBehaviour, IDamageable
         anim = GetComponent<Animator>();
 
         // 충돌 토크로 적이 회전(삐뚤어짐)하는 것 방지
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>();
         if (rb != null) rb.freezeRotation = true;
 
         // 프리팹은 씬 오브젝트(BulletPoolManager)를 참조로 담을 수 없어 런타임에 탐색
@@ -72,6 +73,10 @@ public class RangedEnemyController : MonoBehaviour, IDamageable
 
     void FixedUpdate()
     {
+        // 이동은 Translate 전담 — 충돌(플레이어 대시 등)로 물리 엔진이 준 밀림 속도가
+        // 잔류하면 멀리 날아가므로 매 프레임 제거
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
         if (state != State.Moving || target == null) return; // Design Ref: §6 E3 — target 방어
 
         Vector2 toTarget = target.transform.position - transform.position;

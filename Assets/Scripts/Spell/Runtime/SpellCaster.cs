@@ -86,8 +86,8 @@ public class SpellCaster : MonoBehaviour
         // 시전 텔레그래프: 등급색 고리가 castDelay 동안 중심으로 수렴 → 이후 실제 발동.
         // Targeted=드롭 위치 고정, SelfBuff=플레이어 추종. 레전드는 무지개.
         Color ringColor = GradePalette.ColorOf(marble.grade);
-        Transform follow = self ? player.transform : null;
-        SpellVfx.SpawnConverge(pos, castRingRadius, ringColor, castDelay, marble.grade == Grade.Legend, follow);
+        Transform follow = self ? SpellVfx.VisualAnchor(player) : null; // 몸통 시각 중심 추종(스프라이트 상단 여백 보정)
+        SpellVfx.SpawnConverge(follow != null ? (Vector2)follow.position : pos, castRingRadius, ringColor, castDelay, marble.grade == Grade.Legend, follow);
 
         // castDelay 후 능력 발동 + 발동음(고리 애니메이션 뒤에 실제 효과). 사용음은 드롭 시(SpellDragHandler).
         StartCoroutine(CastAndActivate(marble.ability, ctx, castDelay));
