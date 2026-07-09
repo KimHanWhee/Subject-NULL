@@ -18,10 +18,10 @@ MonoBehaviour:
     (1\uD68C)."
   icon: {fileID: 0}
   targetMode: 0
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 7390477882259021080, guid: 219cfeb05b3ab34448db832599499a7e, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
   reviveRatio: 0.5
   vfxColor: {r: 1, g: 0.95, b: 0.5, a: 1}
   vfxRadius: 0.9
-  vfxDuration: 1
+  vfxDuration: 1.2

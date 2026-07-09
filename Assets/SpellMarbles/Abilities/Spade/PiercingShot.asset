@@ -18,7 +18,7 @@ MonoBehaviour:
     \uAD00\uD1B5\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 739243312471993668, guid: 0ac544615ee106744b0f92d3650461a5, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
   duration: 5

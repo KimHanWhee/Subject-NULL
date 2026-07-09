@@ -27,8 +27,8 @@ public class SlowFieldAbility : SpellAbility
         else
         {
             SpellVfx.SpawnRing(pos, radius, vfxColor, vfxLifetime);
-            SpellParticleVfx.SpawnField(pos, radius, vfxColor, duration); // 감속 지속 동안 연둣빛 입김
         }
+        SpellParticleVfx.SpawnField(pos, radius, vfxColor, duration); // 감속 지속 동안 연둣빛 입김(프리팹 유무 무관, 등급 스케일)
 
         // 반경 내 "Enemy"에게 감속 상태 부여(오사 방지: 태그 확인)
         Collider2D[] hits = Physics2D.OverlapCircleAll(pos, radius);

@@ -19,7 +19,7 @@ MonoBehaviour:
     \uC801\uC6A9\uB41C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 4215424031056745815, guid: f91df991de39c214fb1d2b3461257883, type: 3}
   activationSound: {fileID: 8300000, guid: 56d1d14cf42403644972869d07192a05, type: 3}
   soundVolume: 1
   baseDuration: 2

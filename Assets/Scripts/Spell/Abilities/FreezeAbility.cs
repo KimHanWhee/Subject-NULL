@@ -24,8 +24,8 @@ public class FreezeAbility : SpellAbility
         {
             SpellVfx.SpawnRing(pos, radius, vfxColor, vfxLifetime);
             SpellParticleVfx.SpawnBurst(pos, radius, vfxColor, 30, 0.4f);   // 얼음 파편 폭발
-            SpellParticleVfx.SpawnField(pos, radius, vfxColor, duration);   // 빙결 지속 동안 냉기 입김
         }
+        SpellParticleVfx.SpawnField(pos, radius, vfxColor, duration); // 빙결 지속 동안 냉기 입김(프리팹 유무 무관)
 
         Collider2D[] hits = Physics2D.OverlapCircleAll(pos, radius);
         for (int i = 0; i < hits.Length; i++)

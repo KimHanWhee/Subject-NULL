@@ -17,7 +17,7 @@ MonoBehaviour:
   description: "10\uCD08\uAC04 \uBC1B\uB294 \uD53C\uD574\uAC00 50% \uAC10\uC18C\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 8289331407968083852, guid: 6230561afe86da94796a255d29da5d90, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
   reduction: 0.5

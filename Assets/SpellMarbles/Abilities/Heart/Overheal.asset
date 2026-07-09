@@ -19,10 +19,10 @@ MonoBehaviour:
     \uC720\uC9C0\uB41C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 8660667340458308443, guid: 57d8095af9d36014390a859cef5096cb, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
   tempHp: 2
   vfxColor: {r: 1, g: 0.85, b: 0.35, a: 1}
   vfxRadius: 0.8
-  vfxDuration: 0.8
+  vfxDuration: 1.2

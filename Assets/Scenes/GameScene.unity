@@ -13039,7 +13039,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 356e4545abe85fa478b232ca75a757f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellCaster
-  deck: {fileID: 11400000, guid: fa6ceec9b7a88fc4a84f638ccb7e37b7, type: 2}
+  deck: {fileID: 11400000, guid: 77197b5c9eba0424291a03403adddb6d, type: 2}
   handSize: 5
   refillCooldown: 3
   player: {fileID: 0}

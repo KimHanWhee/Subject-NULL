@@ -18,10 +18,10 @@ MonoBehaviour:
     2\uCD08\uAC04 \uC644\uC804\uD788 \uC815\uC9C0\uC2DC\uD0A8\uB2E4."
   icon: {fileID: 0}
   targetMode: 1
-  effectPrefab: {fileID: 0}
+  effectPrefab: {fileID: 1547992755346367947, guid: 2cf557638e70383449996e1b3c7a9a81, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
   radius: 2
   duration: 2
   vfxColor: {r: 0.55, g: 0.85, b: 1, a: 1}
-  vfxLifetime: 0.6
+  vfxLifetime: 1
