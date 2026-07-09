@@ -29,6 +29,7 @@ public class SelfBuffShieldAbility : SpellAbility
         else
         {
             SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration, vfxWidth);
+            SpellParticleVfx.SpawnOrbit(ctx.caster.transform, vfxRadius, vfxColor, duration); // 하늘색 궤도 입자(실드 지속 표시)
         }
     }
 

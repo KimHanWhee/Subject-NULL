@@ -19,6 +19,10 @@ public class ReflectAbility : SpellAbility
             GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
             Object.Destroy(fx, duration);
         }
-        else SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration);
+        else
+        {
+            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration);
+            SpellParticleVfx.SpawnOrbit(ctx.caster.transform, vfxRadius, vfxColor, duration); // 금빛 가시 궤도 입자
+        }
     }
 }

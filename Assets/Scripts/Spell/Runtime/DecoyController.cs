@@ -31,6 +31,7 @@ public class DecoyController : MonoBehaviour
         d.endTime = Time.time + duration;
         d.nextScan = 0f;
         SpellVfx.SpawnRing(go.transform.position, 0.9f, new Color(0.5f, 1f, 0.95f, 1f), 0.5f);
+        SpellParticleVfx.SpawnBurst(go.transform.position, 0.9f, new Color(0.5f, 1f, 0.95f, 1f), 20, 0.35f); // 분신 생성 파열
         return d;
     }
 

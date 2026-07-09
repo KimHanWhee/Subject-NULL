@@ -20,6 +20,10 @@ public class OverhealAbility : SpellAbility
             GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
             Object.Destroy(fx, vfxDuration);
         }
-        else SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, vfxDuration);
+        else
+        {
+            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, vfxDuration);
+            SpellParticleVfx.SpawnRise(ctx.caster.transform, vfxColor, 1f); // 황금 입자 상승(초과 체력 획득감)
+        }
     }
 }

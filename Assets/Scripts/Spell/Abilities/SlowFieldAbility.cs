@@ -27,6 +27,7 @@ public class SlowFieldAbility : SpellAbility
         else
         {
             SpellVfx.SpawnRing(pos, radius, vfxColor, vfxLifetime);
+            SpellParticleVfx.SpawnField(pos, radius, vfxColor, duration); // 감속 지속 동안 연둣빛 입김
         }
 
         // 반경 내 "Enemy"에게 감속 상태 부여(오사 방지: 태그 확인)

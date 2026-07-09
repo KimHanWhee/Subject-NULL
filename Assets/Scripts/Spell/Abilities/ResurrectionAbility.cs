@@ -20,6 +20,10 @@ public class ResurrectionAbility : SpellAbility
             GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
             Object.Destroy(fx, vfxDuration);
         }
-        else SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, vfxDuration);
+        else
+        {
+            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, vfxDuration);
+            SpellParticleVfx.SpawnRise(ctx.caster.transform, vfxColor, 1.2f); // 금빛 입자 상승(축복 부여감)
+        }
     }
 }

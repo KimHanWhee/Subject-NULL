@@ -13,6 +13,7 @@ public class TimeStopAbility : SpellAbility
     {
         Vector2 center = ctx.caster != null ? (Vector2)ctx.caster.transform.position : ctx.targetPosition;
         SpellVfx.SpawnRing(center, 10f, vfxColor, 0.8f); // 세계로 퍼지는 정지 파동
+        SpellParticleVfx.SpawnImplode(center, 8f, vfxColor, 0f, 48, 0.7f); // 시간이 빨려드는 청백 입자
         TimeStopField.Spawn(duration);
     }
 }

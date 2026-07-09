@@ -23,6 +23,7 @@ public class FlameField : MonoBehaviour
         f.endTime = Time.time + duration;
         f.nextTick = Time.time;   // 즉시 1틱
         f.nextPulse = Time.unscaledTime;
+        SpellParticleVfx.SpawnField(pos, radius, f.color, duration); // 장판 지속 동안 잔불 입자
         return f;
     }
 

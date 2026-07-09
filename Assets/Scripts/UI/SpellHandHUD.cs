@@ -61,7 +61,7 @@ public class SpellHandHUD : MonoBehaviour
 
     void Update()
     {
-        if (caster == null || slots == null) return;
+        if (caster == null || caster.Slots == null || slots == null) return;
         EnsureAnimState();
         for (int i = 0; i < slots.Length; i++)
         {
@@ -80,7 +80,8 @@ public class SpellHandHUD : MonoBehaviour
 
     public void Refresh()
     {
-        if (caster == null || slots == null) return;
+        // caster.Slots는 SpellCaster.Awake에서 생성 → OnEnable 순서에 따라 null 가능(Start의 OnHandChanged가 재호출)
+        if (caster == null || caster.Slots == null || slots == null) return;
         EnsureAnimState();
         for (int i = 0; i < slots.Length; i++)
         {

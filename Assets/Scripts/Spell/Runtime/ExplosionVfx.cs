@@ -92,7 +92,7 @@ public class ExplosionVfx : MonoBehaviour
         main.playOnAwake = false;
         main.loop = false;
         main.gravityModifier = 0f;
-        main.startColor = color;
+        main.startColor = color * 2f;       // HDR: URP Bloom 발광 유도(SpellParticleVfx와 동일 규약)
         main.simulationSpace = ParticleSystemSimulationSpace.World; // 폭발은 발생 위치 고정
 
         var emission = ps.emission;
@@ -107,7 +107,7 @@ public class ExplosionVfx : MonoBehaviour
         col.enabled = true;
         Gradient g = new Gradient();
         g.SetKeys(
-            new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(color, 0.35f) },
+            new[] { new GradientColorKey(Color.white * 2f, 0f), new GradientColorKey(color * 2f, 0.35f) },
             new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.55f), new GradientAlphaKey(0f, 1f) }
         );
         col.color = g;

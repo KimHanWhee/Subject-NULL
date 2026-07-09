@@ -75,6 +75,9 @@ public class BladeStorm : MonoBehaviour
                 if (lastHit.TryGetValue(id, out last) && Time.time - last < rehitCooldown) continue;
                 lastHit[id] = Time.time;
 
+                // 타격 스파크(재타격 쿨다운으로 빈도 제한됨 → 부담 없음)
+                SpellParticleVfx.SpawnBurst(hits[h].transform.position, 0.35f, new Color(0.9f, 0.95f, 1f, 1f), 6, 0.18f);
+
                 IDamageable dmg = hits[h].GetComponent<IDamageable>();
                 if (dmg != null) { dmg.ApplyHit(damage); continue; }
                 Character ch = hits[h].GetComponent<Character>();

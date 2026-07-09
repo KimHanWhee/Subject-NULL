@@ -25,6 +25,7 @@ public class BlackHole : MonoBehaviour
         b.endTime = Time.time + duration;
         b.nextTick = Time.time + b.tickInterval;
         b.nextPulse = Time.unscaledTime;
+        SpellParticleVfx.SpawnImplode(pos, radius, color, duration); // 지속 동안 중심으로 빨려드는 입자
         return b;
     }
 

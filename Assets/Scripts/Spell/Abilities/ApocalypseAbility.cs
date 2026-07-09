@@ -17,6 +17,8 @@ public class ApocalypseAbility : SpellAbility
         SpellVfx.SpawnRing(center, 4f, vfxColor, 0.5f);
         SpellVfx.SpawnRing(center, 8f, vfxColor, 0.7f);
         SpellVfx.SpawnRing(center, 12f, new Color(1f, 0.8f, 0.4f, 1f), 0.9f);
+        SpellParticleVfx.SpawnBurst(center, 6f, vfxColor, 60, 0.6f);                       // 근거리 화염 파편
+        SpellParticleVfx.SpawnBurst(center, 11f, new Color(1f, 0.8f, 0.4f, 1f), 50, 0.9f); // 원거리 잔불 파편
 
         // 활성 적 전체 타격(태그 오염 회피 — 컨트롤러 기준 수집)
         foreach (EnemyController ec in Object.FindObjectsOfType<EnemyController>())

@@ -48,6 +48,7 @@ public class ChainLightningStatus : MonoBehaviour
             visited.Add(next.GetInstanceID());
 
             DrawBolt(current.transform.position, next.transform.position);
+            SpellParticleVfx.SpawnBurst(next.transform.position, 0.4f, new Color(0.6f, 0.85f, 1f, 1f), 8, 0.22f); // 감전 스파크
             DealDamage(next, chainDamage);
             current = next;
         }

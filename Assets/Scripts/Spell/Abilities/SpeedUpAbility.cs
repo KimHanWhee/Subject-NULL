@@ -24,6 +24,7 @@ public class SpeedUpAbility : SpellAbility
         else
         {
             SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration);
+            SpellParticleVfx.SpawnRise(ctx.caster.transform, vfxColor, duration, 0.35f); // World 시뮬 → 이동 시 청록 궤적
         }
     }
 }

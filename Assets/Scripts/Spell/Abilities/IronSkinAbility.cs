@@ -20,6 +20,10 @@ public class IronSkinAbility : SpellAbility
             GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
             Object.Destroy(fx, duration);
         }
-        else SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration);
+        else
+        {
+            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, duration);
+            SpellParticleVfx.SpawnOrbit(ctx.caster.transform, vfxRadius, vfxColor, duration); // 강철빛 궤도 입자(버프 지속 표시)
+        }
     }
 }

@@ -19,6 +19,10 @@ public class DashShieldAbility : SpellAbility
             GameObject fx = Object.Instantiate(effectPrefab, ctx.caster.transform.position, Quaternion.identity, ctx.caster.transform);
             Object.Destroy(fx, duration);
         }
-        else SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, 0.8f); // 짧은 확인 오라
+        else
+        {
+            SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, 0.8f); // 짧은 확인 오라
+            SpellParticleVfx.SpawnOrbit(ctx.caster.transform, vfxRadius, vfxColor, duration); // 하늘색 궤도 입자(버프 지속 표시)
+        }
     }
 }

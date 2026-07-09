@@ -29,6 +29,7 @@ public class HealAbility : SpellAbility
         else
         {
             SpellVfx.SpawnAura(ctx.caster.transform, vfxRadius, vfxColor, vfxDuration);
+            SpellParticleVfx.SpawnRise(ctx.caster.transform, vfxColor, 1f); // 초록 입자 상승(회복감)
         }
     }
 

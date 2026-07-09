@@ -27,5 +27,6 @@ public class ConfusionAbility : SpellAbility
 
         ConfusionStatus.Apply(best, duration);
         SpellVfx.SpawnAura(best.transform, 0.6f, vfxColor, duration); // 대상 머리 위 혼란 오라
+        SpellParticleVfx.SpawnOrbit(best.transform, 0.6f, vfxColor, duration); // 대상 주위를 도는 혼란 입자
     }
 }
