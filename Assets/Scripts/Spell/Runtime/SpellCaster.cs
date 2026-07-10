@@ -7,7 +7,8 @@ using UnityEngine;
 public class SpellCaster : MonoBehaviour
 {
     [Header("Deck / Hand")]
-    public DeckData deck;              // 테스트 덱 (P2에서 저장 덱으로 교체)
+    public DeckData deck;              // 기본 덱(저장 덱이 없을 때 폴백)
+    public SpellMarbleRegistry registry; // 저장 덱(marbleName JSON) 해석용 — 비우면 기본 덱만 사용
     public int handSize = 5;          // Plan SC: FR-05
     public float refillCooldown = 3f; // Plan SC: FR-06 — 사용 후 리필 대기(초)
 
@@ -27,6 +28,7 @@ public class SpellCaster : MonoBehaviour
     private SpellMarble[] slots;
     private float[] refillReadyTime;   // 각 슬롯 리필 가능 시각(unscaled). 채워지면 무의미.
     private int drawIndex;
+    private List<SpellMarble> drawList; // 실제 뽑기 소스: 저장 덱(덱 편성 씬) 우선, 없으면 기본 DeckData
 
     public IReadOnlyList<SpellMarble> Slots => slots;
 
@@ -46,8 +48,20 @@ public class SpellCaster : MonoBehaviour
 
     void Start()
     {
+        drawList = BuildDrawList();
         for (int i = 0; i < slots.Length; i++) slots[i] = DrawNext();
         OnHandChanged?.Invoke();
+    }
+
+    // 저장 덱(DeckSaveService) 우선, 비었거나 registry 미연결이면 기본 DeckData 폴백
+    List<SpellMarble> BuildDrawList()
+    {
+        if (registry != null && DeckSaveService.HasSave())
+        {
+            List<SpellMarble> saved = DeckSaveService.Load(registry);
+            if (saved.Count > 0) return saved;
+        }
+        return (deck != null && deck.marbles != null) ? deck.marbles : null;
     }
 
     void Update()
@@ -109,8 +123,8 @@ public class SpellCaster : MonoBehaviour
 
     SpellMarble DrawNext()
     {
-        if (deck == null || deck.marbles == null || deck.marbles.Count == 0) return null;
-        SpellMarble m = deck.marbles[drawIndex % deck.marbles.Count];
+        if (drawList == null || drawList.Count == 0) return null;
+        SpellMarble m = drawList[drawIndex % drawList.Count];
         drawIndex++;
         return m;
     }

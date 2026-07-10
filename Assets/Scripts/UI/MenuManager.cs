@@ -14,6 +14,11 @@ public class MenuManager : MonoBehaviour
         SceneManager.LoadScene("GameScene");
     }
 
+    public void OnPressDeckBuilding()
+    {
+        SceneManager.LoadScene("DeckBuildingScene");
+    }
+
     public void OnPressExit()
     {
         Application.Quit();

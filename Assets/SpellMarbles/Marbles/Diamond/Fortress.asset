@@ -16,4 +16,4 @@ MonoBehaviour:
   suit: 3
   grade: 1
   ability: {fileID: 11400000, guid: 4e6accf55ba95d847a04870bf6b40c97, type: 2}
-  icon: {fileID: 0}
+  icon: {fileID: 7225575888738433091, guid: 37e19fff14794f84c96229784288ec90, type: 3}

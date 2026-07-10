@@ -420,6 +420,10 @@ MonoBehaviour:
   hud: {fileID: 1854239514}
   iconSize: 34
   spacing: 40
+  convergeDuration: 0.25
+  convergeDotCount: 8
+  convergeRadius: 30
+  convergeDotSize: 9
   spawnDuration: 0.3
   spawnStartScale: 0.25
 --- !u!1 &416340752
@@ -13284,6 +13288,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellCaster
   deck: {fileID: 11400000, guid: fa6ceec9b7a88fc4a84f638ccb7e37b7, type: 2}
+  registry: {fileID: 11400000, guid: 262acf3717eea5645bcaa2a8fd850a37, type: 2}
   handSize: 5
   refillCooldown: 3
   player: {fileID: 0}
