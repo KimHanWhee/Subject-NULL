@@ -164,7 +164,8 @@ public class SpellVfx : MonoBehaviour
     }
 
     // 흰색 링(annulus) 텍스처를 1회 생성 → 스프라이트(지름 1 world unit). localScale로 크기 조절.
-    static Sprite RingSprite()
+    // public: TimeStopWave 등 외부 파동 연출도 같은 링을 재사용(단일 진실원).
+    public static Sprite RingSprite()
     {
         if (ringSprite != null) return ringSprite;
 

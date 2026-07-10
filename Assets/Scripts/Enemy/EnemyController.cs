@@ -118,6 +118,7 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
         state = State.Dying;
         GetComponent<Collider2D>().enabled = false; // 사망 애니메이션 중 접촉 데미지/중복 피격 방지
+        anim.speed = 1f; // 빙결(FreezeStatus)로 애니메이터가 정지 중이어도 사망 연출은 재생
         anim.SetTrigger("Die");
         Invoke("AfterDying", 0.6f);
     }

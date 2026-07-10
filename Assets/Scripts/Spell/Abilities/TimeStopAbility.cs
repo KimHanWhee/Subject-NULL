@@ -6,14 +6,19 @@ public class TimeStopAbility : SpellAbility
 {
     public float duration = 3f;
 
+    [Header("Wave (정지 파동)")]
+    public float waveDuration = 0.7f;   // 파동이 다 퍼지는 시간(초, unscaled)
+    public float waveRadius = 14f;      // 파동 최대 반경(화면 전체 커버)
+    public Material grayscaleMaterial;  // 파장에 맞은 개체 회색화(MiniGungeon/SpriteGrayscale)
+
     [Header("Code VFX")]
     public Color vfxColor = new Color(0.8f, 0.95f, 1f, 1f); // 시간 정지 청백
 
     public override void Activate(SpellContext ctx)
     {
         Vector2 center = ctx.caster != null ? (Vector2)ctx.caster.transform.position : ctx.targetPosition;
-        SpellVfx.SpawnRing(center, 10f, vfxColor, 0.8f); // 세계로 퍼지는 정지 파동
         SpellParticleVfx.SpawnImplode(center, 8f, vfxColor, 0f, 48, 0.7f); // 시간이 빨려드는 청백 입자
-        TimeStopField.Spawn(duration);
+        // 파동이 퍼지며 닿은 개체를 일그러뜨리고 회색+정지 → 완료 시 원복(정지 유지) + 유지 필드 생성
+        TimeStopWave.Spawn(center, waveRadius, waveDuration, duration, grayscaleMaterial, vfxColor);
     }
 }

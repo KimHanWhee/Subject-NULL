@@ -37,10 +37,13 @@ public class SpellParticleVfx : MonoBehaviour
 
     // 가장자리에서 중심으로 빨려드는 입자 — 블랙홀/텔레포트 도착/시간 정지.
     // duration = 0: 1회 버스트, > 0: 지속 방출(블랙홀처럼 오래 빨아들이는 연출).
-    public static SpellParticleVfx SpawnImplode(Vector2 pos, float radius, Color color, float duration = 0f, int count = 26, float lifetime = 0.5f)
+    // follow != null: 대상 추종(레전드 차징). Local 시뮬레이션이라 이미 방출된 입자도 함께 이동해
+    //                 항상 "현재 플레이어 위치"로 수렴한다(World면 시전 시점 위치에 고정됨).
+    public static SpellParticleVfx SpawnImplode(Vector2 pos, float radius, Color color, float duration = 0f, int count = 26, float lifetime = 0.5f, Transform follow = null)
     {
-        SpellParticleVfx fx = Create("SpellImplode", pos, null, color);
+        SpellParticleVfx fx = Create("SpellImplode", pos, follow, color);
         var main = fx.ps.main;
+        if (follow != null) main.simulationSpace = ParticleSystemSimulationSpace.Local; // SpawnOrbit과 동일 추종 규약
         main.startLifetime = lifetime;
         main.startSpeed = -(radius * 0.95f) / Mathf.Max(0.05f, lifetime); // 음수 = 셰이프 안쪽으로
         main.startSize = Mathf.Max(0.07f, radius * 0.12f);

@@ -5,6 +5,8 @@ using UnityEngine;
 public class FreezeStatus : MonoBehaviour
 {
     private Behaviour[] frozen; // 껐던 컨트롤러들(원래 켜져 있던 것만)
+    private Animator anim;      // 걷기 등 애니메이션도 함께 정지(완전 정지 연출)
+    private float animSpeed0 = 1f;
     private float remain;
 
     public static void Apply(GameObject enemy, float duration)
@@ -26,7 +28,16 @@ public class FreezeStatus : MonoBehaviour
         if (ec != null && ec.enabled) { ec.enabled = false; list.Add(ec); }
         if (rc != null && rc.enabled) { rc.enabled = false; list.Add(rc); }
         frozen = list.ToArray();
-        return frozen.Length > 0;
+        if (frozen.Length == 0) return false;
+
+        // 애니메이션 정지(걷기 모션 등) — 만료/사망 시 원래 속도로 복구
+        anim = GetComponent<Animator>();
+        if (anim != null)
+        {
+            animSpeed0 = anim.speed;
+            anim.speed = 0f;
+        }
+        return true;
     }
 
     void Update()
@@ -41,6 +52,8 @@ public class FreezeStatus : MonoBehaviour
         foreach (Behaviour b in frozen)
             if (b != null) b.enabled = true;
         frozen = null;
+        if (anim != null) anim.speed = animSpeed0;
+        anim = null;
     }
 
     void OnDisable() { Restore(); Destroy(this); }

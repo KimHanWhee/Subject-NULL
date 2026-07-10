@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d1eda2d4fbe2f1429f9e3d98bbc2e36, type: 3}
+  m_Name: Verdant
+  m_EditorClassIdentifier: 
+  displayName: "\uC2EC\uC5F0 \uB2AA"
+  floorTint: {r: 1, g: 1, b: 1, a: 1}
+  wallTint: {r: 1, g: 1, b: 1, a: 1}
+  overrideBackground: 1
+  backgroundColor: {r: 0.04, g: 0.09, b: 0.06, a: 1}
+  overlayColor: {r: 0.3, g: 0.9, b: 0.5, a: 0.1}
+  ambient: 3
+  ambientColor: {r: 0.75, g: 1, b: 0.45, a: 1}
+  fromTiles:
+  - {fileID: 11400000, guid: f7975678c482e494f9db6a3f8cc351e1, type: 2}
+  - {fileID: 11400000, guid: 591bf0224f1c566439732c4ce148f78f, type: 2}
+  - {fileID: 11400000, guid: b279f9f20142a0946bec141373fa2c52, type: 2}
+  - {fileID: 11400000, guid: b58808cee37fcca40b0ee939b3c9121f, type: 2}
+  - {fileID: 11400000, guid: f9a1cbdcc428e6b43b8629cde3640d72, type: 2}
+  - {fileID: 11400000, guid: f8ddfafb0c1ce59488f3092fd0ca7adf, type: 2}
+  - {fileID: 11400000, guid: 4d33dc907a2731a4fb2631962ce254e0, type: 2}
+  toTiles:
+  - {fileID: 11400000, guid: 1849a7b2db95d6743b411d148382d88a, type: 2}
+  - {fileID: 11400000, guid: aa747953104013344ab83b0e44a8b23e, type: 2}
+  - {fileID: 11400000, guid: 2eaa91df1dbdcf84ab0d6979abdb556f, type: 2}
+  - {fileID: 11400000, guid: e299f67b27c4b7a47a728f38ae379c81, type: 2}
+  - {fileID: 11400000, guid: e81edfbab90a8844eb482eaaf9cad9fe, type: 2}
+  - {fileID: 11400000, guid: 67a6a9b8575ea0d44bcbbf3b1204336c, type: 2}
+  - {fileID: 11400000, guid: 54797da1fb341d04fa9e8a4296f7f247, type: 2}
+  bgm: {fileID: 0}
+  bgmVolume: 0.5

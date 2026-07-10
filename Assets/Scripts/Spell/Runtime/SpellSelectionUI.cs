@@ -10,7 +10,7 @@ public class SpellSelectionUI : MonoBehaviour
     public Vector2 raisedOffset = new Vector2(0f, 120f); // 위로 올라오는 양(px)
     public float raisedScale = 5f;                     // 선택 중 확대 배율(1=확대 없음)
     public float raiseSpeed = 10f;                       // unscaled 보간 속도(위치·스케일 공용)
-    public float slowScale = 0.3f;                       // Plan SC: FR-08
+    public float slowScale = 0.01f;                      // Plan SC: FR-08 — 씬 인스펙터 값과 동일 기준(0.01)
 
     private Vector2 basePos;
     private Vector3 baseScale = Vector3.one;

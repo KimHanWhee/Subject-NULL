@@ -13296,6 +13296,9 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   castDelay: 0.5
   castRingRadius: 1.2
+  legendCastDelay: 3
+  legendCastRingRadius: 2.6
+  castSlowScale: 0.3
 --- !u!4 &2116818561
 Transform:
   m_ObjectHideFlags: 0

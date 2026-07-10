@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d1eda2d4fbe2f1429f9e3d98bbc2e36, type: 3}
+  m_Name: Ember
+  m_EditorClassIdentifier: 
+  displayName: "\uD654\uC5FC \uB3D9\uAD74"
+  floorTint: {r: 1, g: 1, b: 1, a: 1}
+  wallTint: {r: 1, g: 1, b: 1, a: 1}
+  overrideBackground: 1
+  backgroundColor: {r: 0.12, g: 0.04, b: 0.03, a: 1}
+  overlayColor: {r: 1, g: 0.35, b: 0.15, a: 0.1}
+  ambient: 2
+  ambientColor: {r: 1, g: 0.55, b: 0.2, a: 1}
+  fromTiles:
+  - {fileID: 11400000, guid: f7975678c482e494f9db6a3f8cc351e1, type: 2}
+  - {fileID: 11400000, guid: 591bf0224f1c566439732c4ce148f78f, type: 2}
+  - {fileID: 11400000, guid: b279f9f20142a0946bec141373fa2c52, type: 2}
+  - {fileID: 11400000, guid: b58808cee37fcca40b0ee939b3c9121f, type: 2}
+  - {fileID: 11400000, guid: f9a1cbdcc428e6b43b8629cde3640d72, type: 2}
+  - {fileID: 11400000, guid: f8ddfafb0c1ce59488f3092fd0ca7adf, type: 2}
+  - {fileID: 11400000, guid: 4d33dc907a2731a4fb2631962ce254e0, type: 2}
+  toTiles:
+  - {fileID: 11400000, guid: d6f90cc048e54664b90df7c8d1afc823, type: 2}
+  - {fileID: 11400000, guid: a116067e8cbfdbb45aad114dff5d6115, type: 2}
+  - {fileID: 11400000, guid: 8585296626c0a7d46a98d8bf07d0f010, type: 2}
+  - {fileID: 11400000, guid: 42041b4f2e82aa04dba6a2b0cd29b280, type: 2}
+  - {fileID: 11400000, guid: 16a3ed15679d6fe4ba3da92d30405d1f, type: 2}
+  - {fileID: 11400000, guid: 5bf8ca17bae731841bb58294418ccd41, type: 2}
+  - {fileID: 11400000, guid: f485421a9b4b872468a32b108b586fe6, type: 2}
+  bgm: {fileID: 0}
+  bgmVolume: 0.5

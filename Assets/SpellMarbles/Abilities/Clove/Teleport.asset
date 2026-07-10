@@ -19,6 +19,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   targetMode: 1
   effectPrefab: {fileID: 0}
-  activationSound: {fileID: 0}
+  activationSound: {fileID: 8300000, guid: aba0b92555fa7d6489b1f618dfec370a, type: 3}
   soundVolume: 1
   vfxColor: {r: 0.75, g: 0.4, b: 1, a: 1}
+  wallClearance: 0.55

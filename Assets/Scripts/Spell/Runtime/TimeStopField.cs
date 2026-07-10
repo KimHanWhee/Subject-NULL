@@ -20,6 +20,12 @@ public class TimeStopField : MonoBehaviour
         return f;
     }
 
+    // TimeStopWave가 파동 중 멈춘 총알들을 인계 — 필드 종료 시 함께 복구
+    public void AdoptStoppedBullets(List<EnemyBullet> bullets)
+    {
+        if (bullets != null) stoppedBullets.AddRange(bullets);
+    }
+
     void Update()
     {
         if (Time.unscaledTime >= endTime) { Destroy(gameObject); return; }

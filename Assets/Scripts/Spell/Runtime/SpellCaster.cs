@@ -23,6 +23,13 @@ public class SpellCaster : MonoBehaviour
     public float castDelay = 0.5f;      // 드롭 후 능력 발동까지(초, unscaled). 그동안 등급색 시전 고리가 수렴.
     public float castRingRadius = 1.2f; // 시전 고리 시작 반경(중심으로 수렴)
 
+    [Header("Legend Cast (레전드 차징)")]
+    public float legendCastDelay = 3f;        // 레전드 등급: 강대한 힘을 모으는 긴 시전
+    public float legendCastRingRadius = 2.6f; // 더 크고 넓게 수렴하는 고리
+
+    [Header("Cast Slow (시전 중 슬로우)")]
+    [Range(0.01f, 1f)] public float castSlowScale = 0.01f; // 시전 동안 게임 속도 — Ctrl 선택 슬로우(0.01)와 동일 체감
+
     public event Action OnHandChanged;
 
     private SpellMarble[] slots;
@@ -97,14 +104,29 @@ public class SpellCaster : MonoBehaviour
             effectPool = effectPool
         };
 
-        // 시전 텔레그래프: 등급색 고리가 castDelay 동안 중심으로 수렴 → 이후 실제 발동.
+        // 시전 텔레그래프: 등급색 고리가 시전 시간 동안 중심으로 수렴 → 이후 실제 발동.
         // Targeted=드롭 위치 고정, SelfBuff=플레이어 추종. 레전드는 무지개.
+        // 레전드는 긴 차징(강대한 힘 연출): 큰 이중 수렴 링 + 지속 흡입 입자.
+        bool legend = marble.grade == Grade.Legend;
+        float delay = legend ? legendCastDelay : castDelay;
+        float ringRadius = legend ? legendCastRingRadius : castRingRadius;
         Color ringColor = GradePalette.ColorOf(marble.grade);
         Transform follow = self ? SpellVfx.VisualAnchor(player) : null; // 몸통 시각 중심 추종(스프라이트 상단 여백 보정)
-        SpellVfx.SpawnConverge(follow != null ? (Vector2)follow.position : pos, castRingRadius, ringColor, castDelay, marble.grade == Grade.Legend, follow);
+        Vector2 telegraphPos = follow != null ? (Vector2)follow.position : pos;
+        SpellVfx.SpawnConverge(telegraphPos, ringRadius, ringColor, delay, legend, follow);
+        if (legend)
+        {
+            // 안쪽에서 더 빨리 수렴하는 보조 링(겹겹이 모이는 느낌) + 힘이 빨려드는 입자
+            SpellVfx.SpawnConverge(telegraphPos, ringRadius * 0.6f, ringColor, delay * 0.55f, true, follow);
+            SpellParticleVfx.SpawnImplode(telegraphPos, ringRadius * 1.8f, ringColor, delay, 48, 0.7f, follow);
+        }
 
-        // castDelay 후 능력 발동 + 발동음(고리 애니메이션 뒤에 실제 효과). 사용음은 드롭 시(SpellDragHandler).
-        StartCoroutine(CastAndActivate(marble.ability, ctx, castDelay));
+        // 시전 중 게임 슬로우: Ctrl을 떼도 시전이 끝날 때까지 유지(펄스 — unscaled 기준 자동 만료라 누수 없음)
+        if (TimeController.Instance != null)
+            TimeController.Instance.Pulse(castSlowScale, delay);
+
+        // 시전 시간 후 능력 발동 + 발동음(고리 애니메이션 뒤에 실제 효과). 사용음은 드롭 시(SpellDragHandler).
+        StartCoroutine(CastAndActivate(marble.ability, ctx, delay));
 
         slots[slotIndex] = null;                                  // 소비(드롭 즉시)
         refillReadyTime[slotIndex] = Time.unscaledTime + refillCooldown;
