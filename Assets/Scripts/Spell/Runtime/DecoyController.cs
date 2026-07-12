@@ -45,10 +45,9 @@ public class DecoyController : MonoBehaviour
 
     void RetargetAll(GameObject target)
     {
-        foreach (EnemyController ec in Object.FindObjectsOfType<EnemyController>())
-            ec.SetTarget(target);
-        foreach (RangedEnemyController rc in Object.FindObjectsOfType<RangedEnemyController>())
-            rc.SetTarget(target);
+        // 모든 적 타입 공통 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
+        foreach (EnemyBase e in Object.FindObjectsOfType<EnemyBase>())
+            e.SetTarget(target);
     }
 
     void OnDestroy()

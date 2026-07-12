@@ -19,7 +19,7 @@ public class ConfusionAbility : SpellAbility
         for (int i = 0; i < hits.Length; i++)
         {
             if (!hits[i].CompareTag("Enemy")) continue;
-            if (hits[i].GetComponent<EnemyController>() == null && hits[i].GetComponent<RangedEnemyController>() == null) continue;
+            if (hits[i].GetComponent<EnemyBase>() == null) continue; // 모든 적 타입 공통
             float sq = ((Vector2)hits[i].transform.position - pos).sqrMagnitude;
             if (sq < bestSq) { bestSq = sq; best = hits[i].gameObject; }
         }

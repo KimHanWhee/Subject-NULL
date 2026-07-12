@@ -112,10 +112,9 @@ public class TimeStopWave : MonoBehaviour
     {
         Vector2 center = transform.position;
 
-        foreach (EnemyController ec in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
-            TryHitEnemy(ec.gameObject, center, radius);
-        foreach (RangedEnemyController rc in Object.FindObjectsByType<RangedEnemyController>(FindObjectsSortMode.None))
-            TryHitEnemy(rc.gameObject, center, radius);
+        // 모든 적 타입 공통 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
+        foreach (EnemyBase e in Object.FindObjectsByType<EnemyBase>(FindObjectsSortMode.None))
+            TryHitEnemy(e.gameObject, center, radius);
 
         // 적 총알: 스크립트 정지(이동+수명 동결) + 회색화. 복구는 TimeStopField가 인계받아 종료 시 수행
         foreach (EnemyBullet b in Object.FindObjectsByType<EnemyBullet>(FindObjectsSortMode.None))

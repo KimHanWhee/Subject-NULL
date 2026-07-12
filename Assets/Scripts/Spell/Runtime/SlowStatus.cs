@@ -5,8 +5,7 @@ using UnityEngine;
 // 중첩 시 새로 걸지 않고 지속만 갱신(가장 긴 쪽 유지). 이동 감속은 게임 시간(deltaTime) 기준.
 public class SlowStatus : MonoBehaviour
 {
-    private EnemyController basic;
-    private RangedEnemyController ranged;
+    private EnemyBase enemy; // 모든 적 타입 공통 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
     private float originalSpeed;
     private float remain;
 
@@ -23,21 +22,11 @@ public class SlowStatus : MonoBehaviour
 
     bool Bind(float slowFactor)
     {
-        basic = GetComponent<EnemyController>();
-        ranged = GetComponent<RangedEnemyController>();
-        if (basic != null)
-        {
-            originalSpeed = basic.speed;
-            basic.speed = originalSpeed * Mathf.Clamp01(slowFactor);
-            return true;
-        }
-        if (ranged != null)
-        {
-            originalSpeed = ranged.speed;
-            ranged.speed = originalSpeed * Mathf.Clamp01(slowFactor);
-            return true;
-        }
-        return false;
+        enemy = GetComponent<EnemyBase>();
+        if (enemy == null) return false;
+        originalSpeed = enemy.speed;
+        enemy.speed = originalSpeed * Mathf.Clamp01(slowFactor);
+        return true;
     }
 
     void Update()
@@ -54,8 +43,7 @@ public class SlowStatus : MonoBehaviour
 
     void Restore()
     {
-        if (basic != null) basic.speed = originalSpeed;
-        if (ranged != null) ranged.speed = originalSpeed;
+        if (enemy != null) enemy.speed = originalSpeed;
     }
 
     // 풀 반환/사망 안전망: 감속 잔존 방지

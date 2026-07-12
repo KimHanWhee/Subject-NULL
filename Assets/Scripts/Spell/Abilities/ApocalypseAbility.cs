@@ -21,14 +21,8 @@ public class ApocalypseAbility : SpellAbility
         SpellParticleVfx.SpawnBurst(center, 11f, new Color(1f, 0.8f, 0.4f, 1f), 50, 0.9f); // 원거리 잔불 파편
 
         // 활성 적 전체 타격(태그 오염 회피 — 컨트롤러 기준 수집)
-        foreach (EnemyController ec in Object.FindObjectsOfType<EnemyController>())
-            ec.ApplyHit(damage);
-        foreach (RangedEnemyController rc in Object.FindObjectsOfType<RangedEnemyController>())
-        {
-            IDamageable dmg = rc.GetComponent<IDamageable>();
-            if (dmg != null) { dmg.ApplyHit(damage); continue; }
-            Character ch = rc.GetComponent<Character>();
-            if (ch != null && !ch.Hit(damage)) rc.gameObject.SetActive(false);
-        }
+        // 모든 적 타입 공통 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
+        foreach (EnemyBase e in Object.FindObjectsOfType<EnemyBase>())
+            e.ApplyHit(damage);
     }
 }

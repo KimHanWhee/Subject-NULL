@@ -285,6 +285,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // 레이저 등 히트스캔형 적 공격 공통 진입점 — 총알 피격과 동일하게 대시 무적 프레임 적용
+    public void ApplyRangedHit(float damage, GameObject attacker = null)
+    {
+        if (IsDashActive) return;
+        TakeHit(damage, attacker);
+    }
+
     // Design Ref: §3.1 — 접촉/총알 공통 피격 처리 (Flash/Die 소유)
     // attacker: 접촉 피격 시 해당 적(반사 대상), 총알 등 불명이면 null
     void TakeHit(float damage, GameObject attacker = null)

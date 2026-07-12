@@ -1,13 +1,9 @@
 using UnityEngine;
 
-// Design Ref: §2.2 — 원거리 적. 사거리 유지(히스테리시스) + 주기 사격.
-public class RangedEnemyController : MonoBehaviour, IDamageable
+// Design Ref: §2.2 — 원거리 적(박쥐). 사거리 유지(히스테리시스) + 주기 사격.
+// 산탄 변형(보라 박쥐)은 bulletsPerShot/spreadAngle만 다른 프리팹으로 공유.
+public class RangedEnemyController : EnemyBase
 {
-    enum State { Spawning, Moving, Dying }
-
-    [Header("Move")]
-    public float speed = 2f;
-
     [Header("Range Band")] // Plan SC: FR-02 — 히스테리시스로 경계 떨림 방지
     public float farBand = 7f;   // 이보다 멀면 접근
     public float nearBand = 4f;  // 이보다 가까우면 후퇴
@@ -21,73 +17,37 @@ public class RangedEnemyController : MonoBehaviour, IDamageable
     public float bulletDamage = 1f;
     public AudioClip fireSound;
 
-    [Header("Material")]
-    public Material flashMaterial;
-    public Material defaultMaterial;
+    [Header("Spread")] // 산탄 변형(보라 박쥐) — 1이면 기존 단발과 동일
+    public int bulletsPerShot = 1;   // 동시 발사 수
+    public float spreadAngle = 30f;  // 부채꼴 전체 각도(bulletsPerShot > 1일 때만 사용)
+    public Color bulletColor = Color.red; // 총알 틴트 — 캐릭터 색에 맞춤(풀 공유라 발사마다 지정)
 
-    private GameObject target;
-    private State state;
-    private SpriteRenderer sr;
-    private Animator anim;
-    private Rigidbody2D rb;
     private float nextFireTime;
 
-    void Awake()
+    protected override void Awake()
     {
-        sr = GetComponent<SpriteRenderer>();
-        anim = GetComponent<Animator>();
-
-        // 충돌 토크로 적이 회전(삐뚤어짐)하는 것 방지
-        rb = GetComponent<Rigidbody2D>();
-        if (rb != null) rb.freezeRotation = true;
-
+        base.Awake();
         // 프리팹은 씬 오브젝트(BulletPoolManager)를 참조로 담을 수 없어 런타임에 탐색
         if (bulletPoolManager == null)
             bulletPoolManager = FindObjectOfType<BulletPoolManager>();
     }
 
-    // 스펠 마블 ♣ Decoy — 추적 대상 변경(분신 어그로). null 금지.
-    public void SetTarget(GameObject newTarget)
+    public override void Spawn(GameObject target)
     {
-        if (newTarget != null) target = newTarget;
-    }
-
-    // 기존 EnemyController.Spawn과 동일한 스폰 흐름
-    public void Spawn(GameObject target)
-    {
-        this.target = target;
-        state = State.Spawning;
-        transform.rotation = Quaternion.identity; // 풀 재사용 시 남은 회전값 초기화
-        GetComponent<Character>().Initialize();
-        anim.SetTrigger("Spawn");
-        GetComponent<Collider2D>().enabled = false;
-        Invoke(nameof(StartMoving), 1f);
+        base.Spawn(target);
         nextFireTime = Time.time + fireInterval; // Design Ref: §6 E5 — 스폰 직후 즉발 방지
     }
 
-    void StartMoving()
+    protected override void Tick(Vector2 toTarget, float dt)
     {
-        GetComponent<Collider2D>().enabled = true;
-        state = State.Moving;
-    }
-
-    void FixedUpdate()
-    {
-        // 이동은 Translate 전담 — 충돌(플레이어 대시 등)로 물리 엔진이 준 밀림 속도가
-        // 잔류하면 멀리 날아가므로 매 프레임 제거
-        if (rb != null) rb.linearVelocity = Vector2.zero;
-
-        if (state != State.Moving || target == null) return; // Design Ref: §6 E3 — target 방어
-
-        Vector2 toTarget = target.transform.position - transform.position;
         float dist = toTarget.magnitude;
         Vector2 dir = toTarget.normalized;
 
         // Plan SC: FR-02 — 사거리 유지 (밴드 밖이면 접근/후퇴, 안이면 정지)
         if (dist > farBand)
-            transform.Translate(dir * (speed * Time.fixedDeltaTime));
+            transform.Translate(dir * (speed * dt));
         else if (dist < nearBand)
-            transform.Translate(-dir * (speed * Time.fixedDeltaTime));
+            transform.Translate(-dir * (speed * dt));
         // else: 정지
 
         sr.flipX = dir.x < 0;
@@ -100,70 +60,37 @@ public class RangedEnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    // Plan SC: FR-03 — 발사 순간 플레이어 방향으로 직진(유도 없음)
+    // Plan SC: FR-03 — 발사 순간 플레이어 방향으로 직진(유도 없음). 산탄이면 부채꼴 분산.
     void Fire(Vector2 dir)
     {
         if (bulletPrefab == null || bulletPoolManager == null) return;
 
         ObjectPool pool = bulletPoolManager.GetPool(bulletPrefab);
-        GameObject b = pool.Get();
-        if (b == null) return; // Design Ref: §6 E1 — 풀 고갈 시 이번 발사 스킵
+        int n = Mathf.Max(1, bulletsPerShot);
+        for (int i = 0; i < n; i++)
+        {
+            GameObject b = pool.Get();
+            if (b == null) break; // Design Ref: §6 E1 — 풀 고갈 시 남은 발사 스킵
 
-        b.transform.position = transform.position;
-        EnemyBullet eb = b.GetComponent<EnemyBullet>();
-        eb.Direction = dir;
-        eb.speed = bulletSpeed;
-        eb.damage = bulletDamage;
+            // n발을 spreadAngle 부채꼴에 균등 배치(단발이면 정방향 그대로)
+            float offset = n > 1 ? spreadAngle * ((float)i / (n - 1) - 0.5f) : 0f;
+            Vector2 shotDir = Quaternion.Euler(0f, 0f, offset) * dir;
+
+            b.transform.position = transform.position;
+            EnemyBullet eb = b.GetComponent<EnemyBullet>();
+            eb.Direction = shotDir;
+            eb.speed = bulletSpeed;
+            eb.damage = bulletDamage;
+
+            // 총알 풀은 박쥐 종류 간 공유 → 매 발사 시 자기 색으로 칠함(잔존 색 방지)
+            SpriteRenderer bsr = b.GetComponent<SpriteRenderer>();
+            if (bsr != null) bsr.color = bulletColor;
+        }
 
         if (fireSound != null)
         {
             AudioSource a = GetComponent<AudioSource>();
             if (a != null) a.PlayOneShot(fireSound);
         }
-    }
-
-    // 기존 EnemyController와 동일한 피격/사망 (플레이어 총알 "Bullet"에만 반응 → 오사 없음)
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.tag == "Bullet")
-        {
-            float d = collision.gameObject.GetComponent<Bullet>().damage;
-            ApplyHit(d); // 총알/스펠 공통 경로
-        }
-    }
-
-    // 스펠 등 외부 데미지 소스 공통 진입점 — 사망 시 Die() 애니메이션 보존
-    public void ApplyHit(float damage)
-    {
-        if (state == State.Dying) return; // 이미 죽는 중이면 중복 처리 방지
-        if (GetComponent<Character>().Hit(damage))
-            Flash();
-        else
-            Die();
-    }
-
-    void Flash()
-    {
-        sr.material = flashMaterial;
-        Invoke(nameof(AfterFlash), 0.5f);
-    }
-
-    void AfterFlash()
-    {
-        sr.material = defaultMaterial;
-    }
-
-    void Die()
-    {
-        state = State.Dying;
-        GetComponent<Collider2D>().enabled = false; // 사망 애니메이션 중 접촉 데미지/중복 피격 방지
-        anim.speed = 1f; // 빙결(FreezeStatus)로 애니메이터가 정지 중이어도 사망 연출은 재생
-        anim.SetTrigger("Die");
-        Invoke(nameof(AfterDying), 0.6f);
-    }
-
-    void AfterDying()
-    {
-        gameObject.SetActive(false);
     }
 }

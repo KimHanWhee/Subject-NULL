@@ -24,6 +24,8 @@ public class SpellSelectionUI : MonoBehaviour
         if (handRoot != null)
         {
             basePos = handRoot.anchoredPosition;
+            
+            
             baseScale = handRoot.localScale;
         }
     }

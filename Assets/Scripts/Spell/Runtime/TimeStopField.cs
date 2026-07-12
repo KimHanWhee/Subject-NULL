@@ -35,10 +35,9 @@ public class TimeStopField : MonoBehaviour
         float remain = endTime - Time.unscaledTime;
 
         // 적: 남은 시간만큼 빙결(주기 갱신이라 신규 스폰도 다음 스캔에 정지)
-        foreach (EnemyController ec in Object.FindObjectsOfType<EnemyController>())
-            FreezeStatus.Apply(ec.gameObject, remain + scanInterval);
-        foreach (RangedEnemyController rc in Object.FindObjectsOfType<RangedEnemyController>())
-            FreezeStatus.Apply(rc.gameObject, remain + scanInterval);
+        // 모든 적 타입 공통 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
+        foreach (EnemyBase e in Object.FindObjectsOfType<EnemyBase>())
+            FreezeStatus.Apply(e.gameObject, remain + scanInterval);
 
         // 적 총알: 스크립트 정지(이동+수명 동결)
         foreach (EnemyBullet b in Object.FindObjectsOfType<EnemyBullet>())

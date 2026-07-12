@@ -23,10 +23,9 @@ public class FreezeStatus : MonoBehaviour
     bool Bind()
     {
         var list = new System.Collections.Generic.List<Behaviour>();
-        EnemyController ec = GetComponent<EnemyController>();
-        RangedEnemyController rc = GetComponent<RangedEnemyController>();
-        if (ec != null && ec.enabled) { ec.enabled = false; list.Add(ec); }
-        if (rc != null && rc.enabled) { rc.enabled = false; list.Add(rc); }
+        // 모든 적 타입 공통 처리 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
+        EnemyBase e = GetComponent<EnemyBase>();
+        if (e != null && e.enabled) { e.enabled = false; list.Add(e); }
         frozen = list.ToArray();
         if (frozen.Length == 0) return false;
 
