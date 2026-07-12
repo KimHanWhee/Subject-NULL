@@ -173,6 +173,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyController
   speed: 2
+  flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
+  defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   farBand: 7
   nearBand: 4
   bulletPrefab: {fileID: 2531471628427593085, guid: dc1ee9856fa5f9741badac3f95f65d44, type: 3}
@@ -181,8 +183,9 @@ MonoBehaviour:
   bulletSpeed: 8
   bulletDamage: 1
   fireSound: {fileID: 8300000, guid: 584d3ba59b6b9924b9ca8075fd0b68b9, type: 3}
-  flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
-  defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  bulletsPerShot: 1
+  spreadAngle: 30
+  bulletColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!95 &3383786710312986871
 Animator:
   serializedVersion: 7

@@ -16,7 +16,7 @@ public class LaserEnemyController : EnemyBase
     public float aimTime = 1.1f;      // 조준선 표시 총 시간
     public float lockTime = 0.35f;    // 발사 전 방향 고정 시간(aimTime에 포함) — 대시로 회피 가능
     public float beamTime = 0.18f;    // 빔 표시 시간
-    public float laserRange = 12f;    // 빔 길이
+    public float maxLaserRange = 60f; // 빔 최대 길이(벽이 없을 때의 안전 상한) — 실제 길이는 벽까지
     public float beamWidth = 0.18f;   // 빔 두께(판정 폭도 겸용)
     public float damage = 1f;
     public Color aimColor = new Color(0.2f, 1f, 0.45f, 0.4f);  // 조준선(반투명 초록)
@@ -27,6 +27,7 @@ public class LaserEnemyController : EnemyBase
     private float stateTimer;    // 현재 상태 경과(고정 스텝 누적 → 빙결 시 자동 정지)
     private float cooldownTimer; // 다음 조준까지 남은 시간
     private Vector2 laserDir;    // 고정 시점 이후의 빔 방향
+    private float currentRange;  // 이번 프레임 빔 길이(벽까지 레이캐스트 결과)
     private bool damageDealt;    // 빔 1회당 데미지 1회
     private LineRenderer line;
 
@@ -78,7 +79,8 @@ public class LaserEnemyController : EnemyBase
                 {
                     Enter(State.Aiming);
                     laserDir = toTarget.normalized;
-                    line.enabled = true;
+                    currentRange = BeamRange();
+                    DrawLine(0.045f, aimColor); // 진입 프레임에 이전 위치 잔상 방지
                 }
                 break;
 
@@ -87,6 +89,7 @@ public class LaserEnemyController : EnemyBase
                 if (stateTimer < aimTime - lockTime)
                     laserDir = toTarget.normalized;
                 sr.flipX = laserDir.x < 0;
+                currentRange = BeamRange(); // 조준선도 벽까지 뻗음
 
                 // 고정 구간엔 조준선이 빠르게 점멸(발사 임박 예고)
                 bool locked = stateTimer >= aimTime - lockTime;
@@ -107,6 +110,7 @@ public class LaserEnemyController : EnemyBase
                 break;
 
             case State.Firing:
+                currentRange = BeamRange();
                 DrawLine(beamWidth, beamColor);
                 if (!damageDealt) TryHitPlayer();
                 if (stateTimer >= beamTime)
@@ -125,6 +129,17 @@ public class LaserEnemyController : EnemyBase
         stateTimer = 0f;
     }
 
+    // 빔 실제 길이 — 벽("Wall")에 닿을 때까지. 벽이 없으면 maxLaserRange.
+    float BeamRange()
+    {
+        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, laserDir, maxLaserRange);
+        float best = maxLaserRange;
+        foreach (RaycastHit2D h in hits)
+            if (h.collider != null && h.collider.CompareTag("Wall") && h.distance < best)
+                best = h.distance;
+        return best;
+    }
+
     void DrawLine(float width, Color color)
     {
         line.enabled = true; // 빙결 해제 등으로 꺼졌던 경우 복구
@@ -133,7 +148,7 @@ public class LaserEnemyController : EnemyBase
         line.startColor = color;
         line.endColor = color;
         line.SetPosition(0, transform.position);
-        line.SetPosition(1, (Vector2)transform.position + laserDir * laserRange);
+        line.SetPosition(1, (Vector2)transform.position + laserDir * currentRange);
     }
 
     // 빔 선분과 플레이어 거리로 히트스캔(빔 두께 절반 + 플레이어 반경 여유)
@@ -145,7 +160,7 @@ public class LaserEnemyController : EnemyBase
 
         Vector2 origin = transform.position;
         Vector2 p = target.transform.position;
-        float t = Mathf.Clamp(Vector2.Dot(p - origin, laserDir), 0f, laserRange);
+        float t = Mathf.Clamp(Vector2.Dot(p - origin, laserDir), 0f, currentRange);
         float distToBeam = Vector2.Distance(p, origin + laserDir * t);
         if (distToBeam <= beamWidth * 0.5f + 0.35f)
         {

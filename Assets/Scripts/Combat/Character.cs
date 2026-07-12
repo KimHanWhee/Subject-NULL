@@ -75,20 +75,21 @@ public class Character : MonoBehaviour
 
         if (alive)
         {
-            // 살아있음: 오브젝트가 유지되므로 자체 AudioSource로 재생 (없으면 폴백)
+            // 살아있음: 오브젝트가 유지되므로 자체 AudioSource로 재생 (없으면 2D 폴백)
             if (hitSound != null)
             {
                 if (audioSource != null)
                     audioSource.PlayOneShot(hitSound, soundVolume);
                 else
-                    AudioSource.PlayClipAtPoint(hitSound, transform.position, soundVolume);
+                    Sfx.Play2D(hitSound, soundVolume);
             }
         }
         else
         {
-            // 사망: 곧 비활성화/씬전환 → 끊기지 않도록 임시 오브젝트로 재생
+            // 사망: 곧 비활성화/씬전환 → 임시 오브젝트로 재생.
+            // 2D 재생 — 3D(PlayClipAtPoint)는 거리 감쇠로 소리가 작아져 타격감이 죽는다.
             if (deadSound != null)
-                AudioSource.PlayClipAtPoint(deadSound, transform.position, soundVolume);
+                Sfx.Play2D(deadSound, soundVolume);
         }
 
         return alive;

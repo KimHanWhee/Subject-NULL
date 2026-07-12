@@ -12,12 +12,11 @@ GameObject:
   - component: {fileID: 8162887236850028324}
   - component: {fileID: 200255743462851116}
   - component: {fileID: 1700748609100256545}
-  - component: {fileID: -4554353992140782115}
+  - component: {fileID: 6974807701146866737}
   - component: {fileID: 3383786710312986871}
   - component: {fileID: 351790823191078482}
-  - component: {fileID: 205781693899848542}
   m_Layer: 0
-  m_Name: ShotgunBat
+  m_Name: TankSlime
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.29616, y: -0.63933, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -87,7 +86,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -3818893042616107740, guid: 6ddcceca08a00094ea7bf5493adcca6f, type: 3}
+  m_Sprite: {fileID: 6049100368693747072, guid: 6ddcceca08a00094ea7bf5493adcca6f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -160,7 +159,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &-4554353992140782115
+--- !u!114 &6974807701146866737
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -169,23 +168,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2193062459503502360}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7f39306befb6f9143ae99cfeee45cc30, type: 3}
+  m_Script: {fileID: 11500000, guid: d8aa6ab4b8df50a40914d79158a5b4c0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyController
-  speed: 2
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  speed: 1.5
   flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
   defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
-  farBand: 7
-  nearBand: 4
-  bulletPrefab: {fileID: 2531471628427593085, guid: dc1ee9856fa5f9741badac3f95f65d44, type: 3}
-  bulletPoolManager: {fileID: 0}
-  fireInterval: 2.5
-  bulletSpeed: 6.5
-  bulletDamage: 1
-  fireSound: {fileID: 8300000, guid: 584d3ba59b6b9924b9ca8075fd0b68b9, type: 3}
-  bulletsPerShot: 3
-  spreadAngle: 30
-  bulletColor: {r: 0.75, g: 0.35, b: 1, a: 1}
 --- !u!95 &3383786710312986871
 Animator:
   serializedVersion: 7
@@ -196,7 +184,7 @@ Animator:
   m_GameObject: {fileID: 2193062459503502360}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: e9191ce655040b24bbe8637ffd242eca, type: 2}
+  m_Controller: {fileID: 9100000, guid: f9a856e653c923244b3595625dea1fc4, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -220,105 +208,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 920a281b4445c5346ab91aad37511e1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Character
-  maxHp: 3
+  maxHp: 12
   heartPoint: {fileID: 0}
   hitSound: {fileID: 8300000, guid: 7f77e3a7f243546459a35e6020f47a8a, type: 3}
   deadSound: {fileID: 8300000, guid: fe7ced36532c1e243a0fa7a54f5a60f3, type: 3}
   soundVolume: 1
---- !u!82 &205781693899848542
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2193062459503502360}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 20
-  Pan2D: 0
-  rolloffMode: 1
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4

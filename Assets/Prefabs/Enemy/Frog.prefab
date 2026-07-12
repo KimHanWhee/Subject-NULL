@@ -211,6 +211,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargerEnemyController
   speed: 2
+  flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
+  defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   chargeRange: 5
   windupTime: 0.6
   chargeSpeed: 9
@@ -218,5 +220,3 @@ MonoBehaviour:
   recoverTime: 0.5
   chargeCooldown: 1.5
   windupTint: {r: 1, g: 0.35, b: 0.25, a: 1}
-  flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
-  defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}

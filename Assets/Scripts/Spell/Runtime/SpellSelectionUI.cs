@@ -16,6 +16,8 @@ public class SpellSelectionUI : MonoBehaviour
     private Vector3 baseScale = Vector3.one;
     private bool selecting;
     private int slowHandle = -1;
+    private SpellCaster caster;          // 과부하(조커) 상태 조회용
+    private float nextOverloadNotice;    // 알림 스팸 방지(1초 스로틀)
 
     public bool IsSelecting => selecting;
 
@@ -24,10 +26,11 @@ public class SpellSelectionUI : MonoBehaviour
         if (handRoot != null)
         {
             basePos = handRoot.anchoredPosition;
-            
-            
+
+
             baseScale = handRoot.localScale;
         }
+        caster = FindFirstObjectByType<SpellCaster>();
     }
 
     void Update()
@@ -35,7 +38,23 @@ public class SpellSelectionUI : MonoBehaviour
         bool ctrl = Keyboard.current != null &&
                     (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
 
-        if (ctrl && !selecting) Enter();
+        // 과부하(조커 경고~발동 전) 중엔 벨트 잠금 — Ctrl 선택 불가 + 알림
+        bool overloaded = caster != null && caster.IsOverloaded;
+        if (overloaded && selecting) Exit(); // 과부하 진입 순간 선택 중이었으면 강제 해제
+
+        if (ctrl && !selecting)
+        {
+            if (overloaded)
+            {
+                if (Time.unscaledTime >= nextOverloadNotice)
+                {
+                    nextOverloadNotice = Time.unscaledTime + 1f;
+                    Vector2 pos = Camera.main != null ? (Vector2)Camera.main.transform.position : Vector2.zero;
+                    FloatingText.Show(pos + Vector2.down * 1.5f, "스펠 마블 과부하 상태입니다!", new Color(1f, 0.4f, 0.35f), 4.5f, 1.2f);
+                }
+            }
+            else Enter();
+        }
         else if (!ctrl && selecting) Exit();
 
         if (handRoot != null)

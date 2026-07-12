@@ -309,17 +309,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserEnemyController
   speed: 1.8
+  flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
+  defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   farBand: 8
   nearBand: 5
   fireInterval: 3
   aimTime: 1.1
   lockTime: 0.35
   beamTime: 0.18
-  laserRange: 12
+  maxLaserRange: 60
   beamWidth: 0.18
   damage: 1
   aimColor: {r: 0.2, g: 1, b: 0.45, a: 0.4}
   beamColor: {r: 0.55, g: 1, b: 0.6, a: 1}
   fireSound: {fileID: 8300000, guid: 584d3ba59b6b9924b9ca8075fd0b68b9, type: 3}
-  flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
-  defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}

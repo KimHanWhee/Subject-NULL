@@ -55,7 +55,10 @@ public class SpellCaster : MonoBehaviour
 
     void Start()
     {
-        drawList = BuildDrawList();
+        // 복사본을 셔플 — 원본(DeckData 에셋/저장 덱 리스트)의 순서를 건드리지 않기 위함
+        List<SpellMarble> source = BuildDrawList();
+        drawList = source != null ? new List<SpellMarble>(source) : null;
+        Shuffle(drawList);
         for (int i = 0; i < slots.Length; i++) slots[i] = DrawNext();
         OnHandChanged?.Invoke();
     }
@@ -84,6 +87,8 @@ public class SpellCaster : MonoBehaviour
             }
         }
         if (changed) OnHandChanged?.Invoke();
+
+        CheckOverload();
     }
 
     // Plan SC: FR-09/FR-10 — 발동. TargetMode에 따라 위치 결정 후 능력 실행·소비·리필 예약.
@@ -143,12 +148,56 @@ public class SpellCaster : MonoBehaviour
             audioSource.PlayOneShot(ability.activationSound, ability.soundVolume);
     }
 
+    // 셔플백 뽑기 — 덱은 유한. 남은 덱이 없으면 null(빈 슬롯 유지, 자동 재셔플 없음).
+    // 덱 소진 + 손패 전부 소모 = 과부하(조커) → OnJokerFired에서 재셔플·리필된다.
     SpellMarble DrawNext()
     {
-        if (drawList == null || drawList.Count == 0) return null;
-        SpellMarble m = drawList[drawIndex % drawList.Count];
+        if (drawList == null || drawIndex >= drawList.Count) return null;
+        SpellMarble m = drawList[drawIndex];
         drawIndex++;
         return m;
+    }
+
+    // ---- 과부하(조커) ----
+    // 덱을 전부 뽑았고 손패까지 모두 소모되면 벨트 과부하 → 3초 경고 후 조커 기믹 발동.
+    [Header("Overload (Joker)")]
+    public AudioClip overloadWarningSound; // 경고 사이렌(점멸 3초 동안 루프)
+    public float jokerCooldown = 60f;      // 조커 최소 간격 — 마블 속사 사이클링(고의 낭비→조커 반복) 방지
+
+    public bool IsOverloaded { get; private set; }
+    private float lastJokerTime = float.NegativeInfinity;
+
+    void CheckOverload()
+    {
+        if (IsOverloaded || drawList == null || drawList.Count == 0) return;
+        if (drawIndex < drawList.Count) return;                    // 아직 덱이 남음
+        for (int i = 0; i < slots.Length; i++)
+            if (slots[i] != null) return;                          // 손패가 남음
+        // 쿨다운 중이면 발동 보류 — 벨트는 빈 채로 대기하다 쿨다운이 끝나면 자동 발동(소프트락 없음)
+        if (Time.time < lastJokerTime + jokerCooldown) return;
+        IsOverloaded = true;
+        lastJokerTime = Time.time;
+        JokerSpell.Trigger(player, -1, OnJokerFired, overloadWarningSound); // 3초 경고 → 기믹 → 콜백
+    }
+
+    // 기믹 발동 순간: 덱 재셔플 + 손패 즉시 풀 리필(과부하 해소 보상) + Ctrl 잠금 해제
+    void OnJokerFired()
+    {
+        Shuffle(drawList);
+        drawIndex = 0;
+        for (int i = 0; i < slots.Length; i++) slots[i] = DrawNext();
+        IsOverloaded = false;
+        OnHandChanged?.Invoke();
+    }
+
+    static void Shuffle(List<SpellMarble> list) // Fisher-Yates
+    {
+        if (list == null) return;
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     // HUD 표시용: 빈 슬롯의 리필 진행도(0~1). 채워졌으면 1.

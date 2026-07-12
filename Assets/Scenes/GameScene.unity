@@ -369,6 +369,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 168536228}
   m_CullTransparentMesh: 1
+--- !u!1 &347586969
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 347586971}
+  - component: {fileID: 347586970}
+  m_Layer: 0
+  m_Name: TankSlimePool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &347586970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347586969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d011452f2c04aa142b18049e20b5185a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObjectPool
+  prefab: {fileID: 2193062459503502360, guid: 83bef56f042891e4791d224b7269472a, type: 3}
+  parent: {fileID: 347586971}
+  maxObject: 8
+--- !u!4 &347586971
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347586969}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1707632271}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &363852958
 GameObject:
   m_ObjectHideFlags: 0
@@ -4084,6 +4131,7 @@ MonoBehaviour:
   fasterEnemySpawn: 0.02
   minSpawnTerm: 1
   scoreText: {fileID: 1784521467}
+  meleeWeight: 0.4
   rangedPool: {fileID: 445079918}
   rangedSpawnChance: 0.4
   chargerPool: {fileID: 1786542561}
@@ -4092,6 +4140,10 @@ MonoBehaviour:
   shotgunSpawnChance: 0.2
   laserPool: {fileID: 928797987}
   laserSpawnChance: 0.15
+  tankPool: {fileID: 347586970}
+  tankSpawnChance: 0.15
+  dronePool: {fileID: 1809999446}
+  droneSpawnChance: 0.4
 --- !u!4 &1707632271
 Transform:
   m_ObjectHideFlags: 0
@@ -4109,6 +4161,8 @@ Transform:
   - {fileID: 1786542562}
   - {fileID: 363852960}
   - {fileID: 928797988}
+  - {fileID: 347586971}
+  - {fileID: 1809999447}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1707632272
@@ -4354,6 +4408,53 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1786542560}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1707632271}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1809999445
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1809999447}
+  - component: {fileID: 1809999446}
+  m_Layer: 0
+  m_Name: HealDronePool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1809999446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1809999445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d011452f2c04aa142b18049e20b5185a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObjectPool
+  prefab: {fileID: 2193062459503502360, guid: c1ddc64580a4c4742bd3b05eeb89c30d, type: 3}
+  parent: {fileID: 1809999447}
+  maxObject: 6
+--- !u!4 &1809999447
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1809999445}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -13449,6 +13550,7 @@ MonoBehaviour:
   legendCastDelay: 3
   legendCastRingRadius: 2.6
   castSlowScale: 0.3
+  overloadWarningSound: {fileID: 8300000, guid: f93f48171efdc984fbea32ace130d290, type: 3}
 --- !u!4 &2116818561
 Transform:
   m_ObjectHideFlags: 0
