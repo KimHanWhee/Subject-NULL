@@ -93,6 +93,35 @@ public class SpellVfx : MonoBehaviour
         return fx;
     }
 
+    // 대상을 따라다니는 얇은 원 테두리(범위 필드 표시). 스케일 스프라이트가 아닌 LineRenderer라
+    // 반경과 무관하게 선 두께가 일정 → 큰 필드도 테두리가 두꺼워지지 않는다.
+    static Material fieldLineMat;
+    public static void SpawnFieldOutline(Transform target, float radius, Color color, float duration, float lineWidth = 0.06f)
+    {
+        GameObject go = new GameObject("SpellFieldOutline");
+        if (target != null) { go.transform.SetParent(target, false); go.transform.localPosition = Vector3.zero; }
+        LineRenderer lr = go.AddComponent<LineRenderer>();
+        const int seg = 64;
+        lr.positionCount = seg;
+        lr.loop = true;
+        lr.useWorldSpace = false; // 로컬 좌표 → 부모(대상) 추종
+        lr.startWidth = lineWidth;
+        lr.endWidth = lineWidth;
+        if (fieldLineMat == null) fieldLineMat = new Material(Shader.Find("Sprites/Default")); // 공유(누수 방지)
+        lr.sharedMaterial = fieldLineMat;
+        lr.startColor = color;
+        lr.endColor = color;
+        SortingLayer[] layers = SortingLayer.layers;
+        if (layers != null && layers.Length > 0) lr.sortingLayerID = layers[layers.Length - 1].id;
+        lr.sortingOrder = 31900;
+        for (int i = 0; i < seg; i++)
+        {
+            float a = i * Mathf.PI * 2f / seg;
+            lr.SetPosition(i, new Vector3(Mathf.Cos(a) * radius, Mathf.Sin(a) * radius, 0f));
+        }
+        Object.Destroy(go, duration);
+    }
+
     void Awake()
     {
         EnsureRenderer();

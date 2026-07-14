@@ -67,6 +67,21 @@ public class PlayerController : MonoBehaviour
     public bool IsShieldActive => Time.time <= shieldUntil;
     public void GrantShield(float duration) => shieldUntil = Mathf.Max(shieldUntil, Time.time + duration);
 
+    // 조커 집단 혼란 — 이 시각까지 조작 반전(입력 방향의 반대로 이동). 시각 표시는 JokerSpell 담당.
+    private float invertUntil;
+    public bool ControlsInverted => Time.time <= invertUntil;
+    public void ApplyControlInvert(float duration) => invertUntil = Mathf.Max(invertUntil, Time.time + duration);
+
+    // 스펠 마블 ♥ 무한 질주 — 이 시각까지 대시가 스태미너를 소모하지 않고 쿨타임도 짧아짐.
+    private float staminaFreeUntil;
+    private float staminaFreeCooldown = 0.2f; // 무한 질주 중 대시 쿨타임(초)
+    public bool IsStaminaFree => Time.time <= staminaFreeUntil;
+    public void GrantStaminaFree(float duration, float dashCooldownWhileActive = 0.2f)
+    {
+        staminaFreeUntil = Mathf.Max(staminaFreeUntil, Time.time + duration);
+        staminaFreeCooldown = dashCooldownWhileActive;
+    }
+
     // UI 연동용 (스태미너 바에서 0~1 비율로 사용) — 대시 v2 UI 사이클에서 연결
     public float StaminaRatio => maxStamina > 0f ? currentStamina / maxStamina : 0f;
 
@@ -121,6 +136,8 @@ public class PlayerController : MonoBehaviour
         
         move = move.normalized;
 
+        if (ControlsInverted && move.magnitude > 0f) move = -move; // 조커 집단 혼란 — 조작 반전
+
         if (move.magnitude > 0) lastMoveDir = move; // Plan SC: FR-02 — 폴백용 마지막 이동 방향
 
         if (move.x < 0)
@@ -163,15 +180,18 @@ public class PlayerController : MonoBehaviour
             && !movementLocked                   // 스펠 마블 ♦ Fortress — 대시도 불가
             && !isDashing                        // Plan SC: FR-05 — 대시 중 재입력 무시
             && Time.time >= nextDashTime          // Plan SC: FR-04 — 쿨다운
-            && currentStamina >= dashStaminaCost) // 대시 v2: 스태미너 충분해야 대시
+            && (IsStaminaFree || currentStamina >= dashStaminaCost)) // 무한 질주 중엔 스태미너 무관
         {
             dashDir = (move.magnitude > 0 ? move : lastMoveDir).normalized; // Plan SC: FR-02
             isDashing = true;
             dashEndTime = Time.time + dashDuration;
-            nextDashTime = Time.time + dashCooldown; // 쿨다운은 시작 시각 기준
+            nextDashTime = Time.time + (IsStaminaFree ? staminaFreeCooldown : dashCooldown); // 무한 질주 중 쿨타임 단축
 
-            currentStamina -= dashStaminaCost;                   // 대시 v2: 스태미너 소모
-            staminaRegenTime = Time.time + staminaRegenDelay;    // 대시 v2: 회복 지연 시작
+            if (!IsStaminaFree) // 무한 질주 중이면 스태미너 소모/회복지연 없음
+            {
+                currentStamina -= dashStaminaCost;                   // 대시 v2: 스태미너 소모
+                staminaRegenTime = Time.time + staminaRegenDelay;    // 대시 v2: 회복 지연 시작
+            }
 
             if (dashSound != null)
                 GetComponent<AudioSource>().PlayOneShot(dashSound); // 대시 시작음

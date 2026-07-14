@@ -19,6 +19,16 @@ public class MenuManager : MonoBehaviour
         SceneManager.LoadScene("DeckBuildingScene");
     }
 
+    public void OnPressHowToPlay()
+    {
+        SceneManager.LoadScene("HowToPlayScene");
+    }
+
+    public void OnPressGacha()
+    {
+        SceneManager.LoadScene("GachaScene");
+    }
+
     public void OnPressExit()
     {
         Application.Quit();

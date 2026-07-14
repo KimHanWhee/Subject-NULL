@@ -15,7 +15,7 @@ MonoBehaviour:
   id: Decoy
   abilityName: Decoy
   description: "\uD50C\uB808\uC774\uC5B4 \uC704\uCE58\uC5D0 \uBD84\uC2E0\uC744 \uC0DD\uC131\uD55C\uB2E4.
-    \uC801\uB4E4\uC774 \uBD84\uC2E0\uC744 \uB300\uC2E0 \uB178\uB9B0\uB2E4."
+    \uC801\uB4E4\uC740 \uBD84\uC2E0\uC740 \uC6B0\uC120 \uACF5\uACA9\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}

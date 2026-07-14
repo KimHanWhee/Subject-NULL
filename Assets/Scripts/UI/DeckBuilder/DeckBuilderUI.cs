@@ -134,7 +134,23 @@ public class DeckBuilderUI : MonoBehaviour
         if (deckList.Count == 0 && defaultDeck != null && defaultDeck.marbles != null)
             foreach (SpellMarble m in defaultDeck.marbles)
                 if (m != null && deckList.Count < DeckSaveService.MaxSize) deckList.Add(m);
+        deckList.RemoveAll(m => m == null || !OwnedMarblesService.IsOwned(m)); // 미보유 마블 제외
+        TrimToLimits(); // 등급별 한도 초과분 정리(구버전 저장/기본덱 방어)
         deckList.Sort(CompareMarble);
+    }
+
+    // 등급별 최대 중복 수를 넘는 복사본 제거(한도만큼만 유지)
+    void TrimToLimits()
+    {
+        var counts = new Dictionary<SpellMarble, int>();
+        for (int i = deckList.Count - 1; i >= 0; i--)
+        {
+            SpellMarble m = deckList[i];
+            if (m == null) { deckList.RemoveAt(i); continue; }
+            int c; counts.TryGetValue(m, out c);
+            if (c >= DeckRules.Instance.MaxCopies(m.grade)) deckList.RemoveAt(i);
+            else counts[m] = c + 1;
+        }
     }
 
     int CountInDeck(SpellMarble m)
@@ -146,14 +162,38 @@ public class DeckBuilderUI : MonoBehaviour
 
     void AddToDeck(SpellMarble m)
     {
+        if (!OwnedMarblesService.IsOwned(m))
+        {
+            ShowFeedback("미보유 마블입니다 — 뽑기로 획득하세요", false);
+            return;
+        }
         if (deckList.Count >= DeckSaveService.MaxSize)
         {
             ShowFeedback("덱이 가득 찼습니다 (최대 " + DeckSaveService.MaxSize + "개)", false);
             return;
         }
+        int max = DeckRules.Instance.MaxCopies(m.grade);
+        if (CountInDeck(m) >= max)
+        {
+            string skill = m.ability != null ? m.ability.abilityName : m.marbleName;
+            ShowFeedback("'" + skill + "'은(는) 최대 " + max + "개까지 (" + GradeLabel(m.grade) + " 등급)", false);
+            return;
+        }
         deckList.Add(m);
         deckList.Sort(CompareMarble);
         RefreshAll();
+    }
+
+    static string GradeLabel(Grade g)
+    {
+        switch (g)
+        {
+            case Grade.Normal:  return "일반";
+            case Grade.Gold:    return "골드";
+            case Grade.Diamond: return "다이아";
+            case Grade.Legend:  return "레전드";
+            default:            return g.ToString();
+        }
     }
 
     void RemoveAt(int slotIndex)
@@ -178,8 +218,19 @@ public class DeckBuilderUI : MonoBehaviour
     void AutoFill()
     {
         if (catalog.Count == 0) return;
-        while (deckList.Count < DeckSaveService.MaxSize)
-            deckList.Add(catalog[Random.Range(0, catalog.Count)]);
+        int guard = 0;
+        while (deckList.Count < DeckSaveService.MaxSize && guard++ < 2000)
+        {
+            SpellMarble pick = null;
+            int start = Random.Range(0, catalog.Count);
+            for (int k = 0; k < catalog.Count; k++) // 한도 안 찬 마블만 후보
+            {
+                SpellMarble c = catalog[(start + k) % catalog.Count];
+                if (OwnedMarblesService.IsOwned(c) && CountInDeck(c) < DeckRules.Instance.MaxCopies(c.grade)) { pick = c; break; }
+            }
+            if (pick == null) break; // 더 넣을 수 있는 마블 없음
+            deckList.Add(pick);
+        }
         deckList.Sort(CompareMarble);
         RefreshAll();
         ShowFeedback("남은 칸을 무작위로 채웠습니다", true);
@@ -240,7 +291,7 @@ public class DeckBuilderUI : MonoBehaviour
         collectionPanel = MakePanel(root, "Collection", new Vector2(-320f, -75f), new Vector2(1220f, 890f));
 
         Text header = MakeText(collectionPanel, "Header", new Vector2(0f, 418f), new Vector2(1150f, 32f), 20, TextAnchor.MiddleLeft);
-        header.text = "<b>마블 카탈로그</b>  <size=15><color=#9999AA>카드를 클릭하면 덱에 추가됩니다 (중복 가능)</color></size>";
+        header.text = "<b>마블 카탈로그</b>  <size=15><color=#9999AA>카드 클릭=덱 추가 · <b>스킬마다</b> 개별 중복 제한(등급 높을수록 적게: 일반6/골드3/다이아2/레전드1)</color></size>";
 
         // 슈트 탭 4개(중앙 정렬)
         tabBgs = new Image[4];
@@ -393,6 +444,17 @@ public class DeckBuilderUI : MonoBehaviour
         ev.onClick = () => AddToDeck(m);
         ev.onEnter = () => card.localScale = Vector3.one * 1.05f;
         ev.onExit = () => card.localScale = Vector3.one;
+
+        // 미보유(Gold+ 미획득): 잠금 오버레이 + 라벨 (맨 위에 그려지도록 마지막에 추가)
+        if (!OwnedMarblesService.IsOwned(m))
+        {
+            Image lockOv = MakeImage(card, "Lock", Vector2.zero, new Vector2(w, h), new Color(0.03f, 0.03f, 0.05f, 0.6f));
+            lockOv.sprite = RoundedSprite();
+            lockOv.type = Image.Type.Sliced;
+            Text lockTxt = MakeText(card, "LockTxt", new Vector2(0f, 8f), new Vector2(w - 20f, 64f), 20, TextAnchor.MiddleCenter);
+            lockTxt.text = "<b>미보유</b>\n<size=13><color=#CFC080>뽑기로 획득</color></size>";
+            lockTxt.color = new Color(1f, 0.85f, 0.45f);
+        }
     }
 
     void BuildDeckPanel(RectTransform root)
@@ -511,11 +573,13 @@ public class DeckBuilderUI : MonoBehaviour
             }
         }
 
-        // 현재 탭 카드들의 ×N 뱃지
+        // 현재 탭 카드들의 ×N/최대 뱃지 (한도 도달 시 붉게)
         foreach (KeyValuePair<SpellMarble, Text> kv in cardBadges)
         {
             int cnt = CountInDeck(kv.Key);
-            kv.Value.text = cnt > 0 ? "×" + cnt : "";
+            int max = DeckRules.Instance.MaxCopies(kv.Key.grade);
+            kv.Value.text = "×" + cnt + "/" + max;
+            kv.Value.color = cnt >= max ? new Color(1f, 0.5f, 0.4f) : new Color(1f, 0.84f, 0.3f);
         }
 
         // 카운터 + 저장 버튼 활성

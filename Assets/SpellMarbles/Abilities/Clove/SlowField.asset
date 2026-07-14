@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SlowFieldAbility
   id: SlowField
   abilityName: Slow Field
-  description: "\uB4DC\uB86D\uD55C \uC704\uCE58 \uBC94\uC704 \uB0B4 \uC801\uC758
-    \uC774\uB3D9\uC18D\uB3C4\uB97C 3\uCD08\uAC04 50% \uAC10\uC18C\uC2DC\uD0A8\uB2E4."
+  description: "\uBC94\uC704 \uB0B4 \uC801\uC758 \uC774\uB3D9\uC18D\uB3C4\uB97C 3\uCD08\uAC04
+    50% \uAC10\uC18C\uC2DC\uD0A8\uB2E4."
   icon: {fileID: 0}
   targetMode: 1
   effectPrefab: {fileID: 7603639595974637939, guid: e8d4f2a040c92ea41962fcdd683adfb4, type: 3}

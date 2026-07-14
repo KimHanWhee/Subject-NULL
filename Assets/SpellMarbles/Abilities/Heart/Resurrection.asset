@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ResurrectionAbility
   id: Resurrection
   abilityName: Resurrection
-  description: "\uB2E4\uC74C \uC0AC\uB9DD \uC2DC \uCCB4\uB825 50%\uB85C \uBD80\uD65C\uD55C\uB2E4
+  description: "\uC0AC\uB9DD \uC2DC \uCCB4\uB825 50%\uB85C \uBD80\uD65C\uD55C\uB2E4
     (1\uD68C)."
   icon: {fileID: 0}
   targetMode: 0

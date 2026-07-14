@@ -5,7 +5,8 @@ using UnityEngine;
 public class ConfusionStatus : MonoBehaviour
 {
     private Behaviour[] disabled;   // 껐던 컨트롤러(원래 켜져 있던 것만)
-    private float moveSpeed;
+    private EnemyBase enemy;         // 이동 속도를 매 프레임 라이브로 읽음(SlowStatus 등 감속 반영)
+    private float moveSpeed;         // 폴백(enemy 없을 때)
     private float remain;
     private Vector2 dir;
     private float nextTurn;
@@ -26,7 +27,7 @@ public class ConfusionStatus : MonoBehaviour
         var list = new System.Collections.Generic.List<Behaviour>();
         // 모든 적 타입 공통 처리 — 새 몬스터는 EnemyBase 상속만으로 자동 호환
         EnemyBase e = GetComponent<EnemyBase>();
-        if (e != null && e.enabled) { moveSpeed = e.speed; e.enabled = false; list.Add(e); }
+        if (e != null && e.enabled) { enemy = e; moveSpeed = e.speed; e.enabled = false; list.Add(e); }
         disabled = list.ToArray();
         if (disabled.Length == 0) return false;
         PickDirection();
@@ -46,7 +47,8 @@ public class ConfusionStatus : MonoBehaviour
         if (remain <= 0f) { Restore(); Destroy(this); return; }
 
         if (Time.time >= nextTurn) PickDirection();
-        transform.Translate(dir * (moveSpeed * Time.deltaTime));
+        float sp = enemy != null ? enemy.speed : moveSpeed; // 현재 속도(감속 반영)
+        transform.Translate(dir * (sp * Time.deltaTime));
     }
 
     void Restore()

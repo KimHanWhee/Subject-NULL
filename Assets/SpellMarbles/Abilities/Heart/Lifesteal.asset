@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LifestealAbility
   id: Lifesteal
   abilityName: Lifesteal
-  description: "10\uCD08\uAC04 \uC801\uC5D0\uAC8C \uCD1D\uC54C\uC774 \uBA85\uC911\uD560
-    \uB54C\uB9C8\uB2E4 \uCCB4\uB825\uC744 1 \uD68C\uBCF5\uD55C\uB2E4."
+  description: "10\uCD08\uAC04 \uC801\uC5D0\uAC8C \uAE30\uBCF8 \uACF5\uACA9\uC73C\uB85C
+    \uC785\uD78C \uD53C\uD574 \uB9CC\uD07C \uD68C\uBCF5\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 1108042844691138372, guid: cf6cc6ea578238d478620614d5012182, type: 3}

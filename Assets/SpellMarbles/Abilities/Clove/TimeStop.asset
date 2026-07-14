@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimeStopAbility
   id: TimeStop
   abilityName: Time Stop
-  description: "3\uCD08\uAC04 \uBAA8\uB4E0 \uC801\uACFC \uC801\uC758 \uCD1D\uC54C\uC774
-    \uC644\uC804\uD788 \uC815\uC9C0\uD55C\uB2E4."
+  description: "3\uCD08\uAC04 \uD50C\uB808\uC774\uC5B4\uB97C \uC81C\uC678\uD55C \uBAA8\uB4E0
+    \uAC83\uC744 \uC815\uC9C0\uC2DC\uD0A8\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}

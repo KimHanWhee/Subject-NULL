@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpeedUpAbility
   id: SpeedUp
   abilityName: Speed Up
-  description: "5\uCD08\uAC04 \uC774\uB3D9\uC18D\uB3C4\uAC00 \uC99D\uAC00\uD55C\uB2E4.
-    \uC544\uBB34 \uACF3\uC5D0 \uB4DC\uB86D\uD574\uB3C4 \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C
-    \uC801\uC6A9\uB41C\uB2E4."
+  description: "5\uCD08\uAC04 \uC774\uB3D9\uC18D\uB3C4\uAC00 \uC99D\uAC00\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 8692692847356781540, guid: bb829a79483f28d4bae067a88690c434, type: 3}

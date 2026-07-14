@@ -1,0 +1,11 @@
+{
+  "statements": [
+    {
+      "Sid": "DenyPlayerEconomyIncDec",
+      "Resource": "urn:ugs:economy:/*/*crement",
+      "Principal": "Player",
+      "Action": ["*"],
+      "Effect": "Deny"
+    }
+  ]
+}

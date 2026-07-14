@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cf0f18475cc5e554ba305d8f7b200a24, type: 3}
-  m_Name: DashShield
+  m_Name: RepulseNova
   m_EditorClassIdentifier: Assembly-CSharp::SpellMarble
-  marbleName: dash-shield
+  marbleName: repulse-nova
   suit: 3
   grade: 0
-  ability: {fileID: 11400000, guid: ce5416979e1db9e4e88e275a1499f7d0, type: 2}
+  ability: {fileID: 11400000, guid: 97435f69dc01ae7418290c4e7a735704, type: 2}
   icon: {fileID: 0}

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 761de86e8939efc4fbfd04b6d6378dc4, type: 3}
+  m_Name: SlowAura
+  m_EditorClassIdentifier: Assembly-CSharp::SlowAuraAbility
+  id: SlowAura
+  abilityName: "\uAC10\uC18D \uC7A5\uB9C9"
+  description: "10\uCD08\uAC04 \uD50C\uB808\uC774\uC5B4 \uC8FC\uBCC0 \uBC94\uC704\uC758
+    \uC801 \uC774\uB3D9 \uC18D\uB3C4\uB97C \uD06C\uAC8C \uAC10\uC18C\uC2DC\uD0A8\uB2E4."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  duration: 10
+  radius: 4.5
+  slowFactor: 0.1
+  vfxColor: {r: 0.5, g: 0.7, b: 1, a: 0.9}

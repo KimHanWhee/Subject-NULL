@@ -13551,6 +13551,10 @@ MonoBehaviour:
   legendCastRingRadius: 2.6
   castSlowScale: 0.3
   overloadWarningSound: {fileID: 8300000, guid: f93f48171efdc984fbea32ace130d290, type: 3}
+  jokerThunderSound: {fileID: 0}
+  jokerPurgeSound: {fileID: 8300000, guid: 1c1980fadfd603645a32e92149449a67, type: 3}
+  jokerConfusionSound: {fileID: 0}
+  jokerCooldown: 10
 --- !u!4 &2116818561
 Transform:
   m_ObjectHideFlags: 0

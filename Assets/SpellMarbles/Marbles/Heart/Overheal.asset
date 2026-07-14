@@ -15,5 +15,5 @@ MonoBehaviour:
   marbleName: overheal
   suit: 1
   grade: 1
-  ability: {fileID: 11400000, guid: 8845ef6ccd7933842ab239dce4f7cabf, type: 2}
+  ability: {fileID: 11400000, guid: 14116a032655d4e40919908e0f122f0b, type: 2}
   icon: {fileID: 0}

@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HealAbility
   id: Heal
   abilityName: Heal
-  description: "\uCCB4\uB825\uC744 3 \uD68C\uBCF5\uD55C\uB2E4. \uC544\uBB34 \uACF3\uC5D0
-    \uB4DC\uB86D\uD574\uB3C4 \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C \uC801\uC6A9\uB41C\uB2E4."
+  description: "\uCCB4\uB825\uC744 3 \uD68C\uBCF5\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 3050674163118588703, guid: 21f19bda3abed3e41ad57b3bde5d0c27, type: 3}

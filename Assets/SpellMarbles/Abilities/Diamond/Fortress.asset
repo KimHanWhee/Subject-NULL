@@ -15,7 +15,7 @@ MonoBehaviour:
   id: Fortress
   abilityName: Fortress
   description: "5\uCD08\uAC04 \uC774\uB3D9\uD560 \uC218 \uC5C6\uB294 \uB300\uC2E0
-    \uBC1B\uB294 \uD53C\uD574\uAC00 \uC644\uC804\uD788 \uBB34\uD6A8\uD654\uB41C\uB2E4."
+    \uBC1B\uB294 \uBAA8\uB4E0 \uD53C\uD574\uB97C \uBB34\uC2DC\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 1211959369179881121, guid: e79d9110c1d3197469deaf803cfffdb5, type: 3}

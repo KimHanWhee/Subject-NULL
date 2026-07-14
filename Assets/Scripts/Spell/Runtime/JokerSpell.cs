@@ -9,12 +9,22 @@ public class JokerSpell : MonoBehaviour
 {
     const int GimmickCount = 3;
 
+    // 기믹 효과음(SpellCaster가 인스펙터 클립을 주입) — null이면 무음(Sfx.Play2D가 안전 처리)
+    private AudioClip thunderSound;   // 번개 폭풍 — 낙뢰가 떨어질 때마다
+    private AudioClip purgeSound;     // 대숙청 — 폭발(심판) 순간
+    private AudioClip confusionSound; // 집단 혼란 — 발동 순간
+
     // forceIndex: 테스트/디버그용 강제 선택(-1 = 랜덤)
     // onGimmickStart: 3초 경고가 끝나고 기믹이 실제 발동하는 순간 호출(SpellCaster의 덱 리셋 훅)
     // warnSound: 경고 사이렌(점멸 동안 루프 재생, 종료 시 정지)
-    public static void Trigger(GameObject player, int forceIndex = -1, System.Action onGimmickStart = null, AudioClip warnSound = null)
+    // thunder/purge/confusion: 각 기믹 효과음
+    public static void Trigger(GameObject player, int forceIndex = -1, System.Action onGimmickStart = null, AudioClip warnSound = null,
+        AudioClip thunderSound = null, AudioClip purgeSound = null, AudioClip confusionSound = null)
     {
         JokerSpell j = new GameObject("JokerSpell").AddComponent<JokerSpell>();
+        j.thunderSound = thunderSound;
+        j.purgeSound = purgeSound;
+        j.confusionSound = confusionSound;
         j.StartCoroutine(j.Sequence(player, forceIndex, onGimmickStart, warnSound));
     }
 
@@ -36,19 +46,44 @@ public class JokerSpell : MonoBehaviour
             siren.Play();
         }
 
-        // 전체 화면 적색 오버레이(카메라 자식) — 사이렌처럼 붉어졌다 돌아옴
+        // 전체 화면 오버레이(카메라 자식) — 검정 딤(배경 어둡게) + 적색 점멸
+        SpriteRenderer dark = null;
         SpriteRenderer overlay = null;
         TMPro.TextMeshPro label = null;
+        // 위험 사선 띠(폴리스 라인 테이프) — 위/아래에서 슬라이드 진입 + 스트라이프 스크롤
+        Transform tapeTop = null, tapeBot = null;
+        Material tapeTopMat = null, tapeBotMat = null;
+        float topTargetY = 0f, botTargetY = 0f;
+        const float bandH = 1.1f;                 // 띠 두께(월드 유닛)
+        const float hideDist = bandH + 0.9f;      // 화면 밖 은신 거리(슬라이드 인/아웃)
         if (cam != null)
         {
+            float h = cam.orthographicSize * 2f;
+            Vector3 fullScreen = new Vector3(h * cam.aspect + 2f, h + 2f, 1f);
+
+            // 검정 딤 백드롭 — 경고 동안 배경을 어둡게(붉은 점멸 오버레이 뒤)
+            GameObject dg = new GameObject("JokerWarnDim");
+            dg.transform.SetParent(cam.transform, false);
+            dg.transform.localPosition = new Vector3(0f, 0f, 10f);
+            dark = dg.AddComponent<SpriteRenderer>();
+            dark.sprite = WhiteSprite();
+            dg.transform.localScale = fullScreen;
+            SetTopLayer(dark, 30450); // 붉은 오버레이(30500)보다 뒤
+
             GameObject og = new GameObject("JokerWarnOverlay");
             og.transform.SetParent(cam.transform, false);
             og.transform.localPosition = new Vector3(0f, 0f, 10f);
             overlay = og.AddComponent<SpriteRenderer>();
             overlay.sprite = WhiteSprite();
-            float h = cam.orthographicSize * 2f;
-            og.transform.localScale = new Vector3(h * cam.aspect + 2f, h + 2f, 1f);
+            og.transform.localScale = fullScreen;
             SetTopLayer(overlay, 30500); // 테마 오버레이(30000) 위, 파티클(31000) 아래
+
+            // 테이프 밴드 2줄 — 화면보다 넓게(기울임 여백), 위/아래 가장자리. 반대 방향으로 흐름.
+            float bw = h * cam.aspect + 4f;
+            topTargetY = cam.orthographicSize - bandH * 0.55f;
+            botTargetY = -cam.orthographicSize + bandH * 0.55f;
+            tapeTop = MakeBand(cam.transform, bw, bandH, topTargetY, 4f, 30800, out tapeTopMat);
+            tapeBot = MakeBand(cam.transform, bw, bandH, botTargetY, -4f, 30800, out tapeBotMat);
 
             GameObject lg = new GameObject("JokerWarnLabel");
             lg.transform.SetParent(cam.transform, false);
@@ -65,23 +100,42 @@ public class JokerSpell : MonoBehaviour
             if (mr != null) mr.sortingOrder = 31500;
         }
 
+        // 경고 동안 게임 슬로우(Ctrl 선택 슬로우와 동일 감각) — 화면을 가려도 위협이 거의 멈춰 안전.
+        // unscaled 기준 자동 만료라 경고(3초) 뒤 기믹은 정상 속도로 진행된다.
+        const float warnSlowScale = 0.05f;
+        if (TimeController.Instance != null)
+            TimeController.Instance.Pulse(warnSlowScale, warnTime);
+
         float t = 0f;
         while (t < warnTime)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime; // 사이렌(실시간)과 동기 — 슬로우 무관하게 3초 유지
             float pulse = Mathf.PingPong(t * 2.4f, 1f); // 붉어졌다 돌아왔다
-            if (overlay != null) overlay.color = new Color(1f, 0.08f, 0.08f, pulse * 0.45f);
-            if (label != null) label.color = new Color(1f, 0.25f, 0.25f, 0.35f + pulse * 0.65f);
+            // 시작·끝 0.4초 페이드(배경 딤·오버레이·테이프 슬라이드 공용)
+            float vis = Mathf.Min(Mathf.Clamp01(t / 0.4f), Mathf.Clamp01((warnTime - t) / 0.4f));
+            if (dark != null) dark.color = new Color(0f, 0f, 0f, vis * 0.6f);             // 배경 어둡게(우세)
+            if (overlay != null) overlay.color = new Color(1f, 0.15f, 0.15f, vis * pulse * 0.12f); // 은은한 붉은 점멸
+            if (label != null) label.color = new Color(1f, 0.32f, 0.32f, vis * (0.55f + pulse * 0.45f));
+            if (tapeTopMat != null) tapeTopMat.mainTextureOffset = new Vector2(-t * 1.3f, 0f);
+            if (tapeBotMat != null) tapeBotMat.mainTextureOffset = new Vector2(t * 1.3f, 0f);
+            if (tapeTop != null) tapeTop.localPosition = new Vector3(0f, topTargetY + (1f - vis) * hideDist, 10f);
+            if (tapeBot != null) tapeBot.localPosition = new Vector3(0f, botTargetY - (1f - vis) * hideDist, 10f);
             yield return null;
         }
+        if (dark != null) Destroy(dark.gameObject);
         if (overlay != null) Destroy(overlay.gameObject);
         if (label != null) Destroy(label.gameObject);
+        if (tapeTop != null) Destroy(tapeTop.gameObject);
+        if (tapeBot != null) Destroy(tapeBot.gameObject);
+        if (tapeTopMat != null) Destroy(tapeTopMat); // 런타임 생성 머티리얼 누수 방지
+        if (tapeBotMat != null) Destroy(tapeBotMat);
         if (siren != null) { siren.Stop(); Destroy(siren); }
 
         onGimmickStart?.Invoke(); // 덱 재셔플·리필·Ctrl 잠금 해제(SpellCaster)
         Run(player, forceIndex);
     }
 
+    
     void Run(GameObject player, int forceIndex)
     {
         int pick = forceIndex >= 0 ? forceIndex % GimmickCount : Random.Range(0, GimmickCount);
@@ -125,6 +179,7 @@ public class JokerSpell : MonoBehaviour
         // 심판 — 원 밖 적 전멸 + 원 밖 플레이어 치명타(피해 수정 체인·부활 마블은 정상 개입)
         SpellVfx.SpawnRing(safe, 14f, new Color(1f, 0.3f, 0.3f, 1f), 0.5f);
         SpellParticleVfx.SpawnBurst(safe, 10f, new Color(1f, 0.4f, 0.3f, 1f), 70, 0.7f);
+        Sfx.Play2D(purgeSound, 0.9f); // 대숙청 폭발음
         foreach (EnemyBase e in Object.FindObjectsOfType<EnemyBase>())
         {
             if (!e.gameObject.activeInHierarchy) continue;
@@ -175,6 +230,7 @@ public class JokerSpell : MonoBehaviour
         // 번개 시각: 하늘에서 내리꽂는 지그재그 볼트(잠깐 표시)
         LineRenderer bolt = DrawBolt(pos);
         SpellParticleVfx.SpawnBurst(pos, hitRadius, new Color(1f, 1f, 0.7f, 1f), 14, 0.3f);
+        Sfx.Play2D(thunderSound, 0.55f); // 낙뢰음(타격마다) — 연타 겹침 대비 볼륨 절제
 
         foreach (EnemyBase e in Object.FindObjectsOfType<EnemyBase>())
         {
@@ -225,6 +281,15 @@ public class JokerSpell : MonoBehaviour
         const float duration = 6f;
         Color c = new Color(0.8f, 0.45f, 1f);
         Overload(player, "집단 혼란", c);
+        Sfx.Play2D(confusionSound, 0.9f); // 집단 혼란 발동음
+
+        // 플레이어도 혼란 — 지속시간 동안 조작 반전(입력 반대로 이동) + 시각 표시(보라 궤도)
+        if (player != null)
+        {
+            PlayerController pc = player.GetComponent<PlayerController>();
+            if (pc != null) pc.ApplyControlInvert(duration);
+            SpellParticleVfx.SpawnOrbit(player.transform, 0.6f, c, duration);
+        }
 
         float end = Time.time + duration;
         while (Time.time < end)
@@ -284,6 +349,64 @@ public class JokerSpell : MonoBehaviour
         SortingLayer[] layers = SortingLayer.layers;
         if (layers != null && layers.Length > 0) sr.sortingLayerID = layers[layers.Length - 1].id;
         sr.sortingOrder = order;
+    }
+
+    // 경고 테이프 밴드 1줄 — 카메라 자식 쿼드 + 스크롤용 머티리얼(Unlit/Transparent는 offset 반영됨).
+    Transform MakeBand(Transform parent, float width, float height, float yLocal, float tiltDeg, int order, out Material mat)
+    {
+        GameObject go = new GameObject("JokerHazardBand");
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = new Vector3(0f, yLocal, 10f);
+        go.transform.localRotation = Quaternion.Euler(0f, 0f, tiltDeg);
+        go.transform.localScale = new Vector3(width, height, 1f);
+        MeshFilter mf = go.AddComponent<MeshFilter>();
+        mf.sharedMesh = QuadMesh();
+        MeshRenderer mr = go.AddComponent<MeshRenderer>();
+        mat = new Material(Shader.Find("Unlit/Transparent"));
+        mat.mainTexture = HazardTexture();
+        mat.mainTextureScale = new Vector2(width / Mathf.Max(0.01f, height), 1f); // 정사각 텍셀 → 45° 유지
+        mr.sharedMaterial = mat;
+        SortingLayer[] layers = SortingLayer.layers;
+        if (layers != null && layers.Length > 0) mr.sortingLayerID = layers[layers.Length - 1].id;
+        mr.sortingOrder = order;
+        return go.transform;
+    }
+
+    // 1x1 중심 쿼드(UV 0~1). 테이프 밴드 공용.
+    static Mesh quadMesh;
+    static Mesh QuadMesh()
+    {
+        if (quadMesh != null) return quadMesh;
+        Mesh m = new Mesh();
+        m.vertices = new Vector3[] {
+            new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f),
+            new Vector3(-0.5f, 0.5f, 0f), new Vector3(0.5f, 0.5f, 0f)
+        };
+        m.uv = new Vector2[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f) };
+        m.triangles = new int[] { 0, 2, 1, 2, 3, 1 };
+        m.RecalculateBounds();
+        quadMesh = m;
+        return quadMesh;
+    }
+
+    // 위험 사선 스트라이프(노랑/검정) 텍스처 — Repeat 랩으로 타일링·스크롤.
+    static Texture2D hazardTex;
+    static Texture2D HazardTexture()
+    {
+        if (hazardTex != null) return hazardTex;
+        const int S = 64;
+        const int stripe = 16; // 대각선 줄 두께(px) — S가 2*stripe의 배수라 이음매 없이 반복
+        Texture2D tex = new Texture2D(S, S, TextureFormat.RGBA32, false);
+        tex.wrapMode = TextureWrapMode.Repeat;
+        tex.filterMode = FilterMode.Bilinear;
+        Color yellow = new Color(1f, 0.82f, 0f, 0.92f);
+        Color black = new Color(0.06f, 0.06f, 0.06f, 0.92f);
+        for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+                tex.SetPixel(x, y, (((x + y) / stripe) & 1) == 0 ? yellow : black); // 45° 대각
+        tex.Apply();
+        hazardTex = tex;
+        return hazardTex;
     }
 }
 

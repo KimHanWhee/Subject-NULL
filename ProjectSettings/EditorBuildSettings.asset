@@ -20,6 +20,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DeckBuildingScene.unity
     guid: 061ec4365cdfd8642a290b54ca52dcea
+  - enabled: 1
+    path: Assets/Scenes/HowToPlayScene.unity
+    guid: 0a428e9e2f58dd7449bbd0ce939ed97a
+  - enabled: 1
+    path: Assets/Scenes/GachaScene.unity
+    guid: e9df45baeee42b445ab117f87c192b7c
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

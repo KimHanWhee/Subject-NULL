@@ -33,7 +33,8 @@ public class SpellCaster : MonoBehaviour
     public event Action OnHandChanged;
 
     private SpellMarble[] slots;
-    private float[] refillReadyTime;   // 각 슬롯 리필 가능 시각(unscaled). 채워지면 무의미.
+    private float[] refillReadyTime;   // 각 슬롯 리필 가능 시각(scaled Time.time). 채워지면 무의미.
+                                       // 게임시간 기준이라 Ctrl 선택/시전 슬로우 중엔 리필도 함께 느려짐.
     private int drawIndex;
     private List<SpellMarble> drawList; // 실제 뽑기 소스: 저장 덱(덱 편성 씬) 우선, 없으면 기본 DeckData
 
@@ -63,24 +64,32 @@ public class SpellCaster : MonoBehaviour
         OnHandChanged?.Invoke();
     }
 
-    // 저장 덱(DeckSaveService) 우선, 비었거나 registry 미연결이면 기본 DeckData 폴백
+    // 저장 덱(DeckSaveService) 우선, 비었거나 registry 미연결이면 기본 DeckData 폴백.
+    // 소유(OwnedMarblesService)한 마블만 사용 — 미보유 Gold+(기본덱 포함)는 제외.
     List<SpellMarble> BuildDrawList()
     {
+        List<SpellMarble> src = null;
         if (registry != null && DeckSaveService.HasSave())
         {
             List<SpellMarble> saved = DeckSaveService.Load(registry);
-            if (saved.Count > 0) return saved;
+            if (saved.Count > 0) src = saved;
         }
-        return (deck != null && deck.marbles != null) ? deck.marbles : null;
+        if (src == null) src = (deck != null && deck.marbles != null) ? deck.marbles : null;
+        if (src == null) return null;
+
+        List<SpellMarble> owned = new List<SpellMarble>(); // 원본(에셋 리스트) 훼손 방지 위해 새 리스트
+        foreach (SpellMarble m in src)
+            if (m != null && OwnedMarblesService.IsOwned(m)) owned.Add(m);
+        return owned;
     }
 
     void Update()
     {
-        // Plan SC: FR-06 — 빈 슬롯 리필. unscaled 기준이라 선택 슬로우 중에도 진행.
+        // Plan SC: FR-06 — 빈 슬롯 리필. scaled(Time.time) 기준 — Ctrl 선택/시전 슬로우 중엔 리필도 느려짐.
         bool changed = false;
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] == null && Time.unscaledTime >= refillReadyTime[i])
+            if (slots[i] == null && Time.time >= refillReadyTime[i])
             {
                 slots[i] = DrawNext();
                 if (slots[i] != null) changed = true;
@@ -134,7 +143,7 @@ public class SpellCaster : MonoBehaviour
         StartCoroutine(CastAndActivate(marble.ability, ctx, delay));
 
         slots[slotIndex] = null;                                  // 소비(드롭 즉시)
-        refillReadyTime[slotIndex] = Time.unscaledTime + refillCooldown;
+        refillReadyTime[slotIndex] = Time.time + refillCooldown;  // scaled — 슬로우 중엔 리필 대기도 늘어남
         OnHandChanged?.Invoke();
         return true;
     }
@@ -162,7 +171,14 @@ public class SpellCaster : MonoBehaviour
     // 덱을 전부 뽑았고 손패까지 모두 소모되면 벨트 과부하 → 3초 경고 후 조커 기믹 발동.
     [Header("Overload (Joker)")]
     public AudioClip overloadWarningSound; // 경고 사이렌(점멸 3초 동안 루프)
-    public float jokerCooldown = 60f;      // 조커 최소 간격 — 마블 속사 사이클링(고의 낭비→조커 반복) 방지
+    [Header("Overload (Joker) 기믹 사운드")]
+    public AudioClip jokerThunderSound;    // 번개 폭풍 — 낙뢰음(타격마다)
+    public AudioClip jokerPurgeSound;      // 대숙청 — 폭발음
+    public AudioClip jokerConfusionSound;  // 집단 혼란 — 발동음
+    // 조커 최소 간격 — 마블 속사 사이클링(고의 낭비→조커 즉시 반복) 방지.
+    // 반드시 unscaled 기준: 스케일드(Time.time)로 재면 Ctrl/시전 슬로우(0.01배) 동안 거의 안 흘러
+    // "조커가 게임당 한 번만 터진다"급으로 길어진다. 정상 덱 한 바퀴(수십 초)보다 짧게 유지할 것.
+    public float jokerCooldown = 10f;
 
     public bool IsOverloaded { get; private set; }
     private float lastJokerTime = float.NegativeInfinity;
@@ -174,10 +190,11 @@ public class SpellCaster : MonoBehaviour
         for (int i = 0; i < slots.Length; i++)
             if (slots[i] != null) return;                          // 손패가 남음
         // 쿨다운 중이면 발동 보류 — 벨트는 빈 채로 대기하다 쿨다운이 끝나면 자동 발동(소프트락 없음)
-        if (Time.time < lastJokerTime + jokerCooldown) return;
+        if (Time.unscaledTime < lastJokerTime + jokerCooldown) return;
         IsOverloaded = true;
-        lastJokerTime = Time.time;
-        JokerSpell.Trigger(player, -1, OnJokerFired, overloadWarningSound); // 3초 경고 → 기믹 → 콜백
+        lastJokerTime = Time.unscaledTime;
+        JokerSpell.Trigger(player, -1, OnJokerFired, overloadWarningSound,
+            jokerThunderSound, jokerPurgeSound, jokerConfusionSound); // 3초 경고 → 기믹 → 콜백
     }
 
     // 기믹 발동 순간: 덱 재셔플 + 손패 즉시 풀 리필(과부하 해소 보상) + Ctrl 잠금 해제
@@ -205,7 +222,7 @@ public class SpellCaster : MonoBehaviour
     {
         if (slots == null || slotIndex < 0 || slotIndex >= slots.Length) return 1f;
         if (slots[slotIndex] != null) return 1f;
-        float remain = refillReadyTime[slotIndex] - Time.unscaledTime;
+        float remain = refillReadyTime[slotIndex] - Time.time;
         if (remain <= 0f) return 1f;
         return Mathf.Clamp01(1f - remain / Mathf.Max(0.0001f, refillCooldown));
     }
