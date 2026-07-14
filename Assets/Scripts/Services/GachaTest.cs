@@ -20,11 +20,12 @@ public class GachaTest : MonoBehaviour
         try
         {
             var r = await GachaService.PullAsync();
-            Debug.Log("[Gacha] 뽑기 성공 · id=" + r.id + " grade=" + r.grade);
+            if (!string.IsNullOrEmpty(r.error)) Debug.Log("[Gacha] 뽑기 거부: " + r.error);
+            else Debug.Log("[Gacha] 뽑기 성공 · " + r.marbleName + " (" + r.grade + ") new=" + r.isNew + " gem=" + r.gem + " shards=" + r.shards);
         }
         catch (System.Exception e)
         {
-            Debug.LogError("[Gacha] pullGacha 호출 실패: " + e.Message);
+            Debug.LogError("[Gacha] GachaPull 호출 실패: " + e.Message);
         }
     }
 }

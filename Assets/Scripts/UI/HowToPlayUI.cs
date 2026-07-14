@@ -157,7 +157,7 @@ public class HowToPlayUI : MonoBehaviour
 
     void OnBack()
     {
-        SceneManager.LoadScene("MainMenuScene");
+        SceneLoader.Load("MainMenuScene");
     }
 
     // ---- UI 헬퍼 ----

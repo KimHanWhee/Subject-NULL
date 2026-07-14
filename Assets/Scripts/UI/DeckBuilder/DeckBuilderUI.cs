@@ -64,7 +64,7 @@ public class DeckBuilderUI : MonoBehaviour
     private static Sprite roundedOutlineSprite; // 라운드 사각 외곽선(핀스트라이프, 9-slice)
     private static Texture2D holoTex;     // 홀로그램 포일(무지개 대각 그라데이션, tileable)
 
-    void Start()
+    async void Start()
     {
         if (registry == null || skinTable == null)
         {
@@ -73,10 +73,20 @@ public class DeckBuilderUI : MonoBehaviour
         }
 
         BuildCatalog();
-        LoadInitialDeck();
+        LoadInitialDeck();   // 우선 로컬 미러(마지막 서버 소유)로 즉시 표시
         BuildUI();
         RebuildCardGrid();
         RefreshAll();
+
+        // 서버 소유 최신화 → 재구성(진실은 서버). 미보유가 갱신되면 잠금/덱에서 정리됨.
+        for (int i = 0; i < 100 && !ServicesBootstrap.IsSignedIn; i++)
+            await System.Threading.Tasks.Task.Delay(100);
+        if (await PlayerProfileService.RefreshAsync())
+        {
+            LoadInitialDeck();
+            RebuildCardGrid();
+            RefreshAll();
+        }
     }
 
     void Update()
@@ -510,7 +520,7 @@ public class DeckBuilderUI : MonoBehaviour
         saveButton = MakeButton(panel, "SaveBtn", new Vector2(-150f, -350f), new Vector2(220f, 62f), "덱 저장", new Color(0.22f, 0.5f, 0.3f), SaveDeck);
         MakeButton(panel, "AutoBtn", new Vector2(90f, -350f), new Vector2(200f, 62f), "자동 채우기", new Color(0.28f, 0.3f, 0.45f), AutoFill);
         MakeButton(panel, "ClearBtn", new Vector2(240f, -350f), new Vector2(80f, 62f), "비우기", new Color(0.45f, 0.25f, 0.25f), ClearDeck);
-        MakeButton(panel, "BackBtn", new Vector2(0f, -350f - 76f), new Vector2(470f, 54f), "메인 메뉴로", new Color(0.25f, 0.25f, 0.3f), () => SceneManager.LoadScene("MainMenuScene"));
+        MakeButton(panel, "BackBtn", new Vector2(0f, -350f - 76f), new Vector2(470f, 54f), "메인 메뉴로", new Color(0.25f, 0.25f, 0.3f), () => SceneLoader.Load("MainMenuScene"));
 
         // 저장/오류 피드백(버튼 위)
         feedbackText = MakeText(panel, "Feedback", new Vector2(0f, -298f), new Vector2(540f, 30f), 18, TextAnchor.MiddleCenter);

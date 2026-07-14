@@ -11,22 +11,27 @@ public class MenuManager : MonoBehaviour
 
     public void OnPressStartGame()
     {
-        SceneManager.LoadScene("GameScene");
+        SceneLoader.Load("GameScene");
     }
 
     public void OnPressDeckBuilding()
     {
-        SceneManager.LoadScene("DeckBuildingScene");
+        SceneLoader.Load("DeckBuildingScene");
     }
 
     public void OnPressHowToPlay()
     {
-        SceneManager.LoadScene("HowToPlayScene");
+        SceneLoader.Load("HowToPlayScene");
     }
 
     public void OnPressGacha()
     {
-        SceneManager.LoadScene("GachaScene");
+        SceneLoader.Load("GachaScene");
+    }
+
+    public void OnPressAccount()
+    {
+        SceneLoader.Load("AccountScene");
     }
 
     public void OnPressExit()

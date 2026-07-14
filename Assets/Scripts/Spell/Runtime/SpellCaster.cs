@@ -54,14 +54,26 @@ public class SpellCaster : MonoBehaviour
         audioSource.playOnAwake = false;
     }
 
-    void Start()
+    async void Start()
     {
         // 복사본을 셔플 — 원본(DeckData 에셋/저장 덱 리스트)의 순서를 건드리지 않기 위함
+        // 우선 로컬 미러(마지막 서버 소유)로 즉시 시작 → 게임 시작 지연 없음.
         List<SpellMarble> source = BuildDrawList();
         drawList = source != null ? new List<SpellMarble>(source) : null;
         Shuffle(drawList);
         for (int i = 0; i < slots.Length; i++) slots[i] = DrawNext();
         OnHandChanged?.Invoke();
+
+        // 서버 소유 최신화 → 이후 리필 드로우풀만 보정(현재 손패는 유지). 씬 이탈 시 가드.
+        for (int i = 0; i < 50 && !ServicesBootstrap.IsSignedIn; i++)
+            await System.Threading.Tasks.Task.Delay(100);
+        if (this == null) return;
+        if (await PlayerProfileService.RefreshAsync())
+        {
+            if (this == null) return;
+            List<SpellMarble> refreshed = BuildDrawList();
+            if (refreshed != null) { drawList = new List<SpellMarble>(refreshed); Shuffle(drawList); }
+        }
     }
 
     // 저장 덱(DeckSaveService) 우선, 비었거나 registry 미연결이면 기본 DeckData 폴백.

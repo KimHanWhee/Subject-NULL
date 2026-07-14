@@ -362,6 +362,6 @@ public class PlayerController : MonoBehaviour
 
     void AfterDying()
     {
-        SceneManager.LoadScene("GameOverScene");
+        SceneLoader.Load("GameOverScene");
     }
 }

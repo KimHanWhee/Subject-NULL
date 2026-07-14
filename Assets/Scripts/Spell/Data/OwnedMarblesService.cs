@@ -50,6 +50,25 @@ public static class OwnedMarblesService
 
     public static IReadOnlyCollection<string> OwnedGoldPlus() => Owned();
 
+    // 서버 권위 소유 집합으로 로컬 미러 전체 교체(PlayerProfileService가 호출).
+    // 소유의 진실은 서버 Cloud Save이며, 여기 저장은 동기 읽기용 캐시일 뿐이다.
+    public static void SetFromServer(IEnumerable<string> ownedGoldPlus)
+    {
+        HashSet<string> s = new HashSet<string>();
+        if (ownedGoldPlus != null)
+            foreach (string n in ownedGoldPlus)
+                if (!string.IsNullOrEmpty(n)) s.Add(n);
+        Persist(s);
+    }
+
+    // 서버 뽑기 신규 획득분을 미러에 즉시 추가(추가 왕복 없이).
+    public static void MirrorGrant(string marbleName)
+    {
+        if (string.IsNullOrEmpty(marbleName)) return;
+        HashSet<string> s = Owned();
+        if (s.Add(marbleName)) Persist(s);
+    }
+
     public static void Clear()
     {
         PlayerPrefs.DeleteKey(Key());

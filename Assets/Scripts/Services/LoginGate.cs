@@ -47,9 +47,9 @@ public class LoginGate : MonoBehaviour
         if (AnyInput())
         {
             if (failed)
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 부트 씬 재시작 = 재시도
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 부트 씬 재시작 = 재시도(로더 미경유)
             else
-                SceneManager.LoadScene(nextScene);
+                SceneLoader.Load(nextScene);
         }
     }
 

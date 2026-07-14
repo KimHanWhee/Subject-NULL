@@ -6,11 +6,11 @@ public class GameOverManager : MonoBehaviour
 
     public void OnPressPlayAgain()
     {
-        SceneManager.LoadScene("GameScene");
+        SceneLoader.Load("GameScene");
     }
 
     public void OnPressMainMenu()
     {
-        SceneManager.LoadScene("MainMenuScene");
+        SceneLoader.Load("MainMenuScene");
     }
 }

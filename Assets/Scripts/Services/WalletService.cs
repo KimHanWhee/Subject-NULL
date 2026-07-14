@@ -54,6 +54,16 @@ public static class WalletService
         return true;
     }
 
+    // 서버 권위 값으로 로컬 미러 갱신(PlayerProfileService가 호출).
+    // GEM/조각의 진실은 서버(Economy/Cloud Save)이며, 여기 저장은 UI 표시용 캐시일 뿐이다.
+    public static void SetFromServer(long gem, int shards)
+    {
+        PlayerPrefs.SetInt(AccountScope.Key(GemBase), (int)gem);
+        PlayerPrefs.SetInt(AccountScope.Key(ShardBase), shards);
+        PlayerPrefs.SetInt(AccountScope.Key(InitBase), 1); // 서버값이 있으니 스타터 지급 방지
+        PlayerPrefs.Save();
+    }
+
     // 테스트/디버그
     public static void ResetForTest()
     {
