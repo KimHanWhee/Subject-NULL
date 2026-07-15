@@ -9,14 +9,18 @@ using TMPro;
 // 씬에는 이 컴포넌트를 가진 GameObject 하나 + 카메라만 있으면 된다(Canvas·EventSystem 자동 생성).
 public class HowToPlayUI : MonoBehaviour
 {
-    // 팔레트
-    static readonly Color BG = new Color(0.07f, 0.08f, 0.12f, 1f);
-    static readonly Color PANEL = new Color(0.13f, 0.15f, 0.21f, 0.96f);
-    static readonly Color TAB_ON = new Color(0.96f, 0.78f, 0.25f, 1f);   // 선택된 탭(노랑)
-    static readonly Color TAB_OFF = new Color(0.26f, 0.29f, 0.38f, 1f);  // 미선택 탭
+    // 팔레트 — SUBJECT:NULL 실험실 테마(다크 네이비 + 청록 네온)
+    static readonly Color BG = new Color(0.09f, 0.11f, 0.16f, 1f);
+    static readonly Color PANEL = Color.white;                            // 패널 스프라이트가 색을 담당
+    static readonly Color TAB_ON = Color.white;                           // 선택된 탭(밝게 — 네온 프레임 부각)
+    static readonly Color TAB_OFF = new Color(0.5f, 0.56f, 0.62f, 1f);    // 미선택 탭(어둡게)
     static readonly Color INK = new Color(0.92f, 0.94f, 1f, 1f);
-    static readonly Color TITLE = new Color(1f, 0.86f, 0.4f, 1f);
-    static readonly Color BACK_COL = new Color(0.7f, 0.28f, 0.32f, 1f);
+    static readonly Color TITLE = new Color(0.55f, 0.9f, 1f, 1f);         // 청록
+    static readonly Color BACK_COL = Color.white;
+    static readonly Color OUTLINE = new Color(0.02f, 0.05f, 0.08f, 1f);
+
+    // 실험실 UI 스프라이트(Resources/UI, 9-슬라이스)
+    Sprite panelSprite, buttonSprite;
 
     static readonly string[] TabNames = { "조작", "스펠 마블", "조커" };
 
@@ -63,6 +67,8 @@ public class HowToPlayUI : MonoBehaviour
     void Start()
     {
         font = Resources.Load<TMP_FontAsset>("Fonts/KoreanSDF");
+        panelSprite = Resources.Load<Sprite>("UI/LabDossierPanel");
+        buttonSprite = Resources.Load<Sprite>("UI/SubjectNullButton");
         EnsureEventSystem();
         BuildUI();
         ShowTab(0);
@@ -96,8 +102,9 @@ public class HowToPlayUI : MonoBehaviour
         Stretch(bg.rectTransform);
 
         // --- 타이틀 ---
-        MakeText(root, "Title", "게임 방법", 60f, TITLE, TextAlignmentOptions.Center,
+        var title = MakeText(root, "Title", "게임 방법", 60f, TITLE, TextAlignmentOptions.Center,
             new Vector2(0f, 440f), new Vector2(1200f, 110f), FontStyles.Bold);
+        AddOutline(title);
 
         // --- 탭 버튼 ---
         tabImages = new Image[TabNames.Length];
@@ -119,21 +126,26 @@ public class HowToPlayUI : MonoBehaviour
         for (int i = 0; i < TabBody.Length; i++)
         {
             Image panel = MakeImage(root, "Panel" + i, PANEL);
+            if (panelSprite != null) { panel.sprite = panelSprite; panel.type = Image.Type.Sliced; }
             SetRect(panel.rectTransform, new Vector2(0f, -75f), new Vector2(1680f, 700f));
 
             // 왼쪽: 설명 텍스트
             TextMeshProUGUI body = MakeText(panel.rectTransform, "Body", TabBody[i], 30f, INK,
-                TextAlignmentOptions.TopLeft, new Vector2(-420f, 0f), new Vector2(760f, 640f), FontStyles.Normal);
+                TextAlignmentOptions.TopLeft, new Vector2(-400f, 10f), new Vector2(720f, 600f), FontStyles.Normal);
             body.lineSpacing = 6f;
 
-            // 오른쪽: 인게임 스크린샷(비율 유지)
+            // 오른쪽: 인게임 스크린샷 — 네온 패널 프레임 안에 표시
             Sprite shot = Resources.Load<Sprite>(TabShots[i]);
             if (shot != null)
             {
-                Image img = MakeImage(panel.rectTransform, "Shot", Color.white);
+                Image frame = MakeImage(panel.rectTransform, "ShotFrame", PANEL);
+                if (panelSprite != null) { frame.sprite = panelSprite; frame.type = Image.Type.Sliced; }
+                SetRect(frame.rectTransform, new Vector2(455f, 0f), new Vector2(770f, 480f));
+
+                Image img = MakeImage(frame.rectTransform, "Shot", Color.white);
                 img.sprite = shot;
                 img.preserveAspect = true;
-                SetRect(img.rectTransform, new Vector2(450f, 0f), new Vector2(760f, 470f));
+                SetRect(img.rectTransform, Vector2.zero, new Vector2(700f, 410f));
             }
 
             panels[i] = panel.gameObject;
@@ -190,12 +202,28 @@ public class HowToPlayUI : MonoBehaviour
         Vector2 anchoredPos, Vector2 sizeDelta)
     {
         Image img = MakeImage(parent, name, bgColor);
+        if (buttonSprite != null) { img.sprite = buttonSprite; img.type = Image.Type.Sliced; }
         SetRect(img.rectTransform, anchoredPos, sizeDelta);
         Button b = img.gameObject.AddComponent<Button>();
         b.targetGraphic = img;
-        MakeText(img.rectTransform, "Label", label, size, textColor, TextAlignmentOptions.Center,
+        var c = b.colors;
+        c.highlightedColor = new Color(0.75f, 0.95f, 1f);
+        c.pressedColor = new Color(0.6f, 0.85f, 0.95f);
+        c.fadeDuration = 0.1f;
+        b.colors = c;
+        var lbl = MakeText(img.rectTransform, "Label", label, size, textColor, TextAlignmentOptions.Center,
             Vector2.zero, sizeDelta, FontStyles.Bold);
+        AddOutline(lbl);
         return b;
+    }
+
+    // 밝은 배경에서도 읽히도록 어두운 외곽선
+    void AddOutline(TextMeshProUGUI t)
+    {
+        var m = t.fontMaterial;
+        m.EnableKeyword("OUTLINE_ON");
+        m.SetColor(TMPro.ShaderUtilities.ID_OutlineColor, OUTLINE);
+        m.SetFloat(TMPro.ShaderUtilities.ID_OutlineWidth, 0.22f);
     }
 
     static void SetRect(RectTransform rt, Vector2 anchoredPos, Vector2 sizeDelta)
