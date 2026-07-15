@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SlowAura
   m_EditorClassIdentifier: Assembly-CSharp::SlowAuraAbility
   id: SlowAura
-  abilityName: "\uAC10\uC18D \uC7A5\uB9C9"
+  abilityName: Slow Aura
   description: "10\uCD08\uAC04 \uD50C\uB808\uC774\uC5B4 \uC8FC\uBCC0 \uBC94\uC704\uC758
     \uC801 \uC774\uB3D9 \uC18D\uB3C4\uB97C \uD06C\uAC8C \uAC10\uC18C\uC2DC\uD0A8\uB2E4."
   icon: {fileID: 0}
@@ -25,3 +25,4 @@ MonoBehaviour:
   radius: 4.5
   slowFactor: 0.1
   vfxColor: {r: 0.5, g: 0.7, b: 1, a: 0.9}
+  outlineWidth: 0.06

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SecondWind
   m_EditorClassIdentifier: Assembly-CSharp::SecondWindAbility
   id: SecondWind
-  abilityName: "\uBB34\uD55C \uC9C8\uC8FC"
+  abilityName: Second Wind
   description: "10\uCD08\uAC04 \uB300\uC2DC\uAC00 \uC2A4\uD0DC\uBBF8\uB108\uB97C
     \uC18C\uBAA8\uD558\uC9C0 \uC54A\uB294\uB2E4. \uB9C8\uC74C\uAECF \uC9C8\uC8FC\uD558\uBA70
     \uD68C\uD53C\uD558\uB77C."
@@ -23,6 +23,7 @@ MonoBehaviour:
   activationSound: {fileID: 0}
   soundVolume: 1
   duration: 10
+  dashCooldownWhileActive: 0.2
   vfxColor: {r: 0.4, g: 0.9, b: 1, a: 1}
   vfxRadius: 0.8
   vfxDuration: 0.9

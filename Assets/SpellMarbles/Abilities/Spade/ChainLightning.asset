@@ -24,7 +24,7 @@ MonoBehaviour:
   soundVolume: 1
   chainDamage: 1
   jumpRadius: 2.5
-  maxJumps: 3
+  maxJumps: 9
   duration: 10
   vfxColor: {r: 0.6, g: 0.85, b: 1, a: 1}
   vfxRadius: 0.7

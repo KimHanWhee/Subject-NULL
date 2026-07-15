@@ -4,7 +4,7 @@
 const { DataApi } = require("@unity-services/cloud-save-1.4");
 
 const CATALOG = {
-  Gold:    ["freeze", "fortress", "overheal", "adrenaline", "sniper-mode", "chain-lightning", "teleport"],
+  Gold:    ["freeze", "fortress", "second-wind", "adrenaline", "sniper-mode", "chain-lightning", "teleport"],
   Diamond: ["black-hole", "slow-aura"],
   Legend:  ["resurrection", "mirror-world", "apocalypse", "time-stop"]
 };

@@ -15,7 +15,7 @@ public class CounterAbility : SpellAbility
     public override void Activate(SpellContext ctx)
     {
         if (ctx.caster == null) return;
-        CounterStatus.Apply(ctx.caster, multiplier, counterWindow, duration);
+        CounterStatus.Apply(ctx.caster, multiplier, counterWindow, duration, ctx.marble);
         Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)
         {

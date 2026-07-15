@@ -35,6 +35,16 @@ public interface IPlayerBulletModifier
     void ModifyBullet(Bullet bullet);
 }
 
+// 버프 HUD 표시용 — 플레이어 자기버프 상태 컴포넌트가 구현하면 PlayerBuffHUD가 GetComponents로
+// 수집해 HP바 아래에 아이콘+숫자로 표시. (허브 없이 인터페이스만 — 기존 규약과 동일)
+public interface IBuffDisplay
+{
+    SpellMarble BuffMarble { get; } // 아이콘 해석용(HUD가 icon→ability.icon→skinTable 폴백)
+    bool BuffTimed { get; }         // true=남은 초 표시, false=남은 횟수 표시
+    float BuffRemaining { get; }    // 남은 초(Timed일 때)
+    int BuffCharges { get; }        // 남은 횟수(Timed 아닐 때)
+}
+
 // 플레이어 총알의 적 명중 알림 허브 — Bullet이 호출, Lifesteal/Chain Lightning 등이 구독.
 // (static 이벤트: 플레이어 1인 전제. 구독 해제는 상태 컴포넌트 OnDisable 책임)
 public static class PlayerBulletEvents

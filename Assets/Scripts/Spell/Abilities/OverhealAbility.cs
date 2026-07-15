@@ -14,7 +14,7 @@ public class OverhealAbility : SpellAbility
     public override void Activate(SpellContext ctx)
     {
         if (ctx.caster == null) return;
-        OverhealStatus.Apply(ctx.caster, tempHp);
+        OverhealStatus.Apply(ctx.caster, tempHp, ctx.marble);
         Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)
         {

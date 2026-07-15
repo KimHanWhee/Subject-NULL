@@ -24,6 +24,6 @@ MonoBehaviour:
   damageMult: 3
   bulletSpeedMult: 3
   moveMult: 0.5
-  duration: 3
+  duration: 10
   vfxColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   vfxRadius: 0.7

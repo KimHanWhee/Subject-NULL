@@ -21,7 +21,7 @@ MonoBehaviour:
   effectPrefab: {fileID: 3390929559245767942, guid: 6ebed8975f804584aa9fe01a2b1ec4ee, type: 3}
   activationSound: {fileID: 8300000, guid: 1c1980fadfd603645a32e92149449a67, type: 3}
   soundVolume: 1
-  radius: 1.5
+  radius: 2.8
   baseDamage: 3
   effectLifetime: 0.8
   vfxColor: {r: 1, g: 0.5, b: 0.1, a: 1}

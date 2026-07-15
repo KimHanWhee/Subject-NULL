@@ -86,7 +86,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2365207424780097476, guid: 6ddcceca08a00094ea7bf5493adcca6f, type: 3}
+  m_Sprite: {fileID: 2820143329777312509, guid: 35a9838b0f392ce42bda45f222554999, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -211,6 +211,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargerEnemyController
   speed: 2
+  scoreValue: 15
   flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
   defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   chargeRange: 5

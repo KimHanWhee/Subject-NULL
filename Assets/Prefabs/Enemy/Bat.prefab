@@ -173,6 +173,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyController
   speed: 2
+  scoreValue: 15
   flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
   defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   farBand: 7

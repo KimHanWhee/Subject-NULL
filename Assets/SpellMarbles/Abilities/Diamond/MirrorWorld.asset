@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MirrorWorldAbility
   id: MirrorWorld
   abilityName: Mirror World
-  description: "5\uCD08\uAC04 \uBC1B\uB294 \uBAA8\uB4E0 \uD53C\uD574\uB97C \uC785\uC9C0
-    \uC54A\uACE0 \uC8FC\uBCC0 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uBC18\uC0AC\uB41C\uB2E4."
+  description: "10\uCD08\uAC04 \uC644\uC804 \uBB34\uC801\uC774 \uB418\uBA70, \uBC1B\uC558\uC744
+    \uD53C\uD574\uB97C \uC8FC\uBCC0 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC804\uB7C9
+    \uBC18\uC0AC\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 3687786889078558583, guid: 0b55dcf89e3eab443b290a085e0c9a85, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
-  radius: 4
-  duration: 5
+  radius: 6
+  duration: 10
   vfxColor: {r: 0.8, g: 0.5, b: 1, a: 1}
   vfxRadius: 1

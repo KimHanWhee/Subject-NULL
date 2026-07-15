@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     
     public float speed = 8;
     public WeaponData currentWeapon;
+    public Vector2 muzzleOffset = new Vector2(0f, 0.05f); // 총알 발사 위치(원점=캐릭터 세로중앙 기준, 팔/몸통 높이)
     public BulletPoolManager bulletPoolManager; // currentBulletPool 대신
     public Material flashMaterial;
     public Material defaultMaterial;
@@ -36,6 +37,7 @@ public class PlayerController : MonoBehaviour
     Vector3 move;
     private SpriteRenderer sr;
     private Animator anim;
+    private PlayerAnim panim; // 방향별 스프라이트 애니메이션(Animator 대체)
     private Rigidbody2D rb;
     private float nextFireTime; // 다음 발사 허용 시각 (Time.time 기준)
     private float nextDamageTime; // 다음 피격 허용 시각 (Time.time 기준)
@@ -61,6 +63,10 @@ public class PlayerController : MonoBehaviour
 
     // 스펠 마블 ♥ Adrenaline 등 — 발사 속도 배율(1=기본). 상태 컴포넌트가 관리.
     [NonSerialized] public float fireRateMultiplier = 1f;
+
+    [Header("Score Attack Speed")] // 점수가 오를수록 기본 공속 증가(성장감)
+    public float scoreAtkFullAt = 1000f;   // 이 점수에서 보너스 최대
+    [Range(0f, 2f)] public float scoreAtkMaxBonus = 0.8f; // 최대 추가 공속(+80%)
 
     // spell-marble Design §11.1 — ♦ 방어(SelfBuff 실드) 훅. 이 시각까지 데미지 무시.
     private float shieldUntil;
@@ -92,6 +98,7 @@ public class PlayerController : MonoBehaviour
     {
         sr = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+        panim = GetComponent<PlayerAnim>();
         rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -140,24 +147,11 @@ public class PlayerController : MonoBehaviour
 
         if (move.magnitude > 0) lastMoveDir = move; // Plan SC: FR-02 — 폴백용 마지막 이동 방향
 
-        if (move.x < 0)
-        {
-            sr.flipX = true;
-        }
+        // 방향별 스프라이트(east/west) — 좌우 이동 시 갱신
+        if (move.x < 0) panim.SetFacing(false);
+        else if (move.x > 0) panim.SetFacing(true);
 
-        if (move.x > 0)
-        {
-            sr.flipX = false;
-        }
-
-        if (move.magnitude > 0)
-        {
-            anim.SetTrigger("Move");
-        }
-        else
-        {
-            anim.SetTrigger("Stop");
-        }
+        panim.SetMoving(move.magnitude > 0);
 
         if (Mouse.current.leftButton.isPressed
             && currentWeapon != null
@@ -165,7 +159,11 @@ public class PlayerController : MonoBehaviour
             && !IsSpellSelecting()) // Ctrl 선택 모드 중엔 기본 공격 억제(드래그로 마블만 사용)
         {
             Shoot();
-            float rate = Mathf.Max(currentWeapon.fireRate * Mathf.Max(fireRateMultiplier, 0.01f), 0.0001f); // 스펠 마블 공속 배율 반영
+            // 점수 기반 공속 보너스(상한 있음) — 스펠 마블 배율과 곱연산
+            float scoreMul = 1f;
+            if (GameManager.Instance != null && scoreAtkFullAt > 0f)
+                scoreMul = 1f + Mathf.Clamp01(GameManager.Instance.Score / scoreAtkFullAt) * scoreAtkMaxBonus;
+            float rate = Mathf.Max(currentWeapon.fireRate * Mathf.Max(fireRateMultiplier, 0.01f) * scoreMul, 0.0001f);
             nextFireTime = Time.time + 1f / rate;
         }
 
@@ -252,16 +250,17 @@ public class PlayerController : MonoBehaviour
     {
         GetComponent<AudioSource>().PlayOneShot(currentWeapon.shotSound);
     
+        Vector3 muzzle = transform.position + (Vector3)muzzleOffset; // 총구(팔/몸통 높이)
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
         worldPosition.z = 0;
-        worldPosition -= (transform.position + new Vector3(0, -0.5f, 0));
+        worldPosition -= muzzle;
 
         ObjectPool pool = bulletPoolManager.GetPool(currentWeapon.bulletPrefab);
         GameObject newBullet = pool.Get();
         if (newBullet != null)
         {
             Bullet bulletScript = newBullet.GetComponent<Bullet>();
-            newBullet.transform.position = transform.position + new Vector3(0, -0.5f);
+            newBullet.transform.position = muzzle;
             bulletScript.Direction = worldPosition;
             float dmg = currentWeapon.damage;
             // 스펠 마블 주는 피해 수정(Counter 반격 배율 등) — 발사 시점 적용
@@ -356,12 +355,17 @@ public class PlayerController : MonoBehaviour
 
     void Die()
     {
-        anim.SetTrigger("Die");
+        panim.Die();
         Invoke("AfterDying", 0.875f);
     }
 
     void AfterDying()
     {
+        // 사망 점수 확정 → 계정별 최고기록 갱신 후 GameOverScene으로 전달
+        int finalScore = GameManager.Instance != null ? GameManager.Instance.Score : 0;
+        GameStats.lastScore = finalScore;
+        GameStats.isNewBest = HighScoreService.Submit(finalScore);
+        GameStats.bestScore = HighScoreService.GetBest();
         SceneLoader.Load("GameOverScene");
     }
 }

@@ -21,7 +21,7 @@ MonoBehaviour:
   effectPrefab: {fileID: 0}
   activationSound: {fileID: 8300000, guid: 17ffe3a958aeac044a2af7fca414000b, type: 3}
   soundVolume: 1
-  duration: 3
+  duration: 7
   waveDuration: 0.7
   waveRadius: 14
   grayscaleMaterial: {fileID: 2100000, guid: 75d4d1bfda10ae44b9086f721acf6d33, type: 2}

@@ -8,4 +8,5 @@ public struct SpellContext
     public Vector2 targetPosition;   // Targeted 드롭 위치(SelfBuff면 caster 위치)
     public Grade grade;              // 위력 스케일 힌트(구현체가 자유롭게 반영)
     public ObjectPool effectPool;    // effectPrefab용 풀(없으면 null)
+    public SpellMarble marble;       // 발동한 마블(버프 HUD 아이콘/툴팁 해석용, 선택)
 }

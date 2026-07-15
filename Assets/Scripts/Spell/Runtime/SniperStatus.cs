@@ -1,15 +1,21 @@
 using UnityEngine;
 
 // ♠ Sniper Mode 상태 — 지속시간 동안 총알 속도/데미지 배율(기본 3배), 대신 이동속도 감소.
-public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulletModifier
+public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulletModifier, IBuffDisplay
 {
     private PlayerController pc;
     private float originalSpeed;
     private float damageMult;
     private float bulletSpeedMult;
     private float remain;
+    private SpellMarble marble;
 
-    public static void Apply(GameObject player, float damageMult, float bulletSpeedMult, float moveMult, float duration)
+    public SpellMarble BuffMarble { get { return marble; } }
+    public bool BuffTimed { get { return true; } }
+    public float BuffRemaining { get { return remain; } }
+    public int BuffCharges { get { return 0; } }
+
+    public static void Apply(GameObject player, float damageMult, float bulletSpeedMult, float moveMult, float duration, SpellMarble marble = null)
     {
         SniperStatus s = player.GetComponent<SniperStatus>();
         if (s == null)
@@ -22,6 +28,7 @@ public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulle
         }
         s.damageMult = damageMult;
         s.bulletSpeedMult = bulletSpeedMult;
+        s.marble = marble;
         s.remain = Mathf.Max(s.remain, duration);
     }
 

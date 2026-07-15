@@ -11,6 +11,11 @@ public class TimeStopField : MonoBehaviour
     private const float scanInterval = 0.2f;
     private readonly List<EnemyBullet> stoppedBullets = new List<EnemyBullet>();
 
+    // 플레이어 잔상(시간 정지 중 이동하면 청백 잔상)
+    private SpriteRenderer playerSr;
+    private Vector3 lastGhostPos;
+    private float nextGhost;
+
     public static TimeStopField Spawn(float duration)
     {
         GameObject go = new GameObject("TimeStopField");
@@ -29,6 +34,10 @@ public class TimeStopField : MonoBehaviour
     void Update()
     {
         if (Time.unscaledTime >= endTime) { Destroy(gameObject); return; }
+
+        // 플레이어 잔상 — 정지된 세상 속에서 움직이는 느낌(매 프레임 판정, 스캔과 무관)
+        SpawnPlayerGhost();
+
         if (Time.unscaledTime < nextScan) return;
         nextScan = Time.unscaledTime + scanInterval;
 
@@ -46,6 +55,23 @@ public class TimeStopField : MonoBehaviour
             b.enabled = false;
             stoppedBullets.Add(b);
         }
+    }
+
+    void SpawnPlayerGhost()
+    {
+        if (playerSr == null)
+        {
+            GameObject p = GameObject.FindWithTag("Player");
+            if (p != null) playerSr = p.GetComponent<SpriteRenderer>();
+            if (playerSr == null) return;
+            lastGhostPos = playerSr.transform.position;
+        }
+        if (Time.unscaledTime < nextGhost) return;
+        float moved = ((Vector2)playerSr.transform.position - (Vector2)lastGhostPos).magnitude;
+        if (moved < 0.12f) return;
+        DashGhost.Spawn(playerSr, new Color(0.55f, 0.85f, 1f, 0.5f), 0.45f); // 시간정지 청백 잔상
+        lastGhostPos = playerSr.transform.position;
+        nextGhost = Time.unscaledTime + 0.045f;
     }
 
     void OnDestroy()

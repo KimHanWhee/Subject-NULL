@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RepulseNova
   m_EditorClassIdentifier: Assembly-CSharp::RepulseNovaAbility
   id: RepulseNova
-  abilityName: "\uB109\uBC31 \uB178\uBC14"
+  abilityName: Repulse Nova
   description: "\uC8FC\uBCC0\uC758 \uC801\uC744 \uAC15\uD558\uAC8C \uBC00\uCCD0\uB0B4\uACE0
     \uC7A0\uAE50 \uC2A4\uD134\uC2DC\uD0A8\uB2E4. \uD3EC\uC704\uB97C \uBC97\uC5B4\uB0A0
     \uB54C \uC720\uC6A9\uD558\uB2E4."

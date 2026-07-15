@@ -7,10 +7,14 @@ public class SpellSelectionUI : MonoBehaviour
 {
     public RectTransform handRoot;                       // 상승/확대 대상(HUD 컨테이너)
     public CanvasGroup ctrlHint;                         // "▲ Ctrl" 안내 탭 — 평소 표시, 선택 중 페이드아웃
-    public Vector2 raisedOffset = new Vector2(0f, 120f); // 위로 올라오는 양(px)
-    public float raisedScale = 5f;                     // 선택 중 확대 배율(1=확대 없음)
+    public Vector2 raisedOffset = new Vector2(0f, 120f); // 위로 올라오는 양(px) — 스태미너 창 높이까지만
+    public float raisedScale = 2.4f;                     // 선택 중 확대 배율(1=확대 없음)
     public float raiseSpeed = 10f;                       // unscaled 보간 속도(위치·스케일 공용)
     public float slowScale = 0.01f;                      // Plan SC: FR-08 — 씬 인스펙터 값과 동일 기준(0.01)
+
+    [Header("Ctrl 시 카메라 시야 확대")]
+    public float zoomedOrthoSize = 9f;                   // 선택 중 카메라 orthographicSize(0 이하=미사용) — 시야 넓게
+    public float zoomSpeed = 8f;                         // unscaled 보간 속도
 
     private Vector2 basePos;
     private Vector3 baseScale = Vector3.one;
@@ -18,6 +22,9 @@ public class SpellSelectionUI : MonoBehaviour
     private int slowHandle = -1;
     private SpellCaster caster;          // 과부하(조커) 상태 조회용
     private float nextOverloadNotice;    // 알림 스팸 방지(1초 스로틀)
+    private Camera zoomCam;              // 시야 확대 대상(메인 카메라)
+    private float baseOrtho;             // 원래 orthographicSize
+    private bool hasBaseOrtho;
 
     public bool IsSelecting => selecting;
 
@@ -72,6 +79,25 @@ public class SpellSelectionUI : MonoBehaviour
         // "▲ Ctrl" 안내 탭: 선택 중엔 사라지고 평소엔 표시
         if (ctrlHint != null)
             ctrlHint.alpha = Mathf.MoveTowards(ctrlHint.alpha, selecting ? 0f : 1f, 6f * Time.unscaledDeltaTime);
+
+        // 카메라 시야: 선택 중엔 넓게(zoom out), 평소엔 원래 크기로 복귀
+        EnsureCam();
+        if (zoomCam != null && zoomCam.orthographic && hasBaseOrtho && zoomedOrthoSize > 0f)
+        {
+            float target = selecting ? zoomedOrthoSize : baseOrtho;
+            zoomCam.orthographicSize = Mathf.Lerp(zoomCam.orthographicSize, target, zoomSpeed * Time.unscaledDeltaTime);
+        }
+    }
+
+    void EnsureCam()
+    {
+        if (zoomCam != null) return;
+        zoomCam = Camera.main;
+        if (zoomCam != null && zoomCam.orthographic && !hasBaseOrtho)
+        {
+            baseOrtho = zoomCam.orthographicSize;
+            hasBaseOrtho = true;
+        }
     }
 
     void Enter()
@@ -93,10 +119,12 @@ public class SpellSelectionUI : MonoBehaviour
         slowHandle = -1;
     }
 
-    // 안전망: 비활성 시 슬로우 해제(잔존 방지)
+    // 안전망: 비활성 시 슬로우 해제 + 카메라 시야 원복(잔존 방지)
     void OnDisable()
     {
         ReleaseSlow();
         selecting = false;
+        if (zoomCam != null && zoomCam.orthographic && hasBaseOrtho)
+            zoomCam.orthographicSize = baseOrtho;
     }
 }

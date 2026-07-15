@@ -18,41 +18,39 @@ public class HowToPlayUI : MonoBehaviour
     static readonly Color TITLE = new Color(1f, 0.86f, 0.4f, 1f);
     static readonly Color BACK_COL = new Color(0.7f, 0.28f, 0.32f, 1f);
 
-    static readonly string[] TabNames = { "조작", "스펠 마블", "적 & 조커" };
+    static readonly string[] TabNames = { "조작", "스펠 마블", "조커" };
 
     // 각 탭의 인게임 캡처(Resources/Help). 텍스트 오른쪽에 표시.
-    static readonly string[] TabShots = { "Help/tab_enemies", "Help/tab_marbles", "Help/tab_joker" };
+    static readonly string[] TabShots = { "Help/tab_controls", "Help/tab_marbles", "Help/tab_joker" };
 
     static readonly string[] TabBody =
     {
         // 조작
         "<b>이동</b>   WASD / 방향키\n\n" +
-        "<b>발사</b>   마우스 좌클릭 (커서 방향)\n\n" +
-        "<b>대시</b>   Space + 방향\n" +
-        "     · 짧은 순간 회피 + 무적\n" +
-        "     · 스태미너 소모, 쿨타임\n\n" +
-        "<b>스태미너</b>   대시로 소모 → 자동 회복\n\n" +
-        "<b>니어미스</b>   대시로 아슬하게 피하면\n" +
-        "     잠깐 슬로우모션",
+        "<b>공격</b>   마우스 좌클릭 (커서 방향)\n\n" +
+        "<b>대시</b>   SPACE\n" +
+        "     스태미너 소모\n" +
+        "     원거리 공격 회피 · 쿨타임 1초\n\n" +
+        "<b>Ctrl</b>   스펠 마블",
 
         // 스펠 마블
-        "<b>스펠 마블</b>   특수 능력 카드\n" +
-        "   <color=#7FB0FF>♠ 공격</color>  <color=#FF7F8A>♥ 회복</color>  <color=#7FE08A>♣ 유틸</color>  <color=#C8A0FF>♦ 방어</color>\n\n" +
-        "<b>벨트</b>   우측 하단에 5개 표시\n\n" +
-        "<b>선택</b>   Ctrl 홀드 → 확대 + 슬로우\n\n" +
-        "<b>사용</b>   드래그 & 드롭\n" +
-        "     버프형은 아무 곳에나\n\n" +
-        "<b>등급</b>   일반 → <color=#FFD24A>골드</color> → <color=#66D0FF>다이아</color> → <color=#FF8AF0>레전드</color>\n\n" +
-        "<b>합성</b>   같은 타입끼리 (레전드 제외)",
+        "스펠 마블은 특수 능력을 발동시키는 마법 구슬입니다.\n" +
+        "덱에서 직접 원하는 스펠 마블을 편성하여 사용할 수 있습니다.\n\n" +
+        "<b>타입</b>\n" +
+        "   <color=#7FB0FF>♠ 스페이드 (공격)</color>   <color=#FF7F8A>♥ 하트 (버프)</color>\n" +
+        "   <color=#7FE08A>♣ 클로버 (유틸)</color>   <color=#C8A0FF>♦ 다이아몬드 (방어)</color>\n\n" +
+        "<b>등급</b>   일반 → <color=#FFD24A>골드</color> → <color=#66D0FF>다이아</color> → <color=#FF8AF0>레전드</color>\n" +
+        "   높은 등급일수록 강한 능력.\n" +
+        "   골드 이상은 <b>마블 뽑기</b> 및 구슬 조각 교환으로 획득.\n\n" +
+        "<b>사용</b>   Ctrl 홀드 시 스펠 마블 벨트 팝업\n" +
+        "        Ctrl 홀드 + 마블 드래그 & 드롭 시 사용",
 
-        // 적 & 조커
-        "<b>다양한 적</b>\n" +
-        "   돌진 개구리 · 박쥐 ·\n" +
-        "   탱커 슬라임 · 힐 드론 등\n" +
-        "   힐 드론은 우선 처치!\n\n" +
-        "<b>조커 과부하</b>\n" +
-        "   스펠 마블을 전부 소진하면\n" +
-        "   조커 스펠 발동 (3초 경고 후)\n\n" +
+        // 조커
+        "덱에 편성된 스펠 마블을 <b>모두 사용</b>하면\n" +
+        "<color=#FFD24A><b>JOKER</b></color> 가 발동됩니다.\n\n" +
+        "JOKER는 <b>플레이어와 적 모두에게</b>\n" +
+        "강력한 피해를 줄 수 있으므로,\n" +
+        "잘 이용하여 적을 효율적으로 물리쳐보세요!\n\n" +
         "   · <color=#FF7A7A>대숙청</color> — 안전지대 밖 전멸\n" +
         "   · <color=#FFE066>번개 폭풍</color> — 낙뢰 회피\n" +
         "   · <color=#C87AFF>집단 혼란</color> — 조작 반전"

@@ -132,6 +132,7 @@ public class JokerSpell : MonoBehaviour
         if (siren != null) { siren.Stop(); Destroy(siren); }
 
         onGimmickStart?.Invoke(); // 덱 재셔플·리필·Ctrl 잠금 해제(SpellCaster)
+        MapThemeController.RandomizeCurrent(); // 조커 과부하 → 랜덤 테마 전환(연출)
         Run(player, forceIndex);
     }
 
@@ -161,12 +162,14 @@ public class JokerSpell : MonoBehaviour
     {
         const float warnTime = 3.5f;
         const float safeRadius = 2.6f;
-        Vector2 safe = new Vector2(Random.Range(-7f, 7f), Random.Range(-3.5f, 3.5f));
+        // 맵 전체 랜덤(내부 x±18, y±8 — 안전원이 벽에 걸치지 않게)
+        Vector2 safe = new Vector2(Random.Range(-18f, 18f), Random.Range(-8f, 8f));
 
         Overload(player, "대숙청", new Color(1f, 0.25f, 0.25f));
 
-        // 안전지대 원 표시(지속) + 주기 펄스 링으로 시선 유도
+        // 안전지대 원 표시(지속) + 주기 펄스 링으로 시선 유도 + 시야 밖이면 방향 화살표
         LineRenderer circle = DrawCircle(safe, safeRadius, new Color(0.4f, 1f, 0.55f, 0.9f));
+        OffscreenArrow arrow = OffscreenArrow.Show(safe, new Color(0.4f, 1f, 0.55f, 1f));
         float t = 0f;
         while (t < warnTime)
         {
@@ -175,6 +178,7 @@ public class JokerSpell : MonoBehaviour
             t += 0.6f;
         }
         Destroy(circle.gameObject);
+        if (arrow != null) Destroy(arrow.gameObject);
 
         // 심판 — 원 밖 적 전멸 + 원 밖 플레이어 치명타(피해 수정 체인·부활 마블은 정상 개입)
         SpellVfx.SpawnRing(safe, 14f, new Color(1f, 0.3f, 0.3f, 1f), 0.5f);

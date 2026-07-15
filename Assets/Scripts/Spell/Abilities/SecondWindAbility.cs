@@ -19,6 +19,7 @@ public class SecondWindAbility : SpellAbility
         if (ctx.caster == null) return;
         PlayerController pc = ctx.caster.GetComponent<PlayerController>();
         if (pc != null) pc.GrantStaminaFree(duration, dashCooldownWhileActive);
+        SecondWindStatus.Apply(ctx.caster, duration, ctx.marble); // 버프 HUD 표시용 미러
 
         Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)

@@ -10,6 +10,12 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     [Header("Move")]
     public float speed = 2f; // SlowStatus가 감속 대상으로 사용
 
+    [Header("Score")]
+    public int scoreValue = 10; // 처치 시 기본 점수(강한 적일수록 크게 — 프리팹별 지정)
+
+    // ♦ SlowAura 등 국소 시간감속 — Tick의 dt에 곱해져 이동/돌진/타이머가 함께 느려짐(1=정상).
+    [System.NonSerialized] public float localTimeScale = 1f;
+
     [Header("Material")]
     public Material flashMaterial;
     public Material defaultMaterial;
@@ -20,6 +26,13 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     protected Animator anim;
     protected Rigidbody2D rb;
 
+    // ---- HP 바(코드 생성 월드 스프라이트) ----
+    private Character character;
+    private Transform hpBarRoot;
+    private SpriteRenderer hpBarFill;
+    private const float BarW = 0.9f, BarH = 0.13f, BarY = 0.7f;
+    private static Sprite barSprite;
+
     protected virtual void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
@@ -28,6 +41,59 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         // 충돌 토크로 적이 회전(삐뚤어짐)하는 것 방지
         rb = GetComponent<Rigidbody2D>();
         if (rb != null) rb.freezeRotation = true;
+
+        character = GetComponent<Character>();
+        BuildHpBar();
+    }
+
+    static Sprite BarSprite()
+    {
+        if (barSprite != null) return barSprite;
+        var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+        tex.SetPixel(0, 0, Color.white); tex.Apply();
+        barSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+        return barSprite;
+    }
+
+    void BuildHpBar()
+    {
+        var root = new GameObject("HpBar");
+        root.transform.SetParent(transform, false);
+        root.transform.localPosition = new Vector3(0f, BarY, 0f);
+        hpBarRoot = root.transform;
+
+        var bg = new GameObject("bg").AddComponent<SpriteRenderer>();
+        bg.transform.SetParent(root.transform, false);
+        bg.sprite = BarSprite();
+        bg.color = new Color(0f, 0f, 0f, 0.6f);
+        bg.transform.localScale = new Vector3(BarW + 0.06f, BarH + 0.05f, 1f);
+        SortBar(bg, 20);
+
+        hpBarFill = new GameObject("fill").AddComponent<SpriteRenderer>();
+        hpBarFill.transform.SetParent(root.transform, false);
+        hpBarFill.sprite = BarSprite();
+        SortBar(hpBarFill, 21);
+
+        hpBarRoot.gameObject.SetActive(false);
+    }
+
+    void SortBar(SpriteRenderer s, int extra)
+    {
+        if (sr != null) { s.sortingLayerID = sr.sortingLayerID; s.sortingOrder = sr.sortingOrder + extra; }
+        else s.sortingOrder = 5000 + extra;
+    }
+
+    // 매 프레임 HP 바 갱신(피해 입은 적만 표시)
+    void LateUpdate()
+    {
+        if (hpBarRoot == null) return;
+        float r = character != null ? character.HpRatio : 1f;
+        bool show = phase != Phase.Dying && r > 0f && r < 0.999f;
+        if (hpBarRoot.gameObject.activeSelf != show) hpBarRoot.gameObject.SetActive(show);
+        if (!show) return;
+        hpBarFill.transform.localScale = new Vector3(BarW * r, BarH, 1f);
+        hpBarFill.transform.localPosition = new Vector3(-BarW * 0.5f + BarW * r * 0.5f, 0f, -0.01f);
+        hpBarFill.color = Color.Lerp(new Color(0.9f, 0.2f, 0.2f), new Color(0.4f, 0.9f, 0.35f), r);
     }
 
     // 스펠 마블 ♣ Decoy — 추적 대상 변경(분신 어그로). null 금지(FixedUpdate 방어 있음).
@@ -41,6 +107,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     {
         this.target = target;
         phase = Phase.Spawning;
+        localTimeScale = 1f;                        // 풀 재사용 시 감속 잔존 방지
         transform.rotation = Quaternion.identity; // 풀 재사용 시 남은 회전값 초기화
         GetComponent<Character>().Initialize();
         anim.SetTrigger("Spawn");
@@ -61,7 +128,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
         if (phase != Phase.Active || target == null) return;
-        Tick(target.transform.position - transform.position, Time.fixedDeltaTime);
+        Tick(target.transform.position - transform.position, Time.fixedDeltaTime * localTimeScale);
     }
 
     // 자식 구현: 이동+공격 행동. toTarget = 추적 대상까지의 벡터, dt = 고정 스텝
@@ -98,6 +165,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     protected virtual void Die()
     {
         phase = Phase.Dying;
+        if (GameManager.Instance != null) GameManager.Instance.ReportKill(scoreValue, transform.position); // 처치 점수/콤보
         GetComponent<Collider2D>().enabled = false; // 사망 애니메이션 중 접촉 데미지/중복 피격 방지
         anim.speed = 1f; // 빙결(FreezeStatus)로 애니메이터가 정지 중이어도 사망 연출은 재생
         anim.SetTrigger("Die");

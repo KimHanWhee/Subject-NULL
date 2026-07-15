@@ -14,7 +14,7 @@ public class ResurrectionAbility : SpellAbility
     public override void Activate(SpellContext ctx)
     {
         if (ctx.caster == null) return;
-        ResurrectionStatus.Apply(ctx.caster, reviveRatio);
+        ResurrectionStatus.Apply(ctx.caster, reviveRatio, ctx.marble);
         Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)
         {

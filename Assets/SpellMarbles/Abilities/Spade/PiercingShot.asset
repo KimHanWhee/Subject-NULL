@@ -21,6 +21,6 @@ MonoBehaviour:
   effectPrefab: {fileID: 739243312471993668, guid: 0ac544615ee106744b0f92d3650461a5, type: 3}
   activationSound: {fileID: 0}
   soundVolume: 1
-  duration: 5
+  duration: 10
   vfxColor: {r: 1, g: 0.95, b: 0.6, a: 1}
   vfxRadius: 0.7

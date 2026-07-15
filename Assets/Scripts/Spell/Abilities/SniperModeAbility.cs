@@ -16,7 +16,7 @@ public class SniperModeAbility : SpellAbility
     public override void Activate(SpellContext ctx)
     {
         if (ctx.caster == null) return;
-        SniperStatus.Apply(ctx.caster, damageMult, bulletSpeedMult, moveMult, duration);
+        SniperStatus.Apply(ctx.caster, damageMult, bulletSpeedMult, moveMult, duration, ctx.marble);
         Transform anchor = SpellVfx.VisualAnchor(ctx.caster); // 몸통 시각 중심(스프라이트 상단 여백 보정)
         if (effectPrefab != null)
         {

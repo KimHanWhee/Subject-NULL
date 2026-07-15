@@ -127,7 +127,8 @@ public class SpellCaster : MonoBehaviour
             caster = player,
             targetPosition = pos,
             grade = marble.grade,
-            effectPool = effectPool
+            effectPool = effectPool,
+            marble = marble
         };
 
         // 시전 텔레그래프: 등급색 고리가 시전 시간 동안 중심으로 수렴 → 이후 실제 발동.

@@ -57,6 +57,12 @@ public class MapThemeController : MonoBehaviour
     void Start()
     {
         if (themes == null || themes.Length == 0) return;
+
+        // 실험실 고정 배경 — Lab 테마가 있으면 항상 적용(스토리: 실험체 능력 평가장)
+        for (int k = 0; k < themes.Length; k++)
+            if (themes[k] != null && themes[k].name == "Lab") { Apply(k); return; }
+
+        // 폴백: 기존 랜덤 테마
         int i;
         do { i = Random.Range(0, themes.Length); }
         while (themes.Length > 1 && i == lastIndex);
@@ -68,6 +74,22 @@ public class MapThemeController : MonoBehaviour
         // F9: 테마 순환(플레이 중 분위기 확인용)
         if (Keyboard.current != null && Keyboard.current[Key.F9].wasPressedThisFrame && themes.Length > 0)
             Apply((lastIndex + 1) % themes.Length);
+    }
+
+    // 조커 발동 등에서 호출 — 현재와 다른 테마를 랜덤 적용.
+    public void RandomizeTheme()
+    {
+        if (themes == null || themes.Length == 0) return;
+        int i;
+        do { i = Random.Range(0, themes.Length); }
+        while (themes.Length > 1 && i == lastIndex);
+        Apply(i);
+    }
+
+    public static void RandomizeCurrent()
+    {
+        MapThemeController c = FindFirstObjectByType<MapThemeController>();
+        if (c != null) c.RandomizeTheme();
     }
 
     public void Apply(int index)

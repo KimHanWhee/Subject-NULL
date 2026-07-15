@@ -10,6 +10,9 @@ public class EnemyBullet : MonoBehaviour
     private Vector2 direction;
     private float despawnTime;
 
+    // ♦ SlowAura 국소 감속(1=정상). 매 프레임 SlowAura가 갱신, 범위 밖이면 1로 복귀.
+    [System.NonSerialized] public float localTimeScale = 1f;
+
     public Vector2 Direction
     {
         get { return direction; }
@@ -19,11 +22,12 @@ public class EnemyBullet : MonoBehaviour
     void OnEnable()
     {
         despawnTime = Time.time + lifetime; // 활성화 시점 기준 수명 시작
+        localTimeScale = 1f;
     }
 
     void Update()
     {
-        transform.Translate(direction * (speed * Time.deltaTime));
+        transform.Translate(direction * (speed * Time.deltaTime * localTimeScale));
 
         if (Time.time >= despawnTime)
         {

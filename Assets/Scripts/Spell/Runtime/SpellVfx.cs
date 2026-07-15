@@ -16,6 +16,10 @@ public class SpellVfx : MonoBehaviour
     private Color color;
     private Transform follow;      // Aura/Converge: 대상 추종(SelfBuff는 플레이어)
     private bool rainbow;          // Converge: 레전드 등급 무지개 색상 순환
+    private bool mirror;           // Aura: 거울 세상 필드(강한 일렁임)
+    private float wobblePhase;     // 이중 원반 위상차
+    private Sprite overrideSprite; // 링 대신 쓸 스프라이트(미러 필드=채운 원반)
+    private float mirrorAlpha = 0.85f; // 미러 필드 반투명 알파
 
     private static Sprite ringSprite;
 
@@ -85,6 +89,30 @@ public class SpellVfx : MonoBehaviour
         return fx;
     }
 
+    // ♦ Mirror World — 반경 전체를 채운 반투명 무지개 원반이 천천히 일렁인다(거울 세상 느낌).
+    public static void SpawnMirrorField(Transform target, float radius, float duration)
+    {
+        MirrorDisc(target, radius, duration, 0f, 0.22f);          // 반투명 무지개 채움
+        MirrorDisc(target, radius * 0.96f, duration, Mathf.PI, 0.14f); // 위상차 겹침 → 은은한 물결
+    }
+
+    static void MirrorDisc(Transform target, float radius, float duration, float phase, float alpha)
+    {
+        SpellVfx fx = Create(Color.white);
+        fx.mode = Mode.Aura;
+        fx.follow = target;
+        fx.startRadius = Mathf.Max(0.1f, radius);
+        fx.endRadius = fx.startRadius;
+        fx.duration = Mathf.Max(0.05f, duration);
+        fx.rainbow = true;
+        fx.mirror = true;
+        fx.wobblePhase = phase;
+        fx.overrideSprite = DiscSprite();
+        fx.mirrorAlpha = alpha;
+        if (target != null) fx.transform.position = target.position;
+        fx.Begin();
+    }
+
     static SpellVfx Create(Color color)
     {
         GameObject go = new GameObject("SpellVfx");
@@ -145,6 +173,7 @@ public class SpellVfx : MonoBehaviour
     void Begin()
     {
         EnsureRenderer();
+        if (overrideSprite != null) sr.sprite = overrideSprite; // 미러 필드 = 채운 원반
         startTime = Time.unscaledTime;
         sr.color = color;
         SetDiameter(startRadius * 2f);
@@ -178,9 +207,21 @@ public class SpellVfx : MonoBehaviour
         else // Aura
         {
             if (follow != null) transform.position = follow.position;
-            float pulse = 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 12f);
-            SetDiameter(startRadius * 2f * pulse);
-            SetAlpha(p > 0.8f ? Mathf.InverseLerp(1f, 0.8f, p) : 1f); // 끝 20%만 페이드
+            if (mirror)
+            {
+                // 거울 세상: 채운 원반이 천천히 일렁이며 회전(색만 무지개 순환) → 물결/왜곡 느낌
+                float pulse = 1f + 0.06f * Mathf.Sin(Time.unscaledTime * 3.2f + wobblePhase);
+                SetDiameter(startRadius * 2f * pulse);
+                transform.Rotate(0f, 0f, 16f * Time.unscaledDeltaTime);
+                float fade = p > 0.9f ? Mathf.InverseLerp(1f, 0.9f, p) : 1f;
+                SetAlpha(mirrorAlpha * fade); // 반투명 유지
+            }
+            else
+            {
+                float pulse = 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 12f);
+                SetDiameter(startRadius * 2f * pulse);
+                SetAlpha(p > 0.8f ? Mathf.InverseLerp(1f, 0.8f, p) : 1f); // 끝 20%만 페이드
+            }
         }
     }
 
@@ -223,5 +264,34 @@ public class SpellVfx : MonoBehaviour
 
         ringSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
         return ringSprite;
+    }
+
+    // 채운 원(disc) — 안쪽은 꽉 차고 가장자리만 부드럽게 페이드. 미러 필드(반투명 무지개)용.
+    static Sprite discSprite;
+    static Sprite DiscSprite()
+    {
+        if (discSprite != null) return discSprite;
+
+        const int size = 128;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        float c = (size - 1) * 0.5f;
+        float outer = size * 0.48f;      // 원 반지름(px)
+        float inner = outer * 0.72f;     // 이 안쪽은 알파 1, inner~outer 구간만 페이드
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x - c, dy = y - c;
+                float d = Mathf.Sqrt(dx * dx + dy * dy);
+                float a = d <= inner ? 1f : 1f - Mathf.Clamp01((d - inner) / (outer - inner));
+                a = Mathf.SmoothStep(0f, 1f, a);
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+            }
+        }
+        tex.Apply();
+        discSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        return discSprite;
     }
 }

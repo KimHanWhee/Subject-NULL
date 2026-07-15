@@ -2,13 +2,19 @@ using UnityEngine;
 
 // ♦ Dash Shield 상태 — 지속시간 동안 대시 무적 판정 시간(dashGrace) 연장(기본 2배 체감).
 // dashGrace를 (dashDuration + 원래 grace)만큼 추가 → 대시 무적창이 약 2배.
-public class DashShieldStatus : MonoBehaviour
+public class DashShieldStatus : MonoBehaviour, IBuffDisplay
 {
     private PlayerController pc;
     private float originalGrace;
     private float remain;
+    private SpellMarble marble;
 
-    public static void Apply(GameObject player, float duration)
+    public SpellMarble BuffMarble { get { return marble; } }
+    public bool BuffTimed { get { return true; } }
+    public float BuffRemaining { get { return remain; } }
+    public int BuffCharges { get { return 0; } }
+
+    public static void Apply(GameObject player, float duration, SpellMarble marble = null)
     {
         DashShieldStatus s = player.GetComponent<DashShieldStatus>();
         if (s == null)
@@ -16,6 +22,7 @@ public class DashShieldStatus : MonoBehaviour
             s = player.AddComponent<DashShieldStatus>();
             if (!s.Bind()) { Destroy(s); return; }
         }
+        s.marble = marble;
         s.remain = Mathf.Max(s.remain, duration);
     }
 
