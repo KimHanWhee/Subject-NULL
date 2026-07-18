@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 // 가챠 상점 씬 — 코드 생성 UI(HowToPlayUI/DeckBuilderUI 패턴).
 // 왼쪽: 뽑기(GEM 소비 → 결과 연출). 오른쪽: 도감 + 조각 확정 교환.
@@ -27,8 +28,26 @@ public class GachaShopUI : MonoBehaviour
     float feedbackUntil;
 
     RectTransform collectionGrid;
+
+    // 도감 호버 툴팁(덱 빌더와 동일 패턴 — 커서 추종)
+    RectTransform tooltipRoot;
+    Text tooltipText;
+    Image tooltipIcon;
+
     static Font uiFont;
     static Sprite whiteSprite;
+
+    // SUBJECT:NULL 실험실 UI(Resources/UI, 9-slice) — 패널/버튼/카드 크롬 통일.
+    static Sprite pixelPanelSprite, pixelButtonSprite, pixelCardFrame;
+    static bool pixelLoaded;
+    static void LoadPixelUI()
+    {
+        if (pixelLoaded) return;
+        pixelLoaded = true;
+        pixelPanelSprite = Resources.Load<Sprite>("UI/LabDossierPanel");
+        pixelButtonSprite = Resources.Load<Sprite>("UI/SubjectNullButton");
+        pixelCardFrame = Resources.Load<Sprite>("UI/SpecimenCardFrame");
+    }
 
     bool pulling;
 
@@ -41,16 +60,10 @@ public class GachaShopUI : MonoBehaviour
         RebuildCollection();
 
         // 서버 프로필 최신화 → 재표시(진실은 서버)
-        await WaitSignedIn();
+        await ServicesBootstrap.WaitSignedInAsync(); // WebGL 안전(Task.Delay 금지)
         await PlayerProfileService.RefreshAsync();
         RefreshCurrency();
         RebuildCollection();
-    }
-
-    static async Task WaitSignedIn()
-    {
-        for (int i = 0; i < 100 && !ServicesBootstrap.IsSignedIn; i++)
-            await Task.Delay(100);
     }
 
     // 서버 결과(marbleName/grade 문자열)를 카드 UI가 쓰는 형태로 변환.
@@ -73,6 +86,10 @@ public class GachaShopUI : MonoBehaviour
     {
         if (feedbackText != null && feedbackText.enabled && Time.unscaledTime > feedbackUntil)
             feedbackText.enabled = false;
+
+        // 툴팁 커서 추종(우측 상단 오프셋)
+        if (tooltipRoot != null && tooltipRoot.gameObject.activeSelf && Mouse.current != null)
+            tooltipRoot.position = Mouse.current.position.ReadValue() + new Vector2(18f, 18f);
     }
 
     void EnsureEventSystem()
@@ -99,12 +116,12 @@ public class GachaShopUI : MonoBehaviour
         Image bg = MakeImage(root, "BG", Vector2.zero, new Vector2(1920f, 1080f), BG);
         Stretch(bg.rectTransform);
 
-        MakeText(root, "Title", new Vector2(0f, 495f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>가챠 상점</b>", new Color(1f, 0.86f, 0.4f));
+        MakeText(root, "Title", new Vector2(0f, 495f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>마블 뽑기</b>", new Color(1f, 0.86f, 0.4f));
 
         // 재화(상단 우측, 세로로 쌓기 — 화면 안에)
         gemText = MakeText(root, "Gem", new Vector2(770f, 505f), new Vector2(320f, 36f), 24, TextAnchor.MiddleRight, "", GEM_COL);
         shardText = MakeText(root, "Shard", new Vector2(770f, 468f), new Vector2(320f, 34f), 22, TextAnchor.MiddleRight, "", SHARD_COL);
-        MakeButton(root, "Charge", new Vector2(700f, 428f), new Vector2(230f, 44f), "＋ GEM 충전", new Color(0.2f, 0.5f, 0.42f), OpenChargeOverlay);
+        MakeButton(root, "Charge", new Vector2(700f, 418f), new Vector2(250f, 56f), "＋ GEM 충전", new Color(0.2f, 0.5f, 0.42f), OpenChargeOverlay);
 
         BuildPullPanel(root);
         BuildCollectionPanel(root);
@@ -112,28 +129,143 @@ public class GachaShopUI : MonoBehaviour
         feedbackText = MakeText(root, "Feedback", new Vector2(0f, -500f), new Vector2(1000f, 34f), 20, TextAnchor.MiddleCenter, "", new Color(1f, 0.6f, 0.55f));
         feedbackText.enabled = false;
 
-        MakeButton(root, "Back", new Vector2(-820f, 495f), new Vector2(180f, 54f), "← 메인 메뉴", new Color(0.25f, 0.25f, 0.32f), () => SceneLoader.Load("MainMenuScene"));
+        // 뒤로 버튼: 좌상단 통일 규격(덱/가챠/플레이방법 동일)
+        MakeButton(root, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), "← 뒤로", new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
+
+        BuildTooltip(root); // 마지막에 생성 → 항상 최상단
+    }
+
+    void BuildTooltip(RectTransform root)
+    {
+        tooltipRoot = MakeRect(root, "Tooltip", Vector2.zero, new Vector2(360f, 170f));
+        tooltipRoot.pivot = new Vector2(0f, 0f); // 커서 우상단으로 펼침
+
+        Image bg = MakeImage(tooltipRoot, "Bg", Vector2.zero, Vector2.zero, new Color(0.05f, 0.05f, 0.08f, 0.95f));
+        Stretch(bg.rectTransform);
+
+        tooltipIcon = MakeImage(tooltipRoot, "Icon", Vector2.zero, new Vector2(48f, 48f), Color.white);
+        tooltipIcon.rectTransform.anchorMin = new Vector2(0f, 1f);
+        tooltipIcon.rectTransform.anchorMax = new Vector2(0f, 1f);
+        tooltipIcon.rectTransform.anchoredPosition = new Vector2(34f, -34f);
+        tooltipIcon.preserveAspect = true;
+
+        tooltipText = MakeText(tooltipRoot, "Text", Vector2.zero, new Vector2(280f, 150f), 16, TextAnchor.UpperLeft, "", Color.white);
+        tooltipText.rectTransform.anchorMin = new Vector2(0f, 1f);
+        tooltipText.rectTransform.anchorMax = new Vector2(0f, 1f);
+        tooltipText.rectTransform.pivot = new Vector2(0f, 1f);
+        tooltipText.rectTransform.anchoredPosition = new Vector2(66f, -12f);
+
+        tooltipRoot.SetAsLastSibling();
+        tooltipRoot.gameObject.SetActive(false);
+    }
+
+    void ShowTooltip(SpellMarble m)
+    {
+        if (tooltipRoot == null || m == null || m.ability == null) return;
+        tooltipRoot.gameObject.SetActive(true);
+        tooltipRoot.SetAsLastSibling(); // 이후에 만들어진 오버레이/피드백 위로
+        tooltipText.text =
+            "<b>" + m.ability.abilityName + "</b>\n" +
+            SuitInfo.RichLabel(m.suit) + "  <color=#FFD24A>[" + GradeLabel(m.grade) + "]</color>\n" +
+            m.ability.description;
+        tooltipIcon.sprite = ArtOf(m);
+        tooltipIcon.enabled = tooltipIcon.sprite != null;
+        if (Mouse.current != null)
+            tooltipRoot.position = Mouse.current.position.ReadValue() + new Vector2(18f, 18f);
+    }
+
+    void HideTooltip()
+    {
+        if (tooltipRoot != null) tooltipRoot.gameObject.SetActive(false);
     }
 
     void BuildPullPanel(RectTransform root)
     {
         RectTransform panel = MakePanel(root, "PullPanel", new Vector2(-540f, -30f), new Vector2(720f, 860f));
-        MakeText(panel, "PullHeader", new Vector2(0f, 380f), new Vector2(660f, 34f), 24, TextAnchor.MiddleCenter, "<b>뽑기</b>  <size=15><color=#9AA>Gold 이상 마블 · 중복은 조각으로 환급</color></size>", Color.white);
+        MakeText(panel, "PullHeader", new Vector2(0f, 380f), new Vector2(660f, 34f), 24, TextAnchor.MiddleCenter, "<b>뽑기</b>", Color.white);
 
         // 결과 카드 슬롯(뽑을 때마다 플립 카드 생성)
         revealSlot = MakeRect(panel, "RevealSlot", new Vector2(0f, 70f), new Vector2(320f, 440f));
         revealPlaceholder = MakeText(revealSlot, "Placeholder", Vector2.zero, new Vector2(300f, 60f), 20, TextAnchor.MiddleCenter, "여기에 결과가 표시됩니다", new Color(0.6f, 0.6f, 0.72f));
-        MakeText(panel, "Hint", new Vector2(0f, -168f), new Vector2(600f, 26f), 15, TextAnchor.MiddleCenter, "<color=#8A8A98>카드를 클릭해 뒤집으세요 · 뒷면 색/오오라로 등급을 미리 알 수 있어요</color>", Color.white);
 
         pullButton = MakeButton(panel, "Pull1Btn", new Vector2(-175f, -330f), new Vector2(330f, 84f), "", new Color(0.32f, 0.28f, 0.5f), () => OnPull(1));
         pullButton10 = MakeButton(panel, "Pull10Btn", new Vector2(175f, -330f), new Vector2(330f, 84f), "", new Color(0.42f, 0.3f, 0.55f), () => OnPull(10));
+
+        MakeButton(panel, "RateBtn", new Vector2(0f, -243f), new Vector2(230f, 50f), "확률 상세 보기", new Color(0.24f, 0.3f, 0.42f), OpenRateOverlay);
+    }
+
+    // ── 확률 상세(공시) ────────────────────────────────────
+    // 서버 RNG와 동일 규칙으로 계산: 등급 가중치(GachaConfig) → 등급 내 균등.
+    // 값이 서버(GachaPull.js)와 어긋나지 않도록 GachaConfig 가중치를 서버와 같게 유지할 것.
+    void OpenRateOverlay()
+    {
+        Image dim = MakeImage(canvasRoot, "RateOverlay", Vector2.zero, new Vector2(1920f, 1080f), new Color(0f, 0f, 0f, 0.88f));
+        Stretch(dim.rectTransform);
+        dim.raycastTarget = true;
+        RectTransform panel = MakePanel(dim.rectTransform, "RatePanel", Vector2.zero, new Vector2(780f, 880f));
+        MakeText(panel, "RT", new Vector2(0f, 385f), new Vector2(700f, 40f), 30, TextAnchor.MiddleCenter, "<b>뽑기 확률 상세</b>", new Color(1f, 0.86f, 0.4f));
+        MakeText(panel, "RTsub", new Vector2(0f, 345f), new Vector2(700f, 26f), 15, TextAnchor.MiddleCenter, "<color=#9AA>등급을 먼저 추첨한 뒤, 같은 등급 안에서는 균등 확률로 결정됩니다</color>", Color.white);
+        MakeButton(panel, "Close", new Vector2(330f, 400f), new Vector2(60f, 52f), "✕", new Color(0.3f, 0.3f, 0.38f), () => Destroy(dim.gameObject));
+
+        // 뽑기 풀(도감과 동일: Normal 제외, 등급→이름 정렬)
+        List<SpellMarble> pool = new List<SpellMarble>();
+        foreach (SpellMarble m in registry.allMarbles)
+            if (m != null && m.grade != Grade.Normal) pool.Add(m);
+        pool.Sort((a, b) => { int c = a.grade.CompareTo(b.grade); return c != 0 ? c : string.Compare(a.marbleName, b.marbleName, System.StringComparison.Ordinal); });
+
+        GachaConfig cfg = GachaConfig.Instance;
+        float totalWeight = cfg.Weight(Grade.Gold) + cfg.Weight(Grade.Diamond) + cfg.Weight(Grade.Legend);
+        Dictionary<Grade, int> countOf = new Dictionary<Grade, int>();
+        foreach (SpellMarble m in pool)
+        {
+            if (!countOf.ContainsKey(m.grade)) countOf[m.grade] = 0;
+            countOf[m.grade]++;
+        }
+
+        // 표: 등급 | 스킬명 | 확률(%)
+        const float colGrade = -260f, colName = -40f, colRate = 240f;
+        float y = 295f;
+        const float rowH = 38f;
+        Color headCol = new Color(0.65f, 0.7f, 0.85f);
+        MakeText(panel, "HGrade", new Vector2(colGrade, y), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>등급</b>", headCol);
+        MakeText(panel, "HName", new Vector2(colName, y), new Vector2(300f, 30f), 18, TextAnchor.MiddleLeft, "<b>스킬명</b>", headCol);
+        MakeText(panel, "HRate", new Vector2(colRate, y), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>확률(%)</b>", headCol);
+        MakeImage(panel, "HLine", new Vector2(0f, y - rowH * 0.55f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
+        y -= rowH + 6f;
+
+        for (int i = 0; i < pool.Count; i++)
+        {
+            SpellMarble m = pool[i];
+            if ((i & 1) == 0) MakeImage(panel, "RowBG" + i, new Vector2(0f, y), new Vector2(680f, rowH - 4f), new Color(1f, 1f, 1f, 0.045f));
+            int cnt = countOf[m.grade];
+            float pct = totalWeight > 0f && cnt > 0 ? cfg.Weight(m.grade) / totalWeight / cnt * 100f : 0f;
+            Color gc = GradePalette.ColorOf(m.grade);
+            string name = m.ability != null ? m.ability.abilityName : m.marbleName;
+            MakeText(panel, "RG" + i, new Vector2(colGrade, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, "<b>" + GradeLabel(m.grade) + "</b>", gc);
+            MakeText(panel, "RN" + i, new Vector2(colName, y), new Vector2(300f, 30f), 17, TextAnchor.MiddleLeft, name, Color.white);
+            MakeText(panel, "RR" + i, new Vector2(colRate, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, pct.ToString("0.##") + "%", new Color(0.85f, 0.9f, 1f));
+            y -= rowH;
+        }
+
+        // 등급 합계 요약
+        MakeImage(panel, "FLine", new Vector2(0f, y + rowH * 0.45f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
+        string sum = "등급 합계 — ";
+        Grade[] grades = { Grade.Gold, Grade.Diamond, Grade.Legend };
+        for (int g = 0; g < grades.Length; g++)
+        {
+            float gp = totalWeight > 0f ? cfg.Weight(grades[g]) / totalWeight * 100f : 0f;
+            Color gc = GradePalette.ColorOf(grades[g]);
+            sum += "<color=#" + ColorUtility.ToHtmlStringRGB(gc) + ">" + GradeLabel(grades[g]) + " " + gp.ToString("0.##") + "%</color>";
+            if (g < grades.Length - 1) sum += " · ";
+        }
+        MakeText(panel, "Sum", new Vector2(0f, y - 6f), new Vector2(700f, 30f), 17, TextAnchor.MiddleCenter, sum, Color.white);
+        MakeText(panel, "Note", new Vector2(0f, y - 40f), new Vector2(700f, 26f), 14, TextAnchor.MiddleCenter, "<color=#8A8A98>일반 등급 14종은 기본 보유로 뽑기 대상이 아닙니다 · 중복 획득 시 조각으로 환급됩니다</color>", Color.white);
     }
 
     void BuildCollectionPanel(RectTransform root)
     {
         RectTransform panel = MakePanel(root, "CollectionPanel", new Vector2(560f, -30f), new Vector2(760f, 860f));
-        MakeText(panel, "ColHeader", new Vector2(0f, 385f), new Vector2(700f, 34f), 22, TextAnchor.MiddleLeft, "<b>도감 · 조각 교환</b>  <size=14><color=#9AA>미보유는 조각으로 확정 교환</color></size>", Color.white);
-        MakeText(panel, "ColNote", new Vector2(0f, 352f), new Vector2(700f, 26f), 14, TextAnchor.MiddleLeft, "<color=#8A8A98>Normal 14종은 기본 보유</color>", Color.white);
+        MakeText(panel, "ColHeader", new Vector2(0f, 385f), new Vector2(700f, 34f), 22, TextAnchor.MiddleLeft, "<b>도감 · 조각 교환</b>", Color.white);
         collectionGrid = MakeRect(panel, "Grid", new Vector2(0f, -30f), new Vector2(720f, 720f));
     }
 
@@ -202,7 +334,6 @@ public class GachaShopUI : MonoBehaviour
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
         MakeText(dim.rectTransform, "Title", new Vector2(0f, 430f), new Vector2(1000f, 52f), 34, TextAnchor.MiddleCenter, "<b>" + results.Count + "연 뽑기</b>", new Color(1f, 0.86f, 0.4f));
-        MakeText(dim.rectTransform, "Sub", new Vector2(0f, 392f), new Vector2(1000f, 30f), 17, TextAnchor.MiddleCenter, "<color=#9AA>카드를 클릭해 뒤집거나 [전체 공개] · 뒷면 오오라로 등급 확인</color>", Color.white);
 
         int newCnt = 0, shardSum = 0;
         foreach (var r in results) { if (r.isNew) newCnt++; shardSum += r.shardsGained; }
@@ -281,18 +412,31 @@ public class GachaShopUI : MonoBehaviour
         if (r.marble != null) { cv.typeArt.sprite = skinTable.Get(r.marble.suit, r.marble.grade); cv.typeArt.preserveAspect = true; }
         cv.typeArt.gameObject.SetActive(false);
 
-        // 앞면(처음 숨김)
+        // 앞면(처음 숨김) — 레이아웃은 원래 스타일, 프레임만 SF 카드(등급색 틴트)로 교체
         Image edge = MakeImage(pivot, "Front", Vector2.zero, new Vector2(w, h), gc);
-        Image body = MakeImage(edge.rectTransform, "Body", Vector2.zero, new Vector2(w - 6f, h - 6f), new Color(0.13f, 0.13f, 0.2f));
-        float artS = Mathf.Min(w - 56f, h * 0.44f);
-        Image art = MakeImage(body.rectTransform, "Art", new Vector2(0f, h * 0.16f), new Vector2(artS, artS), Color.white);
+        RectTransform content;
+        if (pixelCardFrame != null)
+        {
+            edge.sprite = pixelCardFrame;
+            edge.color = Color.Lerp(Color.white, gc, 0.8f);
+            edge.type = Image.Type.Sliced;
+            edge.pixelsPerUnitMultiplier = 1.5f; // 테두리 두께를 카드 크기에 맞게
+            content = edge.rectTransform;
+        }
+        else
+        {
+            Image body = MakeImage(edge.rectTransform, "Body", Vector2.zero, new Vector2(w - 6f, h - 6f), new Color(0.13f, 0.13f, 0.2f));
+            content = body.rectTransform;
+        }
+        float artS = Mathf.Min(w - 64f, h * 0.4f);
+        Image art = MakeImage(content, "Art", new Vector2(0f, h * 0.16f), new Vector2(artS, artS), Color.white);
         if (r.marble != null) { art.sprite = ArtOf(r.marble); art.preserveAspect = true; }
         string name = r.marble == null ? "?" : (r.marble.ability != null ? r.marble.ability.abilityName : r.marble.marbleName);
         int nameSize = Mathf.RoundToInt(Mathf.Clamp(w * 0.085f, 13f, 22f));
-        MakeText(body.rectTransform, "Name", new Vector2(0f, -h * 0.15f), new Vector2(w - 12f, 44f), nameSize, TextAnchor.UpperCenter, "<b>" + name + "</b>", Color.white);
-        MakeText(body.rectTransform, "Grade", new Vector2(0f, -h * 0.30f), new Vector2(w - 12f, 26f), Mathf.RoundToInt(nameSize * 0.75f), TextAnchor.UpperCenter, "<color=#FFD24A>[" + GradeLabel(grade) + "]</color>", Color.white);
+        MakeText(content, "Name", new Vector2(0f, -h * 0.15f), new Vector2(w - 24f, 44f), nameSize, TextAnchor.UpperCenter, "<b>" + name + "</b>", Color.white);
+        MakeText(content, "Grade", new Vector2(0f, -h * 0.30f), new Vector2(w - 24f, 26f), Mathf.RoundToInt(nameSize * 0.75f), TextAnchor.UpperCenter, "<color=#FFD24A>[" + GradeLabel(grade) + "]</color>", Color.white);
         string tag = r.isNew ? "<color=#7FE08A><b>NEW</b></color>" : "<color=#CFC080>중복 +조각 " + r.shardsGained + "</color>";
-        MakeText(body.rectTransform, "Tag", new Vector2(0f, -h * 0.5f + 16f), new Vector2(w - 12f, 24f), Mathf.RoundToInt(nameSize * 0.72f), TextAnchor.MiddleCenter, tag, Color.white);
+        MakeText(content, "Tag", new Vector2(0f, -h * 0.5f + 20f), new Vector2(w - 24f, 24f), Mathf.RoundToInt(nameSize * 0.72f), TextAnchor.MiddleCenter, tag, Color.white);
         edge.gameObject.SetActive(false);
         cv.front = edge.rectTransform;
 
@@ -458,6 +602,7 @@ public class GachaShopUI : MonoBehaviour
     // ── 도감 · 교환 ───────────────────────────────────────
     void RebuildCollection()
     {
+        HideTooltip(); // 아이템 재생성 중 툴팁 잔상 방지
         for (int i = collectionGrid.childCount - 1; i >= 0; i--) Destroy(collectionGrid.GetChild(i).gameObject);
 
         List<SpellMarble> pool = new List<SpellMarble>();
@@ -480,9 +625,25 @@ public class GachaShopUI : MonoBehaviour
     {
         bool owned = OwnedMarblesService.IsOwned(m);
         Color gc = GradePalette.ColorOf(m.grade);
+        LoadPixelUI();
 
         Image edge = MakeImage(collectionGrid, "Item_" + m.marbleName, pos, new Vector2(w, h), gc);
-        Image body = MakeImage(edge.rectTransform, "Body", Vector2.zero, new Vector2(w - 6f, h - 6f), new Color(0.15f, 0.15f, 0.22f));
+        edge.raycastTarget = true; // 호버 감지(자식 버튼 클릭은 그대로 동작 — 이벤트는 부모로도 전달됨)
+        DeckItemEvents hover = edge.gameObject.AddComponent<DeckItemEvents>();
+        SpellMarble hovered = m;
+        hover.onEnter = () => ShowTooltip(hovered);
+        hover.onExit = HideTooltip;
+        Image body;
+        if (pixelCardFrame != null)
+        {
+            edge.sprite = pixelCardFrame;
+            edge.color = Color.Lerp(Color.white, gc, 0.8f); // 등급별 프레임 색
+            edge.type = Image.Type.Sliced;
+            edge.pixelsPerUnitMultiplier = 3f;              // 작은 아이템이라 테두리 더 얇게
+            body = MakeImage(edge.rectTransform, "Body", Vector2.zero, new Vector2(w - 30f, h - 30f), new Color(0.1f, 0.12f, 0.16f, 0.75f));
+        }
+        else
+            body = MakeImage(edge.rectTransform, "Body", Vector2.zero, new Vector2(w - 6f, h - 6f), new Color(0.15f, 0.15f, 0.22f));
 
         Image art = MakeImage(body.rectTransform, "Art", new Vector2(-w * 0.5f + 44f, 18f), new Vector2(64f, 64f), Color.white);
         art.sprite = ArtOf(m);
@@ -499,7 +660,7 @@ public class GachaShopUI : MonoBehaviour
         else
         {
             int cost = GachaConfig.Instance.ExchangeCost(m.grade);
-            Button ex = MakeButton(body.rectTransform, "Exchange", new Vector2(0f, -44f), new Vector2(w - 30f, 34f), "조각 " + cost + " 교환", new Color(0.32f, 0.28f, 0.5f), null);
+            Button ex = MakeButton(body.rectTransform, "Exchange", new Vector2(0f, -42f), new Vector2(w - 30f, 42f), "조각 " + cost + " 교환", new Color(0.32f, 0.28f, 0.5f), null);
             SpellMarble captured = m;
             ex.onClick.AddListener(() => OnExchange(captured));
             // 어둡게(미보유)
@@ -633,6 +794,7 @@ public class GachaShopUI : MonoBehaviour
     // ── UI 프리미티브 ─────────────────────────────────────
     static Font UiFont()
     {
+        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
         if (uiFont == null) uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return uiFont;
     }
@@ -704,15 +866,30 @@ public class GachaShopUI : MonoBehaviour
 
     RectTransform MakePanel(RectTransform parent, string name, Vector2 pos, Vector2 size)
     {
-        return MakeImage(parent, name, pos, size, PANEL).rectTransform;
+        LoadPixelUI();
+        Image img = MakeImage(parent, name, pos, size, PANEL);
+        if (pixelPanelSprite != null) { img.sprite = pixelPanelSprite; img.color = Color.white; img.type = Image.Type.Sliced; } // 실험실 네온 도시어 패널
+        return img.rectTransform;
     }
 
     Button MakeButton(RectTransform parent, string name, Vector2 pos, Vector2 size, string label, Color color, UnityEngine.Events.UnityAction onClick)
     {
+        LoadPixelUI();
         Image img = MakeImage(parent, name, pos, size, color);
         img.raycastTarget = true;
+        if (pixelButtonSprite != null)
+        {
+            img.sprite = pixelButtonSprite;                       // SF 네온 버튼(기능색은 밝게 틴트해 유지)
+            img.color = Color.Lerp(color, Color.white, 0.4f);
+            img.type = Image.Type.Sliced;
+        }
         Button b = img.gameObject.AddComponent<Button>();
         b.targetGraphic = img;
+        var cb = b.colors;
+        cb.highlightedColor = new Color(0.82f, 0.96f, 1f);
+        cb.pressedColor = new Color(0.66f, 0.86f, 0.96f);
+        cb.fadeDuration = 0.1f;
+        b.colors = cb;
         if (onClick != null) b.onClick.AddListener(onClick);
         MakeText(img.rectTransform, "Label", Vector2.zero, size, 20, TextAnchor.MiddleCenter, label, Color.white);
         return b;

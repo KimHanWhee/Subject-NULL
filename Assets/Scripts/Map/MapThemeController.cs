@@ -76,6 +76,37 @@ public class MapThemeController : MonoBehaviour
             Apply((lastIndex + 1) % themes.Length);
     }
 
+    void LateUpdate()
+    {
+        // Shift 선택 모드의 시야 확대(orthographicSize 변경)에도 오버레이가 항상 화면을 덮도록 매 프레임 보정
+        if (overlay != null && overlay.gameObject.activeSelf && cam != null)
+        {
+            float h = cam.orthographicSize * 2f;
+            overlay.transform.localScale = new Vector3(h * cam.aspect + 2f, h + 2f, 1f);
+        }
+    }
+
+    // 환경 파티클 방출 영역 — 카메라가 아닌 맵(Floor 타일맵) 전체 기준.
+    // 카메라 크기 기준이면 Shift 줌아웃 시 방출 영역 경계(네모 박스)가 화면에 드러난다.
+    Bounds MapWorldBounds()
+    {
+        if (floorMap != null)
+        {
+            floorMap.CompressBounds();
+            Bounds lb = floorMap.localBounds;
+            Vector3 c = floorMap.transform.TransformPoint(lb.center);
+            Vector3 s = Vector3.Scale(lb.size, floorMap.transform.lossyScale);
+            return new Bounds(c, s);
+        }
+        // 폴백: 카메라 시야의 2.5배(최대 줌아웃에도 경계가 안 보일 만큼)
+        if (cam != null)
+        {
+            float h = cam.orthographicSize * 2f;
+            return new Bounds(cam.transform.position, new Vector3(h * cam.aspect * 2.5f, h * 2.5f, 1f));
+        }
+        return new Bounds(Vector3.zero, new Vector3(50f, 30f, 1f));
+    }
+
     // 조커 발동 등에서 호출 — 현재와 다른 테마를 랜덤 적용.
     public void RandomizeTheme()
     {
@@ -172,12 +203,13 @@ public class MapThemeController : MonoBehaviour
         ambient = null;
         if (theme.ambient == MapTheme.AmbientStyle.None || cam == null) return;
 
-        float halfH = cam.orthographicSize + 1f;
-        float halfW = halfH * cam.aspect + 1f;
+        // 맵 전체를 덮는 월드 고정 방출 영역 — 카메라 부착이면 Shift 줌아웃 시 경계 박스가 보인다
+        Bounds area = MapWorldBounds();
+        float halfH = area.extents.y + 2f;
+        float halfW = area.extents.x + 2f;
 
         GameObject go = new GameObject("ThemeAmbient");
-        go.transform.SetParent(cam.transform, false);
-        go.transform.localPosition = new Vector3(0f, 0f, 10f);
+        go.transform.position = new Vector3(area.center.x, area.center.y, 10f); // 월드 고정(카메라 비부착)
         ambient = go.AddComponent<ParticleSystem>();
         ambient.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
@@ -187,6 +219,7 @@ public class MapThemeController : MonoBehaviour
         main.prewarm = true; // 시작/전환 즉시 화면에 입자가 차 있도록(누적 대기 없음)
         main.gravityModifier = 0f;
         main.startColor = theme.ambientColor;
+        main.maxParticles = 4000; // 맵 전체 커버(수명 = 맵 높이/낙하속도)라 기본 1000으론 부족
         main.simulationSpace = ParticleSystemSimulationSpace.World; // 카메라가 움직여도 입자는 월드에 남음
 
         var shape = ambient.shape;

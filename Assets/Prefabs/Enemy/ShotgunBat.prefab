@@ -178,7 +178,7 @@ MonoBehaviour:
   defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   farBand: 7
   nearBand: 4
-  bulletPrefab: {fileID: 2531471628427593085, guid: dc1ee9856fa5f9741badac3f95f65d44, type: 3}
+  bulletPrefab: {fileID: 2531471628427593085, guid: b7e4d1f2a3c5497f8e6012bd34a9c801, type: 3}
   bulletPoolManager: {fileID: 0}
   fireInterval: 2.5
   bulletSpeed: 6.5

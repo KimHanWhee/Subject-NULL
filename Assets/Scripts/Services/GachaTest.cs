@@ -7,9 +7,8 @@ public class GachaTest : MonoBehaviour
 {
     async void Start()
     {
-        // 로그인 완료까지 대기(최대 ~10초)
-        for (int i = 0; i < 100 && !ServicesBootstrap.IsSignedIn; i++)
-            await Task.Delay(100);
+        // 로그인 완료까지 대기(최대 ~10초) — WebGL 안전(Task.Delay 금지)
+        await ServicesBootstrap.WaitSignedInAsync();
 
         if (!ServicesBootstrap.IsSignedIn)
         {

@@ -30,6 +30,14 @@ public static class HighScoreService
         if (score <= GetBest()) return false;
         PlayerPrefs.SetInt(Key(), score);
         PlayerPrefs.Save();
+        CloudSyncService.PushScore(score); // 서버 동기화(비동기)
         return true;
+    }
+
+    // 서버(Cloud Save) 기록으로 로컬 캐시 교체 — 로그인 직후 CloudSyncService.PullAsync에서 호출.
+    public static void OverwriteLocal(int score)
+    {
+        PlayerPrefs.SetInt(Key(), score);
+        PlayerPrefs.Save();
     }
 }

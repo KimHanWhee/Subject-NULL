@@ -5,6 +5,30 @@ using UnityEngine;
 //    검증 끝나면(또는 라이브 전) 이 컴포넌트와 파일을 삭제할 것.
 public class EconomyWalletDevPanel : MonoBehaviour
 {
+    void Awake()
+    {
+        // 릴리스 빌드에선 스스로 제거 — 에디터/개발(Development) 빌드, 또는 웹 주소에
+        // ?dev=1 이 붙은 경우에만 표시(운영자 GEM 충전용 — 레코드 생성 겸용).
+        // ⚠️ 이건 UI만 숨길 뿐이다. Cloud Code의 DevGrantGem 함수 자체가 플레이어 호출
+        //    가능하므로, 라이브 전 반드시 대시보드에서 DevGrantGem을 삭제/차단할 것(치트 통로).
+        //    그때 이 파일도 같이 삭제.
+        if (!Application.isEditor && !Debug.isDebugBuild && !HasDevQuery())
+        {
+            Destroy(this);
+            return;
+        }
+    }
+
+    static bool HasDevQuery()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        string url = Application.absoluteURL;
+        return !string.IsNullOrEmpty(url) && url.Contains("dev=1");
+#else
+        return false;
+#endif
+    }
+
     async void Start()
     {
         // 로그인 완료까지 잠깐 대기 후 첫 잔액 읽기.

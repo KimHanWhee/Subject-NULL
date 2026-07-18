@@ -1,12 +1,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// Design Ref: §5.1 — Ctrl 홀드 선택 모드: 손패 상승 + 게임 슬로우(선택 UI는 unscaled).
+// Design Ref: §5.1 — Shift 홀드 선택 모드: 손패 상승 + 게임 슬로우(선택 UI는 unscaled).
+// (원래 Ctrl이었으나 WebGL 배포 시 브라우저 단축키(Ctrl+W=탭 닫기) 충돌로 Shift로 변경)
 // Plan SC: FR-07(선택 모드) / FR-08(슬로우)
 public class SpellSelectionUI : MonoBehaviour
 {
     public RectTransform handRoot;                       // 상승/확대 대상(HUD 컨테이너)
-    public CanvasGroup ctrlHint;                         // "▲ Ctrl" 안내 탭 — 평소 표시, 선택 중 페이드아웃
+    public CanvasGroup ctrlHint;                         // "▲ Shift" 안내 탭 — 평소 표시, 선택 중 페이드아웃(필드명은 씬 직렬화 유지)
     public Vector2 raisedOffset = new Vector2(0f, 120f); // 위로 올라오는 양(px) — 스태미너 창 높이까지만
     public float raisedScale = 2.4f;                     // 선택 중 확대 배율(1=확대 없음)
     public float raiseSpeed = 10f;                       // unscaled 보간 속도(위치·스케일 공용)
@@ -43,9 +44,9 @@ public class SpellSelectionUI : MonoBehaviour
     void Update()
     {
         bool ctrl = Keyboard.current != null &&
-                    (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
+                    (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
 
-        // 과부하(조커 경고~발동 전) 중엔 벨트 잠금 — Ctrl 선택 불가 + 알림
+        // 과부하(조커 경고~발동 전) 중엔 벨트 잠금 — Shift 선택 불가 + 알림
         bool overloaded = caster != null && caster.IsOverloaded;
         if (overloaded && selecting) Exit(); // 과부하 진입 순간 선택 중이었으면 강제 해제
 

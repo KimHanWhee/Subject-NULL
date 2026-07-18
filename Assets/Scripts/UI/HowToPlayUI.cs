@@ -35,7 +35,7 @@ public class HowToPlayUI : MonoBehaviour
         "<b>대시</b>   SPACE\n" +
         "     스태미너 소모\n" +
         "     원거리 공격 회피 · 쿨타임 1초\n\n" +
-        "<b>Ctrl</b>   스펠 마블",
+        "<b>Shift</b>   스펠 마블",
 
         // 스펠 마블
         "스펠 마블은 특수 능력을 발동시키는 마법 구슬입니다.\n" +
@@ -46,8 +46,8 @@ public class HowToPlayUI : MonoBehaviour
         "<b>등급</b>   일반 → <color=#FFD24A>골드</color> → <color=#66D0FF>다이아</color> → <color=#FF8AF0>레전드</color>\n" +
         "   높은 등급일수록 강한 능력.\n" +
         "   골드 이상은 <b>마블 뽑기</b> 및 구슬 조각 교환으로 획득.\n\n" +
-        "<b>사용</b>   Ctrl 홀드 시 스펠 마블 벨트 팝업\n" +
-        "        Ctrl 홀드 + 마블 드래그 & 드롭 시 사용",
+        "<b>사용</b>   Shift 홀드 시 스펠 마블 벨트 팝업\n" +
+        "        Shift 홀드 + 마블 드래그 & 드롭 시 사용",
 
         // 조커
         "덱에 편성된 스펠 마블을 <b>모두 사용</b>하면\n" +
@@ -127,11 +127,11 @@ public class HowToPlayUI : MonoBehaviour
         {
             Image panel = MakeImage(root, "Panel" + i, PANEL);
             if (panelSprite != null) { panel.sprite = panelSprite; panel.type = Image.Type.Sliced; }
-            SetRect(panel.rectTransform, new Vector2(0f, -75f), new Vector2(1680f, 700f));
+            SetRect(panel.rectTransform, new Vector2(0f, -95f), new Vector2(1680f, 760f));
 
-            // 왼쪽: 설명 텍스트
+            // 왼쪽: 설명 텍스트 (긴 탭 본문도 하단 테두리 안에 들어가게 넉넉히)
             TextMeshProUGUI body = MakeText(panel.rectTransform, "Body", TabBody[i], 30f, INK,
-                TextAlignmentOptions.TopLeft, new Vector2(-400f, 10f), new Vector2(720f, 600f), FontStyles.Normal);
+                TextAlignmentOptions.TopLeft, new Vector2(-395f, 0f), new Vector2(760f, 660f), FontStyles.Normal);
             body.lineSpacing = 6f;
 
             // 오른쪽: 인게임 스크린샷 — 네온 패널 프레임 안에 표시
@@ -151,9 +151,9 @@ public class HowToPlayUI : MonoBehaviour
             panels[i] = panel.gameObject;
         }
 
-        // --- 뒤로 버튼 ---
-        Button back = MakeButton(root, "BackButton", "← 뒤로", 34f, BACK_COL, Color.white,
-            new Vector2(760f, -460f), new Vector2(300f, 88f));
+        // --- 뒤로 버튼 (좌상단 통일 규격 — 덱/가챠/플레이방법 동일) ---
+        Button back = MakeButton(root, "BackButton", "← 뒤로", 30f, BACK_COL, Color.white,
+            new Vector2(-810f, 476f), new Vector2(220f, 68f));
         back.onClick.AddListener(OnBack);
     }
 

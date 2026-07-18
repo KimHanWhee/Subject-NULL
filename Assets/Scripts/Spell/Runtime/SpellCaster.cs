@@ -65,14 +65,34 @@ public class SpellCaster : MonoBehaviour
         OnHandChanged?.Invoke();
 
         // 서버 소유 최신화 → 이후 리필 드로우풀만 보정(현재 손패는 유지). 씬 이탈 시 가드.
-        for (int i = 0; i < 50 && !ServicesBootstrap.IsSignedIn; i++)
-            await System.Threading.Tasks.Task.Delay(100);
+        await ServicesBootstrap.WaitSignedInAsync(5f); // WebGL 안전(Task.Delay 금지)
         if (this == null) return;
         if (await PlayerProfileService.RefreshAsync())
         {
             if (this == null) return;
             List<SpellMarble> refreshed = BuildDrawList();
-            if (refreshed != null) { drawList = new List<SpellMarble>(refreshed); Shuffle(drawList); }
+            if (refreshed != null)
+            {
+                // 새 드로우풀로 교체하되, 이미 손패에 있는 마블은 '이미 뽑힌' 것으로 처리해야 한다.
+                // (그냥 통째로 교체하면 손패 마블이 풀에 그대로 남아 — 덱에 1장만 넣은 마블이
+                //  손패 + 드로우로 2번 등장하는 중복 버그)
+                // 손패 마블을 리스트 앞으로 옮기고 drawIndex를 그 뒤로 설정 —
+                // 전체 구성은 덱 그대로라 조커의 전체 재셔플(drawIndex=0)과도 호환된다.
+                Shuffle(refreshed);
+                int front = 0;
+                foreach (SpellMarble s in slots)
+                {
+                    if (s == null) continue;
+                    int k = refreshed.IndexOf(s, front);
+                    if (k >= 0)
+                    {
+                        (refreshed[front], refreshed[k]) = (refreshed[k], refreshed[front]);
+                        front++;
+                    }
+                }
+                drawList = refreshed;
+                drawIndex = front;
+            }
         }
     }
 

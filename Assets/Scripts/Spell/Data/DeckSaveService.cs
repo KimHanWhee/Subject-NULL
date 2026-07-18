@@ -31,6 +31,18 @@ public static class DeckSaveService
                     blob.names.Add(m.marbleName);
         PlayerPrefs.SetString(ResolveKey(), JsonUtility.ToJson(blob));
         PlayerPrefs.Save();
+        CloudSyncService.PushDeck(blob.names); // 서버 동기화(비동기 — 실패 시 다음 저장/로그인 때 재시도)
+    }
+
+    // 서버(Cloud Save) 덱으로 로컬 캐시 교체 — 로그인 직후 CloudSyncService.PullAsync에서 호출.
+    public static void OverwriteLocal(List<string> names)
+    {
+        Blob blob = new Blob();
+        if (names != null)
+            foreach (string n in names)
+                if (!string.IsNullOrEmpty(n)) blob.names.Add(n);
+        PlayerPrefs.SetString(ResolveKey(), JsonUtility.ToJson(blob));
+        PlayerPrefs.Save();
     }
 
     // 미존재 id는 스킵(마블 에셋이 삭제/개명된 경우 폴백). Design §6 에러 처리.

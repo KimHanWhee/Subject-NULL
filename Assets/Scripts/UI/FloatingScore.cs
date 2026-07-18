@@ -26,7 +26,9 @@ public class FloatingScore : MonoBehaviour
         tm.fontSize = 90;
         tm.anchor = TextAnchor.LowerCenter;
         tm.alignment = TextAlignment.Center;
-        tm.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // 내장 폰트(숫자용)
+        Font ff = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백 없음
+        if (ff == null) ff = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        tm.font = ff;
         if (tm.font == null) tm.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         mr = GetComponent<MeshRenderer>();
         mr.sharedMaterial = tm.font != null ? tm.font.material : mr.sharedMaterial;

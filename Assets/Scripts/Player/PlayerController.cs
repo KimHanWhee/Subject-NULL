@@ -239,11 +239,12 @@ public class PlayerController : MonoBehaviour
         return true;
     }
 
-    // 스펠 마블 선택 모드(Ctrl 홀드) 여부 — 이 동안 기본 공격 억제
+    // 스펠 마블 선택 모드(Shift 홀드) 여부 — 이 동안 기본 공격 억제
+    // (Ctrl → Shift: WebGL에서 Ctrl+W 등 브라우저 단축키 충돌 방지, SpellSelectionUI와 동일 판정)
     bool IsSpellSelecting()
     {
         return Keyboard.current != null &&
-               (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
+               (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
     }
 
     void Shoot()
@@ -366,6 +367,7 @@ public class PlayerController : MonoBehaviour
         GameStats.lastScore = finalScore;
         GameStats.isNewBest = HighScoreService.Submit(finalScore);
         GameStats.bestScore = HighScoreService.GetBest();
+        RankingService.Submit(finalScore); // 글로벌 랭킹(서버가 Best만 유지)
         SceneLoader.Load("GameOverScene");
     }
 }

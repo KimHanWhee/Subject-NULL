@@ -64,6 +64,18 @@ public class DeckBuilderUI : MonoBehaviour
     private static Sprite roundedOutlineSprite; // 라운드 사각 외곽선(핀스트라이프, 9-slice)
     private static Texture2D holoTex;     // 홀로그램 포일(무지개 대각 그라데이션, tileable)
 
+    // SUBJECT:NULL 실험실 UI(Resources/UI, 9-slice) — 패널/버튼/카드 크롬을 통일된 SF 룩으로.
+    private static Sprite pixelPanelSprite, pixelButtonSprite, pixelCardFrame;
+    private static bool pixelLoaded;
+    static void LoadPixelUI()
+    {
+        if (pixelLoaded) return;
+        pixelLoaded = true;
+        pixelPanelSprite = Resources.Load<Sprite>("UI/LabDossierPanel");
+        pixelButtonSprite = Resources.Load<Sprite>("UI/SubjectNullButton");
+        pixelCardFrame = Resources.Load<Sprite>("UI/SpecimenCardFrame");   // SF 카드 프레임
+    }
+
     async void Start()
     {
         if (registry == null || skinTable == null)
@@ -79,8 +91,7 @@ public class DeckBuilderUI : MonoBehaviour
         RefreshAll();
 
         // 서버 소유 최신화 → 재구성(진실은 서버). 미보유가 갱신되면 잠금/덱에서 정리됨.
-        for (int i = 0; i < 100 && !ServicesBootstrap.IsSignedIn; i++)
-            await System.Threading.Tasks.Task.Delay(100);
+        await ServicesBootstrap.WaitSignedInAsync(); // WebGL 안전(Task.Delay 금지)
         if (await PlayerProfileService.RefreshAsync())
         {
             LoadInitialDeck();
@@ -378,43 +389,40 @@ public class DeckBuilderUI : MonoBehaviour
         }
     }
 
-    // 트럼프 카드 1장: 슈트색 프레임 + 스킬 아트(크게) + 슈트 뱃지(좌상단, 작게)
-    //                + 등급 보석(우상단) + 이름 + 설명 + ×N 뱃지
+    // 카드 1장: SF 카드 프레임(SpecimenCardFrame, 등급색 틴트) + 스킬 아트(크게) + 슈트 뱃지(좌상단)
+    //          + 등급 보석(우상단) + 이름 + 설명 + ×N 뱃지 — 레이아웃은 원래 스타일 그대로, 프레임만 교체.
     void BuildCard(SpellMarble m, Vector2 pos)
     {
         float w = cardSize.x, h = cardSize.y;
-        Color suitCol = SuitCardColor(m.suit);
+        Color gradeCol = GradePalette.ColorOf(m.grade);
+        LoadPixelUI();
 
-        // 등급 테두리(카드보다 살짝 크게 뒤에 깔림). 레전드는 Update에서 무지개 순환
-        Image gradeEdge = MakeImage(cardGridRoot, "Card_" + m.marbleName, pos, new Vector2(w + 8f, h + 8f), GradePalette.ColorOf(m.grade));
-        gradeEdge.sprite = RoundedSprite();
-        gradeEdge.type = Image.Type.Sliced;
-        RectTransform card = gradeEdge.rectTransform;
-        if (m.grade == Grade.Legend) legendEdges.Add(gradeEdge);
-
-        // 카드 본체(슈트색)
-        Image frame = MakeImage(card, "Frame", Vector2.zero, new Vector2(w, h), suitCol);
-        frame.sprite = RoundedSprite();
+        // 카드 본체: 등급색으로 틴트한 SF 프레임(등급별 프레임 색). 레전드는 Update에서 무지개 순환
+        Image frame = MakeImage(cardGridRoot, "Card_" + m.marbleName, pos, new Vector2(w, h), Color.white);
+        if (pixelCardFrame != null)
+        {
+            frame.sprite = pixelCardFrame;
+            frame.color = Color.Lerp(Color.white, gradeCol, 0.8f);
+            frame.pixelsPerUnitMultiplier = 1.5f; // 테두리 두께를 카드 크기에 맞게(원본 비율 유지)
+        }
+        else { frame.sprite = RoundedSprite(); frame.color = SuitCardColor(m.suit); }
         frame.type = Image.Type.Sliced;
         frame.raycastTarget = true; // 클릭/호버 히트 영역
+        RectTransform card = frame.rectTransform;
+        if (m.grade == Grade.Legend) legendEdges.Add(frame);
 
-        // 핀스트라이프(트럼프 프레임 느낌의 안쪽 이중선)
-        Image pin = MakeImage(card, "Pinstripe", Vector2.zero, new Vector2(w - 16f, h - 16f), new Color(1f, 1f, 1f, 0.28f));
-        pin.sprite = RoundedOutlineSprite();
-        pin.type = Image.Type.Sliced;
-
-        // 아트 영역(어두운 패널 위에 스킬 아이콘)
-        Image artBg = MakeImage(card, "ArtBg", new Vector2(0f, 62f), new Vector2(w - 26f, 150f), new Color(0.06f, 0.06f, 0.09f, 0.85f));
+        // 아트 영역(어두운 패널 위에 스킬 아이콘 — 프레임 내부창: 상단 헤더밴드 아래에 맞춤)
+        Image artBg = MakeImage(card, "ArtBg", new Vector2(0f, 44f), new Vector2(w - 44f, 130f), new Color(0.06f, 0.06f, 0.09f, 0.85f));
         artBg.sprite = RoundedSprite();
         artBg.type = Image.Type.Sliced;
-        Image art = MakeImage(card, "Art", new Vector2(0f, 62f), new Vector2(124f, 124f), Color.white);
+        Image art = MakeImage(card, "Art", new Vector2(0f, 44f), new Vector2(112f, 112f), Color.white);
         art.sprite = ArtOf(m);
         art.preserveAspect = true;
 
-        // 레전드 홀로그램 포일(카드 전체 위에 은은히, UV 스크롤은 Update에서)
+        // 레전드 홀로그램 포일(카드 위에 은은히, UV 스크롤은 Update에서)
         if (m.grade == Grade.Legend)
         {
-            RectTransform holoRt = MakeRect(card, "Holo", Vector2.zero, new Vector2(w - 10f, h - 10f));
+            RectTransform holoRt = MakeRect(card, "Holo", Vector2.zero, new Vector2(w - 36f, h - 36f));
             RawImage holo = holoRt.gameObject.AddComponent<RawImage>();
             holo.texture = HoloTexture();
             holo.color = new Color(1f, 1f, 1f, 0.28f);
@@ -431,21 +439,21 @@ public class DeckBuilderUI : MonoBehaviour
         suitTxt.color = SuitInfo.ColorOf(m.suit);
 
         // 등급 보석(우상단)
-        Image gem = MakeImage(card, "GradeGem", new Vector2(w * 0.5f - 24f, h * 0.5f - 24f), new Vector2(20f, 20f), GradePalette.ColorOf(m.grade));
+        Image gem = MakeImage(card, "GradeGem", new Vector2(w * 0.5f - 24f, h * 0.5f - 24f), new Vector2(20f, 20f), gradeCol);
         gem.sprite = CircleSprite();
 
         // 이름
-        Text name = MakeText(card, "Name", new Vector2(0f, -32f), new Vector2(w - 20f, 28f), 19, TextAnchor.MiddleCenter);
+        Text name = MakeText(card, "Name", new Vector2(0f, -46f), new Vector2(w - 40f, 28f), 19, TextAnchor.MiddleCenter);
         name.text = "<b>" + (m.ability != null ? m.ability.abilityName : m.marbleName) + "</b>";
 
         // 설명(하단 — 넘치면 잘림)
-        Text desc = MakeText(card, "Desc", new Vector2(0f, -95f), new Vector2(w - 28f, 92f), 13, TextAnchor.UpperCenter);
+        Text desc = MakeText(card, "Desc", new Vector2(0f, -102f), new Vector2(w - 48f, 74f), 13, TextAnchor.UpperCenter);
         desc.text = m.ability != null ? m.ability.description : "";
         desc.color = new Color(0.82f, 0.82f, 0.88f);
         desc.verticalOverflow = VerticalWrapMode.Truncate;
 
         // 덱 포함 수(우하단 ×N)
-        Text count = MakeText(card, "Count", new Vector2(w * 0.5f - 30f, -h * 0.5f + 18f), new Vector2(52f, 26f), 17, TextAnchor.MiddleRight);
+        Text count = MakeText(card, "Count", new Vector2(w * 0.5f - 34f, -h * 0.5f + 20f), new Vector2(52f, 26f), 17, TextAnchor.MiddleRight);
         count.color = new Color(1f, 0.84f, 0.3f);
         cardBadges[m] = count;
 
@@ -458,7 +466,7 @@ public class DeckBuilderUI : MonoBehaviour
         // 미보유(Gold+ 미획득): 잠금 오버레이 + 라벨 (맨 위에 그려지도록 마지막에 추가)
         if (!OwnedMarblesService.IsOwned(m))
         {
-            Image lockOv = MakeImage(card, "Lock", Vector2.zero, new Vector2(w, h), new Color(0.03f, 0.03f, 0.05f, 0.6f));
+            Image lockOv = MakeImage(card, "Lock", Vector2.zero, new Vector2(w - 20f, h - 20f), new Color(0.03f, 0.03f, 0.05f, 0.62f));
             lockOv.sprite = RoundedSprite();
             lockOv.type = Image.Type.Sliced;
             Text lockTxt = MakeText(card, "LockTxt", new Vector2(0f, 8f), new Vector2(w - 20f, 64f), 20, TextAnchor.MiddleCenter);
@@ -520,7 +528,8 @@ public class DeckBuilderUI : MonoBehaviour
         saveButton = MakeButton(panel, "SaveBtn", new Vector2(-150f, -350f), new Vector2(220f, 62f), "덱 저장", new Color(0.22f, 0.5f, 0.3f), SaveDeck);
         MakeButton(panel, "AutoBtn", new Vector2(90f, -350f), new Vector2(200f, 62f), "자동 채우기", new Color(0.28f, 0.3f, 0.45f), AutoFill);
         MakeButton(panel, "ClearBtn", new Vector2(240f, -350f), new Vector2(80f, 62f), "비우기", new Color(0.45f, 0.25f, 0.25f), ClearDeck);
-        MakeButton(panel, "BackBtn", new Vector2(0f, -350f - 76f), new Vector2(470f, 54f), "메인 메뉴로", new Color(0.25f, 0.25f, 0.3f), () => SceneLoader.Load("MainMenuScene"));
+        // 뒤로 버튼: 좌상단 통일 규격(덱/가챠/플레이방법 동일)
+        MakeButton(root, "BackBtn", new Vector2(-810f, 476f), new Vector2(220f, 68f), "← 뒤로", new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
 
         // 저장/오류 피드백(버튼 위)
         feedbackText = MakeText(panel, "Feedback", new Vector2(0f, -298f), new Vector2(540f, 30f), 18, TextAnchor.MiddleCenter);
@@ -668,20 +677,33 @@ public class DeckBuilderUI : MonoBehaviour
 
     RectTransform MakePanel(RectTransform parent, string name, Vector2 pos, Vector2 size)
     {
+        LoadPixelUI();
         Image img = MakeImage(parent, name, pos, size, new Color(0.11f, 0.11f, 0.17f, 0.9f));
-        img.sprite = RoundedSprite();
+        if (pixelPanelSprite != null) { img.sprite = pixelPanelSprite; img.color = Color.white; } // 실험실 네온 도시어 패널
+        else img.sprite = RoundedSprite();
         img.type = Image.Type.Sliced;
         return img.rectTransform;
     }
 
     Button MakeButton(RectTransform parent, string name, Vector2 pos, Vector2 size, string label, Color color, UnityEngine.Events.UnityAction onClick)
     {
+        LoadPixelUI();
         Image img = MakeImage(parent, name, pos, size, color);
-        img.sprite = RoundedSprite();
-        img.type = Image.Type.Sliced;
         img.raycastTarget = true;
+        if (pixelButtonSprite != null)
+        {
+            img.sprite = pixelButtonSprite;                       // SF 네온 버튼(기능색은 밝게 틴트해 유지)
+            img.color = Color.Lerp(color, Color.white, 0.4f);
+        }
+        else img.sprite = RoundedSprite();
+        img.type = Image.Type.Sliced;
         Button btn = img.gameObject.AddComponent<Button>();
         btn.targetGraphic = img;
+        var cb = btn.colors;
+        cb.highlightedColor = new Color(0.82f, 0.96f, 1f);
+        cb.pressedColor = new Color(0.66f, 0.86f, 0.96f);
+        cb.fadeDuration = 0.1f;
+        btn.colors = cb;
         btn.onClick.AddListener(onClick);
 
         Text t = MakeText(img.rectTransform, "Label", Vector2.zero, size, 20, TextAnchor.MiddleCenter);
@@ -692,6 +714,7 @@ public class DeckBuilderUI : MonoBehaviour
     // 한글 표시용 legacy 폰트(프로젝트 툴팁과 동일 계열 — TMP 기본 폰트는 한글 글리프 없음)
     static Font UiFont()
     {
+        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
         if (uiFont == null) uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return uiFont;
     }

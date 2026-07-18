@@ -8,11 +8,14 @@ public class HeartPoint : MonoBehaviour
     [Tooltip("0번 = 풀피, 마지막 인덱스 = 빈피 (마지막 스프라이트를 배경 프레임으로 사용)")]
     public Sprite[] heartSprites;
 
-    // 스프라이트 내 빨간 바(트랙) 영역 — 정규화 측정값
+    // 스프라이트 내 빨간 바(트랙) 영역 — 정규화 측정값(기본 프레임 기준)
     const float TrackXMin = 0.238f, TrackXMax = 0.912f, TrackYMin = 0.304f, TrackYMax = 0.696f;
+    // 연구실 리스킨 프레임(Resources/UI/LabHpBar, 350x58) 기준 트랙 영역 — 픽셀 실측(x 31..319, y 14..41 top기준)
+    const float LabXMin = 0.089f, LabXMax = 0.914f, LabYMin = 0.293f, LabYMax = 0.759f;
 
     private Image image;
     private Image fill;
+    private float txMin, txMax, tyMin, tyMax; // 실제 사용 트랙(프레임 종류에 따라 결정)
     private static Sprite whiteSprite;
 
     void Awake()
@@ -32,24 +35,39 @@ public class HeartPoint : MonoBehaviour
 
     void BuildFill()
     {
-        // 배경 = 빈 프레임(프레임+십자가+빈 트랙) 고정
-        if (image != null && heartSprites != null && heartSprites.Length > 0)
+        // 연구실 리스킨 프레임(Resources) 우선 — 있으면 트랙 좌표도 해당 스프라이트 기준으로 교체
+        Sprite lab = Resources.Load<Sprite>("UI/LabHpBar");
+        bool labMode = lab != null;
+        if (labMode) { txMin = LabXMin; txMax = LabXMax; tyMin = LabYMin; tyMax = LabYMax; }
+        else { txMin = TrackXMin; txMax = TrackXMax; tyMin = TrackYMin; tyMax = TrackYMax; }
+
+        // 배경 = 빈 프레임(프레임+빈 트랙) 고정
+        if (image != null)
         {
-            image.sprite = heartSprites[heartSprites.Length - 1];
-            image.type = Image.Type.Simple;
+            if (labMode) { image.sprite = lab; image.type = Image.Type.Simple; }
+            else if (heartSprites != null && heartSprites.Length > 0)
+            {
+                image.sprite = heartSprites[heartSprites.Length - 1];
+                image.type = Image.Type.Simple;
+            }
         }
         // 빨간 fill(코드 생성) — 트랙 영역에 앵커, 폭만 ratio로 조절
         var go = new GameObject("HpFill", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(transform, false);
         fill = go.GetComponent<Image>();
         fill.sprite = White();
-        fill.color = new Color(177f / 255f, 62f / 255f, 83f / 255f, 1f);
+        fill.color = labMode
+            ? new Color(1f, 0.3f, 0.42f, 1f)                    // 연구실 프레임엔 네온 레드
+            : new Color(177f / 255f, 62f / 255f, 83f / 255f, 1f);
         fill.raycastTarget = false;
         var rt = fill.rectTransform;
-        rt.anchorMin = new Vector2(TrackXMin, TrackYMin);
-        rt.anchorMax = new Vector2(TrackXMax, TrackYMax);
+        rt.anchorMin = new Vector2(txMin, tyMin);
+        rt.anchorMax = new Vector2(txMax, tyMax);
         rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
         go.transform.SetAsLastSibling(); // 배경 위로
+
+        // 노이즈/글리치 연출(모니터 계기판 느낌)
+        gameObject.AddComponent<HpBarGlitchFx>().Init(image, fill);
     }
 
     public void UpdateHeart(float hp, float maxHp)
@@ -57,8 +75,8 @@ public class HeartPoint : MonoBehaviour
         float ratio = maxHp > 0f ? Mathf.Clamp01(hp / maxHp) : 0f;
         if (fill == null) return;
         var rt = fill.rectTransform;
-        rt.anchorMin = new Vector2(TrackXMin, TrackYMin);
-        rt.anchorMax = new Vector2(TrackXMin + (TrackXMax - TrackXMin) * ratio, TrackYMax);
+        rt.anchorMin = new Vector2(txMin, tyMin);
+        rt.anchorMax = new Vector2(txMin + (txMax - txMin) * ratio, tyMax);
         rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
         fill.enabled = ratio > 0f;
     }

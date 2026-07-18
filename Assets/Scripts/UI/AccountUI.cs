@@ -1,23 +1,26 @@
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
+using Unity.Services.Authentication;
 
-// 계정 화면 — 코드 생성 UI(GachaShopUI 패턴). 익명 계정을 아이디/비번에 연결(영구화)하거나,
-// 기존 계정으로 로그인. 씬엔 이 컴포넌트 + 카메라만 있으면 됨.
+// 계정 화면 — 코드 생성 UI. 게스트(익명) ↔ Google 계정 구조.
+// - 게스트: [Google 계정 연결] 로 진행상황 유지한 채 영구화
+// - Google 연결됨: 상태 표시 + [로그아웃]
+// 씬엔 이 컴포넌트 + 카메라만 있으면 됨.
 public class AccountUI : MonoBehaviour
 {
     static readonly Color BG = new Color(0.07f, 0.075f, 0.11f, 1f);
     static readonly Color PANEL = new Color(0.12f, 0.12f, 0.18f, 0.95f);
 
     RectTransform canvasRoot;
-    Text statusText, feedbackText;
-    InputField linkUser, linkPass, loginUser, loginPass;
-    Button linkBtn, loginBtn;
+    Text statusText, feedbackText, playerIdText, nickText;
+    Button linkBtn, logoutBtn, switchBtn, copyIdBtn, nickBtn;
+    InputField nickInput;
+    bool editingNick;
     float feedbackUntil;
     bool busy;
+    bool switchConfirm; // [다른 계정으로 로그인] 2단계 확인(게스트 진행상황 포기 경고)
     static Font uiFont;
     static Sprite whiteSprite;
 
@@ -25,8 +28,9 @@ public class AccountUI : MonoBehaviour
     {
         EnsureEventSystem();
         BuildUI();
-        for (int i = 0; i < 100 && !ServicesBootstrap.IsSignedIn; i++)
-            await Task.Delay(100);
+        await ServicesBootstrap.WaitSignedInAsync(); // WebGL 안전(Task.Delay 금지)
+        await AccountService.RefreshAsync();
+        try { await AuthenticationService.Instance.GetPlayerNameAsync(); } catch { } // 닉네임 확보(없으면 자동 생성)
         RefreshStatus();
     }
 
@@ -60,76 +64,207 @@ public class AccountUI : MonoBehaviour
         Stretch(bg.rectTransform);
 
         MakeText(canvasRoot, "Title", new Vector2(0f, 430f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>계정</b>", new Color(1f, 0.86f, 0.4f));
-        statusText = MakeText(canvasRoot, "Status", new Vector2(0f, 360f), new Vector2(1100f, 40f), 22, TextAnchor.MiddleCenter, "", new Color(0.8f, 0.85f, 0.95f));
+        statusText = MakeText(canvasRoot, "Status", new Vector2(0f, 340f), new Vector2(1300f, 44f), 24, TextAnchor.MiddleCenter, "<color=#E0A06A>서버 연결 중...</color>", new Color(0.8f, 0.85f, 0.95f));
 
-        // 왼쪽: 계정 만들기(연결)
-        RectTransform link = MakePanel(canvasRoot, "LinkPanel", new Vector2(-320f, -40f), new Vector2(560f, 560f));
-        MakeText(link, "LH", new Vector2(0f, 220f), new Vector2(520f, 34f), 26, TextAnchor.MiddleCenter, "<b>계정 만들기</b>", Color.white);
-        MakeText(link, "LHsub", new Vector2(0f, 176f), new Vector2(500f, 60f), 15, TextAnchor.UpperCenter, "<color=#9AA>지금 진행상황(GEM·마블) 그대로 유지한 채\n아이디/비번을 연결합니다. 다른 기기서 복구 가능.</color>", Color.white);
-        linkUser = MakeInput(link, "LinkUser", new Vector2(0f, 90f), new Vector2(460f, 56f), "아이디 (3~20자)", false);
-        linkPass = MakeInput(link, "LinkPass", new Vector2(0f, 20f), new Vector2(460f, 56f), "비밀번호 (8~30자, 대소문자·숫자·기호)", true);
-        linkBtn = MakeButton(link, "LinkBtn", new Vector2(0f, -70f), new Vector2(460f, 68f), "계정 만들기", new Color(0.3f, 0.42f, 0.32f), OnLink);
-        MakeText(link, "LinkHint", new Vector2(0f, -150f), new Vector2(500f, 40f), 14, TextAnchor.UpperCenter, "<color=#8A8A98>익명 상태에서 한 번만 연결됩니다.</color>", Color.white);
+        // 중앙 패널
+        RectTransform panel = MakePanel(canvasRoot, "Panel", new Vector2(0f, -40f), new Vector2(720f, 460f));
 
-        // 오른쪽: 로그인(기존 계정)
-        RectTransform login = MakePanel(canvasRoot, "LoginPanel", new Vector2(320f, -40f), new Vector2(560f, 560f));
-        MakeText(login, "GH", new Vector2(0f, 220f), new Vector2(520f, 34f), 26, TextAnchor.MiddleCenter, "<b>로그인</b>", Color.white);
-        MakeText(login, "GHsub", new Vector2(0f, 176f), new Vector2(500f, 60f), 15, TextAnchor.UpperCenter, "<color=#E0A06A>⚠ 다른 계정으로 로그인하면 지금 익명 진행상황엔\n접근할 수 없습니다(연결 안 했다면).</color>", Color.white);
-        loginUser = MakeInput(login, "LoginUser", new Vector2(0f, 90f), new Vector2(460f, 56f), "아이디", false);
-        loginPass = MakeInput(login, "LoginPass", new Vector2(0f, 20f), new Vector2(460f, 56f), "비밀번호", true);
-        loginBtn = MakeButton(login, "LoginBtn", new Vector2(0f, -70f), new Vector2(460f, 68f), "로그인", new Color(0.3f, 0.32f, 0.5f), OnLogin);
+        MakeText(panel, "Info", new Vector2(0f, 150f), new Vector2(640f, 100f), 18, TextAnchor.UpperCenter,
+            "<color=#9AA>게스트 진행상황(GEM·마블)은 이 브라우저에만 저장됩니다.\nGoogle 계정을 연결하면 어떤 기기에서든 이어할 수 있습니다.</color>", Color.white);
 
-        feedbackText = MakeText(canvasRoot, "Feedback", new Vector2(0f, -400f), new Vector2(1200f, 40f), 22, TextAnchor.MiddleCenter, "", new Color(1f, 0.6f, 0.55f));
+        // 닉네임(리더보드 표시명) + 변경 — 인라인 입력 전환
+        nickText = MakeText(panel, "Nick", new Vector2(-40f, -122f), new Vector2(460f, 30f), 18, TextAnchor.MiddleCenter, "", new Color(0.75f, 0.85f, 0.95f));
+        nickBtn = MakeButton(panel, "NickEdit", new Vector2(230f, -122f), new Vector2(90f, 44f), "변경", new Color(0.3f, 0.32f, 0.44f), OnNickButton);
+        nickBtn.gameObject.SetActive(false);
+
+        // 플레이어 ID(운영/문의 대응용) + 복사 — 패널 하단에 작게
+        playerIdText = MakeText(panel, "PlayerId", new Vector2(-40f, -170f), new Vector2(460f, 30f), 16, TextAnchor.MiddleCenter, "", new Color(0.55f, 0.6f, 0.72f));
+        copyIdBtn = MakeButton(panel, "CopyId", new Vector2(230f, -170f), new Vector2(90f, 44f), "복사", new Color(0.3f, 0.32f, 0.44f), OnCopyId);
+        copyIdBtn.gameObject.SetActive(false);
+
+        linkBtn = MakeButton(panel, "LinkGoogle", new Vector2(0f, 30f), new Vector2(460f, 76f), "Google 계정 연결", new Color(0.28f, 0.4f, 0.34f), OnLinkGoogle);
+        // 게스트 전용: 이미 다른 플레이어에 연결된 Google 계정으로 갈아타는 출구(로그인 선택 화면으로)
+        switchBtn = MakeButton(panel, "SwitchAccount", new Vector2(0f, -70f), new Vector2(460f, 64f), "다른 계정으로 로그인", new Color(0.3f, 0.32f, 0.44f), OnSwitchAccount);
+        logoutBtn = MakeButton(panel, "Logout", new Vector2(0f, -80f), new Vector2(460f, 64f), "로그아웃", new Color(0.42f, 0.28f, 0.28f), OnLogout);
+
+        feedbackText = MakeText(canvasRoot, "Feedback", new Vector2(0f, -360f), new Vector2(1200f, 40f), 22, TextAnchor.MiddleCenter, "", new Color(1f, 0.6f, 0.55f));
         feedbackText.enabled = false;
 
-        MakeButton(canvasRoot, "Back", new Vector2(-820f, 480f), new Vector2(180f, 54f), "← 메인 메뉴", new Color(0.25f, 0.25f, 0.32f), () => SceneLoader.Load("MainMenuScene"));
+        MakeButton(canvasRoot, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), "← 뒤로", new Color(0.25f, 0.25f, 0.32f), () => SceneLoader.Load("MainMenuScene"));
+
+        linkBtn.gameObject.SetActive(false);
+        switchBtn.gameObject.SetActive(false);
+        logoutBtn.gameObject.SetActive(false);
     }
 
     void RefreshStatus()
     {
-        bool linked = AccountService.IsLinked;
+        bool googleLinked = AccountService.IsLinked;
         if (statusText != null)
         {
-            if (!ServicesBootstrap.IsSignedIn) statusText.text = "<color=#E0A06A>서버 연결 중...</color>";
-            else if (linked) statusText.text = "현재 계정: <b><color=#7FE08A>" + AccountService.Username + "</color></b> (영구 · 복구 가능)";
-            else statusText.text = "현재 계정: <color=#E0A06A>익명</color> — 아직 저장 안 됨. 계정을 만들어 두세요.";
+            if (!ServicesBootstrap.IsSignedIn)
+                statusText.text = "<color=#E0A06A>서버에 연결하지 못했습니다</color>";
+            else if (googleLinked)
+                statusText.text = "현재 계정: <b><color=#7FE08A>Google 연결됨</color></b> (영구 · 어느 기기서든 복구 가능)";
+            else
+                statusText.text = "현재 계정: <color=#E0A06A>게스트</color> — 아직 이 브라우저에만 저장됩니다";
         }
-        // 이미 연결됐으면 '계정 만들기'는 잠금
-        if (linkBtn != null) linkBtn.interactable = ServicesBootstrap.IsSignedIn && !linked && !busy;
-        if (loginBtn != null) loginBtn.interactable = ServicesBootstrap.IsSignedIn && !busy;
-    }
-
-    async void OnLink()
-    {
-        if (busy) return;
-        busy = true; RefreshStatus();
-        try
+        bool signedIn = ServicesBootstrap.IsSignedIn;
+        if (linkBtn != null)
         {
-            var res = await AccountService.LinkAsync(linkUser.text.Trim(), linkPass.text);
-            if (res.ok) { ShowFeedback("계정 생성 완료! 이제 어느 기기서든 로그인해 복구할 수 있어요.", true); linkPass.text = ""; }
-            else ShowFeedback(res.error);
+            linkBtn.gameObject.SetActive(signedIn && !googleLinked);
+            linkBtn.interactable = !busy && GoogleAuth.IsSupported;
+            Text label = linkBtn.GetComponentInChildren<Text>();
+            if (label != null && !GoogleAuth.IsSupported)
+                label.text = "Google 계정 연결 (웹 빌드 전용)";
         }
-        catch (Exception e) { Debug.LogError("[Account] link: " + e); ShowFeedback("오류로 실패했습니다"); }
-        finally { busy = false; RefreshStatus(); }
-    }
-
-    async void OnLogin()
-    {
-        if (busy) return;
-        busy = true; RefreshStatus();
-        try
+        if (logoutBtn != null)
         {
-            var res = await AccountService.LoginAsync(loginUser.text.Trim(), loginPass.text);
-            if (res.ok)
+            // 게스트 상태에서 로그아웃하면 진행상황을 잃으므로 Google 연결 시에만 노출
+            logoutBtn.gameObject.SetActive(signedIn && googleLinked);
+            logoutBtn.interactable = !busy;
+        }
+        if (switchBtn != null)
+        {
+            // 게스트 전용 — Google 연결 계정으로 갈아탈 때 사용(연결됨 상태에선 [로그아웃]이 같은 역할)
+            switchBtn.gameObject.SetActive(signedIn && !googleLinked);
+            switchBtn.interactable = !busy;
+        }
+        if (playerIdText != null)
+        {
+            string pid = CurrentPlayerId();
+            playerIdText.text = string.IsNullOrEmpty(pid) ? "" : "플레이어 ID: " + pid;
+            if (copyIdBtn != null) copyIdBtn.gameObject.SetActive(!string.IsNullOrEmpty(pid));
+        }
+        if (nickText != null && !editingNick)
+        {
+            string nick = RankingService.CurrentName;
+            nickText.text = string.IsNullOrEmpty(nick) ? "" : "닉네임: <b>" + nick + "</b>";
+            if (nickBtn != null)
             {
-                await PlayerProfileService.RefreshAsync(); // 로그인 계정의 재화/소유 반영
-                ShowFeedback("로그인 성공!", true);
-                loginPass.text = "";
+                nickBtn.gameObject.SetActive(signedIn && !string.IsNullOrEmpty(nick));
+                nickBtn.interactable = !busy;
             }
-            else ShowFeedback(res.error);
         }
-        catch (Exception e) { Debug.LogError("[Account] login: " + e); ShowFeedback("오류로 실패했습니다"); }
+    }
+
+    // ── 닉네임 인라인 편집 ──────────────────────────────────
+    void OnNickButton()
+    {
+        if (busy) return;
+        if (!editingNick) BeginNickEdit();
+        else _ = SaveNickAsync();
+    }
+
+    void BeginNickEdit()
+    {
+        editingNick = true;
+        nickText.gameObject.SetActive(false);
+        Text label = nickBtn.GetComponentInChildren<Text>();
+        if (label != null) label.text = "저장";
+
+        var go = new GameObject("NickInput", typeof(RectTransform), typeof(Image), typeof(InputField));
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.SetParent(nickText.rectTransform.parent, false);
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(320f, 46f);
+        rt.anchoredPosition = new Vector2(-40f, -122f);
+        Image bg = go.GetComponent<Image>();
+        bg.color = new Color(0.09f, 0.1f, 0.15f, 0.95f);
+
+        var tgo = new GameObject("Text", typeof(RectTransform));
+        tgo.transform.SetParent(rt, false);
+        Text t = tgo.AddComponent<Text>();
+        t.font = UiFont(); t.fontSize = 20; t.alignment = TextAnchor.MiddleLeft;
+        t.color = new Color(0.9f, 0.95f, 1f); t.supportRichText = false;
+        RectTransform trt = t.rectTransform;
+        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+        trt.offsetMin = new Vector2(12f, 4f); trt.offsetMax = new Vector2(-12f, -4f);
+
+        nickInput = go.GetComponent<InputField>();
+        nickInput.textComponent = t;
+        nickInput.characterLimit = 16;
+        string cur = RankingService.CurrentName;
+        int hash = cur.IndexOf('#');
+        nickInput.text = hash > 0 ? cur.Substring(0, hash) : cur; // #태그는 서버가 다시 붙임
+        nickInput.ActivateInputField();
+    }
+
+    async System.Threading.Tasks.Task SaveNickAsync()
+    {
+        if (nickInput == null) return;
+        busy = true;
+        try
+        {
+            string err = await RankingService.SetNameAsync(nickInput.text);
+            if (err != null) { ShowFeedback(err); return; } // 편집 상태 유지, 재시도 가능
+            ShowFeedback("닉네임이 변경되었습니다", true);
+            EndNickEdit();
+        }
         finally { busy = false; RefreshStatus(); }
+    }
+
+    void EndNickEdit()
+    {
+        editingNick = false;
+        if (nickInput != null) { Destroy(nickInput.gameObject); nickInput = null; }
+        nickText.gameObject.SetActive(true);
+        Text label = nickBtn.GetComponentInChildren<Text>();
+        if (label != null) label.text = "변경";
+    }
+
+    static string CurrentPlayerId()
+    {
+        try { return ServicesBootstrap.IsSignedIn ? AuthenticationService.Instance.PlayerId : ""; }
+        catch { return ""; }
+    }
+
+    void OnCopyId()
+    {
+        string pid = CurrentPlayerId();
+        if (string.IsNullOrEmpty(pid)) return;
+        ClipboardUtil.Copy(pid);
+        ShowFeedback("플레이어 ID를 복사했습니다", true);
+    }
+
+    // 게스트 → 로그인 선택 화면. 지금 게스트 계정은 복구 불가라 2번 클릭으로 확인.
+    void OnSwitchAccount()
+    {
+        if (busy) return;
+        if (!switchConfirm)
+        {
+            switchConfirm = true;
+            Text label = switchBtn.GetComponentInChildren<Text>();
+            if (label != null) label.text = "지금 게스트 진행상황을 잃습니다 — 한 번 더 클릭";
+            ShowFeedback("이 브라우저의 게스트 계정(GEM·마블)은 복구할 수 없게 됩니다.");
+            return;
+        }
+        OnLogout(); // 세션 토큰 제거 → 로그인 화면(게스트/Google 선택)
+    }
+
+    async void OnLinkGoogle()
+    {
+        if (busy) return;
+        busy = true; RefreshStatus();
+        try
+        {
+            string err = await ServicesBootstrap.LinkGoogleAsync();
+            await AccountService.RefreshAsync();
+            if (AccountService.IsLinked) ShowFeedback("Google 계정 연결 완료! 이제 어느 기기에서든 이어할 수 있어요.", true);
+            else if (!string.IsNullOrEmpty(err)) ShowFeedback(err);
+        }
+        finally { busy = false; RefreshStatus(); }
+    }
+
+    void OnLogout()
+    {
+        if (busy) return;
+        try
+        {
+            AuthenticationService.Instance.SignOut(true); // 세션 토큰까지 제거
+        }
+        catch (Exception e) { Debug.LogWarning("[Account] 로그아웃 예외: " + e.Message); }
+        SceneLoader.Load("LoginScene");
     }
 
     void ShowFeedback(string msg, bool ok = false)
@@ -144,6 +279,7 @@ public class AccountUI : MonoBehaviour
     // ── UI 프리미티브 ─────────────────────────────────────
     static Font UiFont()
     {
+        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
         if (uiFont == null) uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return uiFont;
     }
@@ -159,28 +295,13 @@ public class AccountUI : MonoBehaviour
         return whiteSprite;
     }
 
-    InputField MakeInput(RectTransform parent, string name, Vector2 pos, Vector2 size, string placeholder, bool password)
+    static void Stretch(RectTransform rt)
     {
-        Image box = MakeImage(parent, name, pos, size, new Color(0.08f, 0.08f, 0.13f));
-        box.raycastTarget = true;
-        InputField input = box.gameObject.AddComponent<InputField>();
-
-        Text ph = MakeText(box.rectTransform, "Placeholder", Vector2.zero, new Vector2(size.x - 24f, size.y), 20, TextAnchor.MiddleLeft, placeholder, new Color(0.55f, 0.55f, 0.65f));
-        ph.rectTransform.offsetMin = new Vector2(14f, 0f); ph.rectTransform.offsetMax = new Vector2(-14f, 0f);
-        Text txt = MakeText(box.rectTransform, "Text", Vector2.zero, new Vector2(size.x - 24f, size.y), 20, TextAnchor.MiddleLeft, "", Color.white);
-        txt.rectTransform.offsetMin = new Vector2(14f, 0f); txt.rectTransform.offsetMax = new Vector2(-14f, 0f);
-        txt.supportRichText = false;
-
-        input.textComponent = txt;
-        input.placeholder = ph;
-        input.targetGraphic = box;
-        if (password) { input.contentType = InputField.ContentType.Password; input.inputType = InputField.InputType.Password; }
-        input.lineType = InputField.LineType.SingleLine;
-        input.characterLimit = 40;
-        return input;
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
     }
 
-    static RectTransform MakeRect(RectTransform parent, string name, Vector2 pos, Vector2 size)
+    RectTransform MakeRect(RectTransform parent, string name, Vector2 pos, Vector2 size)
     {
         GameObject go = new GameObject(name, typeof(RectTransform));
         RectTransform rt = go.GetComponent<RectTransform>();
@@ -191,7 +312,20 @@ public class AccountUI : MonoBehaviour
         return rt;
     }
 
-    static Image MakeImage(RectTransform parent, string name, Vector2 pos, Vector2 size, Color color)
+    RectTransform MakePanel(RectTransform parent, string name, Vector2 pos, Vector2 size)
+    {
+        Image img = MakeImage(parent, name, pos, size, PANEL);
+        Sprite pixel = Resources.Load<Sprite>("UI/LabDossierPanel"); // PixelLab 패널 프레임
+        if (pixel != null)
+        {
+            img.sprite = pixel;
+            img.type = Image.Type.Sliced;
+            img.color = Color.white;
+        }
+        return img.rectTransform;
+    }
+
+    Image MakeImage(RectTransform parent, string name, Vector2 pos, Vector2 size, Color color)
     {
         RectTransform rt = MakeRect(parent, name, pos, size);
         Image img = rt.gameObject.AddComponent<Image>();
@@ -201,35 +335,31 @@ public class AccountUI : MonoBehaviour
         return img;
     }
 
-    static Text MakeText(RectTransform parent, string name, Vector2 pos, Vector2 size, int fontSize, TextAnchor align, string text, Color color)
+    Text MakeText(RectTransform parent, string name, Vector2 pos, Vector2 size, int fontSize, TextAnchor align, string text, Color color)
     {
         RectTransform rt = MakeRect(parent, name, pos, size);
         Text t = rt.gameObject.AddComponent<Text>();
-        t.font = UiFont(); t.fontSize = fontSize; t.alignment = align; t.supportRichText = true;
-        t.text = text; t.color = color; t.raycastTarget = false;
-        t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
+        t.font = UiFont(); t.fontSize = fontSize; t.alignment = align;
+        t.supportRichText = true; t.text = text; t.color = color; t.raycastTarget = false;
+        t.horizontalOverflow = HorizontalWrapMode.Overflow; t.verticalOverflow = VerticalWrapMode.Overflow;
         return t;
-    }
-
-    RectTransform MakePanel(RectTransform parent, string name, Vector2 pos, Vector2 size)
-    {
-        return MakeImage(parent, name, pos, size, PANEL).rectTransform;
     }
 
     Button MakeButton(RectTransform parent, string name, Vector2 pos, Vector2 size, string label, Color color, UnityEngine.Events.UnityAction onClick)
     {
         Image img = MakeImage(parent, name, pos, size, color);
         img.raycastTarget = true;
-        Button b = img.gameObject.AddComponent<Button>();
-        b.targetGraphic = img;
-        if (onClick != null) b.onClick.AddListener(onClick);
-        MakeText(img.rectTransform, "Label", Vector2.zero, size, 22, TextAnchor.MiddleCenter, label, Color.white);
-        return b;
-    }
-
-    static void Stretch(RectTransform rt)
-    {
-        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+        Sprite pixel = Resources.Load<Sprite>("UI/SubjectNullButton"); // PixelLab 버튼 프레임
+        if (pixel != null)
+        {
+            img.sprite = pixel;
+            img.type = Image.Type.Sliced;
+            img.color = Color.Lerp(Color.white, color, 0.35f);
+        }
+        Button btn = img.gameObject.AddComponent<Button>();
+        btn.targetGraphic = img;
+        btn.onClick.AddListener(onClick);
+        MakeText(img.rectTransform, "Label", Vector2.zero, new Vector2(size.x - 20f, size.y), Mathf.RoundToInt(size.y * 0.36f), TextAnchor.MiddleCenter, label, new Color(0.9f, 0.95f, 1f));
+        return btn;
     }
 }

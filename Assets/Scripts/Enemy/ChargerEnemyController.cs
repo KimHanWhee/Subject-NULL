@@ -27,6 +27,8 @@ public class ChargerEnemyController : EnemyBase
         state = State.Chasing;
         stateTimer = 0f;
         cooldownTimer = 0.5f; // 스폰 직후 즉시 돌진 방지(짧은 유예)
+        // 돌진은 velocity 이동(아래 Charging) — 고속에서도 벽을 못 뚫게 연속 충돌 검사
+        if (rb != null) rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
     }
 
     protected override void Tick(Vector2 toTarget, float dt)
@@ -56,7 +58,11 @@ public class ChargerEnemyController : EnemyBase
                 break;
 
             case State.Charging:
-                transform.Translate(chargeDir * (chargeSpeed * dt));
+                // ⚠️ Translate 금지 — 물리 우회라 고속에서 벽 관통(스텝당 침투 > 엔진 보정).
+                // EnemyBase.FixedUpdate가 매 스텝 velocity를 0으로 만든 뒤 Tick을 부르므로
+                // 여기서 다시 세팅하면 "이번 스텝만 유효한" 돌진 속도가 되고, 벽은 엔진이 막는다.
+                if (rb != null) rb.linearVelocity = chargeDir * (chargeSpeed * localTimeScale);
+                else transform.Translate(chargeDir * (chargeSpeed * dt));
                 if (stateTimer >= chargeTime) Enter(State.Recover);
                 break;
 
@@ -82,9 +88,11 @@ public class ChargerEnemyController : EnemyBase
         base.Die();
     }
 
-    // 빙결(FreezeStatus)이 컨트롤러를 끌 때 조준 점멸 색이 남지 않도록 정리
+    // 빙결(FreezeStatus)이 컨트롤러를 끌 때 정리 — 색 원복 + 돌진 관성 제거
+    // (컨트롤러가 꺼지면 EnemyBase의 velocity 초기화도 멈추므로 여기서 지워야 빙결 중 미끄러지지 않음)
     void OnDisable()
     {
         if (sr != null) sr.color = Color.white;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
     }
 }

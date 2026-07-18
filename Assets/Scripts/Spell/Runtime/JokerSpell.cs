@@ -67,6 +67,7 @@ public class JokerSpell : MonoBehaviour
             dg.transform.localPosition = new Vector3(0f, 0f, 10f);
             dark = dg.AddComponent<SpriteRenderer>();
             dark.sprite = WhiteSprite();
+            dark.color = Color.clear; // 기본색(불투명 흰색) 노출 금지 — 페이드 루프가 색을 입힌다
             dg.transform.localScale = fullScreen;
             SetTopLayer(dark, 30450); // 붉은 오버레이(30500)보다 뒤
 
@@ -75,6 +76,7 @@ public class JokerSpell : MonoBehaviour
             og.transform.localPosition = new Vector3(0f, 0f, 10f);
             overlay = og.AddComponent<SpriteRenderer>();
             overlay.sprite = WhiteSprite();
+            overlay.color = Color.clear;
             og.transform.localScale = fullScreen;
             SetTopLayer(overlay, 30500); // 테마 오버레이(30000) 위, 파티클(31000) 아래
 
@@ -366,7 +368,11 @@ public class JokerSpell : MonoBehaviour
         MeshFilter mf = go.AddComponent<MeshFilter>();
         mf.sharedMesh = QuadMesh();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
-        mat = new Material(Shader.Find("Unlit/Transparent"));
+        // 빌드에는 참조 없는 셰이더가 스트리핑될 수 있음(WebGL에서 실제 발생) — fallback 체인 + 실패 시 띠 생략
+        Shader bandShader = Shader.Find("Unlit/Transparent");
+        if (bandShader == null) bandShader = Shader.Find("Sprites/Default");
+        if (bandShader == null) { mat = null; Destroy(go); return null; }
+        mat = new Material(bandShader);
         mat.mainTexture = HazardTexture();
         mat.mainTextureScale = new Vector2(width / Mathf.Max(0.01f, height), 1f); // 정사각 텍셀 → 45° 유지
         mr.sharedMaterial = mat;

@@ -15,7 +15,13 @@ public class NearMissDetector : MonoBehaviour
     }
 
     // Plan SC: FR-01/FR-04 — 감지 존은 "Player" 아님 → 총알 소멸 없이 감지만
-    private void OnTriggerEnter2D(Collider2D collision)
+    // ⚠️ Enter만 쓰면 안 됨: 총알이 존에 "먼저" 들어온 뒤 대시하는 게 일반적인 플레이 흐름이라
+    //    Enter 시점엔 IsDashActive=false로 불발 → 이후 재진입이 없어 영영 안 터진다.
+    //    Stay로 "대시 중 + 존 안에 총알 존재"를 매 스텝 검사(중복 발동은 SlowMotion 쿨다운이 방어).
+    private void OnTriggerEnter2D(Collider2D collision) => TryTrigger(collision);
+    private void OnTriggerStay2D(Collider2D collision) => TryTrigger(collision);
+
+    void TryTrigger(Collider2D collision)
     {
         if (collision.tag == "EnemyBullet"
             && player != null && player.IsDashActive

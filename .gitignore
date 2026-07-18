@@ -40,3 +40,5 @@ crashlytics-build.properties
 
 # 패키징 로그
 sysinfo.txt
+# Local Netlify folder
+.netlify

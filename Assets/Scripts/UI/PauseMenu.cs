@@ -109,22 +109,80 @@ public class PauseMenu : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
 
+        BuildPauseButton(canvasGo.transform); // 우측 상단 상시 노출(패널 밖 — 정지 중에도 위치 유지)
+
         // 어두운 배경막
         panel = new GameObject("Dim", typeof(Image));
         panel.transform.SetParent(canvasGo.transform, false);
         var dim = panel.GetComponent<Image>();
         dim.color = new Color(0f, 0f, 0f, 0.72f);
+        dim.raycastTarget = true; // 뒤 HUD 클릭 차단
         var drt = dim.rectTransform;
         drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one;
         drt.offsetMin = Vector2.zero; drt.offsetMax = Vector2.zero;
 
-        // 제목
-        var title = MakeText(panel.transform, "일시정지", 88, new Vector2(0f, 220f));
-        title.fontStyle = FontStyles.Bold;
+        // 중앙 도시어 패널(연구실 크롬) — 없으면 기존 무패널 레이아웃으로 폴백
+        Transform content = panel.transform;
+        var panelSprite = Resources.Load<Sprite>("UI/LabDossierPanel");
+        if (panelSprite != null)
+        {
+            var box = new GameObject("LabPanel", typeof(Image));
+            box.transform.SetParent(panel.transform, false);
+            var bi = box.GetComponent<Image>();
+            bi.sprite = panelSprite;
+            bi.type = Image.Type.Sliced;
+            bi.raycastTarget = false;
+            var brt = bi.rectTransform;
+            brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.5f);
+            brt.sizeDelta = new Vector2(560f, 620f);
+            brt.anchoredPosition = Vector2.zero;
+            content = box.transform;
+        }
 
-        MakeButton(panel.transform, "재개", new Vector2(0f, 60f), new Color(0.30f, 0.62f, 0.35f), Resume);
-        MakeButton(panel.transform, "다시시작", new Vector2(0f, -50f), new Color(0.32f, 0.44f, 0.66f), Restart);
-        MakeButton(panel.transform, "메인메뉴", new Vector2(0f, -160f), new Color(0.55f, 0.32f, 0.34f), MainMenu);
+        // 제목 + 실험실 플레이버
+        var title = MakeText(content, "일시정지", 60, new Vector2(0f, 200f));
+        title.fontStyle = FontStyles.Bold;
+        title.color = new Color(1f, 0.86f, 0.4f);
+        var sub = MakeText(content, "── 실험 일시 중단 ──", 22, new Vector2(0f, 142f));
+        sub.color = new Color(0.55f, 0.75f, 0.8f);
+
+        MakeButton(content, "재개", new Vector2(0f, 40f), new Color(0.30f, 0.62f, 0.35f), Resume);
+        MakeButton(content, "다시시작", new Vector2(0f, -75f), new Color(0.32f, 0.44f, 0.66f), Restart);
+        MakeButton(content, "메인메뉴", new Vector2(0f, -190f), new Color(0.55f, 0.32f, 0.34f), MainMenu);
+    }
+
+    // 우측 상단 일시정지 버튼(⏸) — 클릭 = Esc와 동일 토글. 점수(우상단 텍스트) 바로 위 코너.
+    void BuildPauseButton(Transform canvasRoot)
+    {
+        var go = new GameObject("PauseBtn", typeof(Image), typeof(Button));
+        go.transform.SetParent(canvasRoot, false);
+        var img = go.GetComponent<Image>();
+        var btnSprite = Resources.Load<Sprite>("UI/SubjectNullButton");
+        if (btnSprite != null)
+        {
+            img.sprite = btnSprite;
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.85f, 0.95f, 1f, 0.9f);
+        }
+        else img.color = new Color(0.16f, 0.2f, 0.3f, 0.85f);
+        var rt = img.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f); // 화면 우상단 고정(레터박스 대응)
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(64f, 64f);
+        rt.anchoredPosition = new Vector2(-48f, -42f);
+
+        var btn = go.GetComponent<Button>();
+        btn.onClick.AddListener(Toggle);
+        var colors = btn.colors;
+        colors.highlightedColor = new Color(0.75f, 0.95f, 1f);
+        colors.pressedColor = new Color(0.55f, 0.8f, 0.95f);
+        colors.fadeDuration = 0.08f;
+        btn.colors = colors;
+
+        var t = MakeText(go.transform, "II", 26, Vector2.zero);
+        t.fontStyle = FontStyles.Bold;
+        t.color = new Color(0.85f, 0.95f, 1f);
+        t.rectTransform.sizeDelta = rt.sizeDelta;
     }
 
     TextMeshProUGUI MakeText(Transform parent, string text, float size, Vector2 anchoredPos)
@@ -151,7 +209,14 @@ public class PauseMenu : MonoBehaviour
         var go = new GameObject("Btn_" + label, typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
         var img = go.GetComponent<Image>();
-        img.color = color;
+        var pixel = Resources.Load<Sprite>("UI/SubjectNullButton"); // 연구실 네온 버튼 크롬(덱/가챠와 통일)
+        if (pixel != null)
+        {
+            img.sprite = pixel;
+            img.type = Image.Type.Sliced;
+            img.color = Color.Lerp(color, Color.white, 0.4f);
+        }
+        else img.color = color;
         var rt = img.rectTransform;
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);

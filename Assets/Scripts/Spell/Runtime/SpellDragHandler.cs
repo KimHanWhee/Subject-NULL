@@ -61,6 +61,14 @@ public class SpellDragHandler : MonoBehaviour
         if (cancelLabel != null) cancelLabel.SetActive(false);
         if (dragGhost != null) dragGhost.gameObject.SetActive(false);
         if (tooltipRoot != null) tooltipRoot.SetActive(false);
+
+        // 씬의 툴팁 텍스트가 내장 Arial이면 한글 교체 — WebGL은 OS 폰트 폴백이 없어
+        // 한글 글리프가 사라지고, 레이아웃이 텍스트 크기를 따라가 박스까지 쭈그라든다.
+        if (tooltipText != null)
+        {
+            Font kr = Resources.Load<Font>("Fonts/malgun");
+            if (kr != null) tooltipText.font = kr;
+        }
     }
 
     void Update()
