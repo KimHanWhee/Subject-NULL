@@ -6,7 +6,17 @@ public class Bullet : MonoBehaviour
     public float speed = 15;
     public float damage = 1;
     [System.NonSerialized] public bool pierce; // 스펠 마블 ♠ Piercing — true면 적 명중에도 소멸 안 함(발사 시마다 재설정)
+    [System.NonSerialized] public bool frozen; // 스펠 마블 ♣ Time Stop — 정지 중 발사분은 제자리 대기(발사 시마다 재설정)
     Vector2 direction;
+    SpriteRenderer sr;
+
+    // 시간 정지 대기 상태 토글 — 대기 중인 탄은 청백으로 물들여 "쌓여 있다"는 걸 보여준다
+    public void SetFrozen(bool on)
+    {
+        frozen = on;
+        if (sr == null) sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = on ? new Color(0.7f, 0.95f, 1f) : Color.white;
+    }
 
     public Vector2 Direction
     {
@@ -23,6 +33,7 @@ public class Bullet : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (frozen) return; // ♣ Time Stop — 정지가 풀릴 때까지 제자리
         transform.Translate(direction * (speed * Time.deltaTime));
     }
 

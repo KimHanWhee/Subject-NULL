@@ -11,7 +11,9 @@ public static class SuitInfo
             case Suit.Spade:   return "♠";
             case Suit.Heart:   return "♥";
             case Suit.Club:    return "♣";
-            case Suit.Diamond: return "♦";
+            // ♦(U+2666)는 malgun.ttf에 글리프가 없어 WebGL(OS 폴백 없음)에서 안 보임.
+            // KS X 1001 표준에 포함된 ◆(U+25C6)로 대체 — 모든 슈트 표기 공통.
+            case Suit.Diamond: return "◆";
             default:           return "?";
         }
     }

@@ -37,6 +37,7 @@ public class DeckBuilderUI : MonoBehaviour
     private RectTransform cardGridRoot;           // 탭 전환 시 파괴/재생성
     private Image[] tabBgs;
     private Text[] tabLabels;
+    private ScrollRect cardScroll; // 카탈로그 세로 스크롤(마블 증가 대응)
     private readonly Dictionary<SpellMarble, Text> cardBadges = new Dictionary<SpellMarble, Text>(); // 현재 탭 카드의 ×N
 
     private Image[] slotRings;                    // 덱 슬롯 등급 테두리
@@ -339,8 +340,57 @@ public class DeckBuilderUI : MonoBehaviour
         }
         StyleTabs();
 
-        // 카드 그리드 컨테이너(탭 전환 시 통째로 재생성)
-        cardGridRoot = MakeRect(collectionPanel, "CardGrid", new Vector2(0f, -70f), new Vector2(1150f, 700f));
+        // 카드 그리드 — 마블이 늘어 2행(8종)을 넘으면 세로 스크롤(마스크 뷰포트 + ScrollRect)
+        GameObject viewportGo = new GameObject("CardViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
+        RectTransform viewport = (RectTransform)viewportGo.transform;
+        viewport.SetParent(collectionPanel, false);
+        viewport.anchorMin = viewport.anchorMax = new Vector2(0.5f, 0.5f);
+        viewport.pivot = new Vector2(0.5f, 0.5f);
+        viewport.sizeDelta = new Vector2(1150f, 700f);
+        viewport.anchoredPosition = new Vector2(0f, -70f);
+        Image vpImg = viewportGo.GetComponent<Image>();
+        vpImg.color = new Color(0f, 0f, 0f, 0.01f); // 휠/드래그 스크롤 수신용(투명 레이캐스트)
+        vpImg.raycastTarget = true;
+
+        // 컨텐츠(탭 전환 시 통째로 재생성) — 높이는 RebuildCardGrid가 행 수에 맞춰 갱신
+        cardGridRoot = MakeRect(viewport, "CardGrid", Vector2.zero, new Vector2(1150f, 700f));
+        cardGridRoot.anchorMin = new Vector2(0.5f, 1f);
+        cardGridRoot.anchorMax = new Vector2(0.5f, 1f);
+        cardGridRoot.pivot = new Vector2(0.5f, 1f);
+        cardGridRoot.anchoredPosition = Vector2.zero;
+
+        cardScroll = viewportGo.AddComponent<ScrollRect>();
+        cardScroll.viewport = viewport;
+        cardScroll.content = cardGridRoot;
+        cardScroll.horizontal = false;
+        cardScroll.vertical = true;
+        cardScroll.movementType = ScrollRect.MovementType.Clamped;
+        cardScroll.scrollSensitivity = 28f;
+
+        // 슬림 스크롤바(우측) — 내용이 넘칠 때만 표시
+        GameObject sbGo = new GameObject("CardScrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+        RectTransform sbRt = (RectTransform)sbGo.transform;
+        sbRt.SetParent(collectionPanel, false);
+        sbRt.anchorMin = sbRt.anchorMax = new Vector2(0.5f, 0.5f);
+        sbRt.pivot = new Vector2(0.5f, 0.5f);
+        sbRt.sizeDelta = new Vector2(7f, 700f);
+        sbRt.anchoredPosition = new Vector2(586f, -70f);
+        sbGo.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.06f);
+
+        GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+        RectTransform handleRt = (RectTransform)handleGo.transform;
+        handleRt.SetParent(sbRt, false);
+        handleRt.anchorMin = Vector2.zero; handleRt.anchorMax = Vector2.one;
+        handleRt.offsetMin = Vector2.zero; handleRt.offsetMax = Vector2.zero;
+        Image handleImg = handleGo.GetComponent<Image>();
+        handleImg.color = new Color(0.55f, 0.9f, 1f, 0.4f);
+
+        Scrollbar sb = sbGo.GetComponent<Scrollbar>();
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.handleRect = handleRt;
+        sb.targetGraphic = handleImg;
+        cardScroll.verticalScrollbar = sb;
+        cardScroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
     }
 
     void SelectTab(Suit suit)
@@ -376,17 +426,25 @@ public class DeckBuilderUI : MonoBehaviour
         foreach (SpellMarble m in catalog)
             if (m.suit == currentSuit) list.Add(m);
 
-        // 행 중앙 정렬 그리드(슈트당 8종 초과 시 줄바꿈 — 3행부터는 그리드 높이 초과 주의)
+        // 행 중앙 정렬 그리드 — 2행까지는 뷰포트에 세로 중앙, 3행부터는 위 정렬 + 스크롤
         int rows = Mathf.Max(1, (list.Count + cardsPerRow - 1) / cardsPerRow);
+        float block = rows * cardSpacingY;
+        float contentH = Mathf.Max(block + 16f, 700f); // 뷰포트(700)보다 작아지지 않게
+        cardGridRoot.sizeDelta = new Vector2(1150f, contentH);
+        float topPad = (contentH - block) * 0.5f;
+
         for (int k = 0; k < list.Count; k++)
         {
             int row = k / cardsPerRow;
             int col = k % cardsPerRow;
             int rowCount = Mathf.Min(cardsPerRow, list.Count - row * cardsPerRow);
             float rowX0 = -(rowCount - 1) * cardSpacingX * 0.5f;
-            float y0 = (rows - 1) * cardSpacingY * 0.5f;
-            BuildCard(list[k], new Vector2(rowX0 + col * cardSpacingX, y0 - row * cardSpacingY));
+            // 카드 앵커는 컨텐츠 중앙 기준 — 중앙에서 위/아래로 배치
+            float y = contentH * 0.5f - topPad - (row + 0.5f) * cardSpacingY;
+            BuildCard(list[k], new Vector2(rowX0 + col * cardSpacingX, y));
         }
+
+        if (cardScroll != null) cardScroll.verticalNormalizedPosition = 1f; // 탭 전환 시 맨 위로
     }
 
     // 카드 1장: SF 카드 프레임(SpecimenCardFrame, 등급색 틴트) + 스킬 아트(크게) + 슈트 뱃지(좌상단)

@@ -28,6 +28,7 @@ public class GachaShopUI : MonoBehaviour
     float feedbackUntil;
 
     RectTransform collectionGrid;
+    ScrollRect collectionScroll; // 도감 세로 스크롤(마블 증가 대응)
 
     // 도감 호버 툴팁(덱 빌더와 동일 패턴 — 커서 추종)
     RectTransform tooltipRoot;
@@ -266,7 +267,61 @@ public class GachaShopUI : MonoBehaviour
     {
         RectTransform panel = MakePanel(root, "CollectionPanel", new Vector2(560f, -30f), new Vector2(760f, 860f));
         MakeText(panel, "ColHeader", new Vector2(0f, 385f), new Vector2(700f, 34f), 22, TextAnchor.MiddleLeft, "<b>도감 · 조각 교환</b>", Color.white);
-        collectionGrid = MakeRect(panel, "Grid", new Vector2(0f, -30f), new Vector2(720f, 720f));
+
+        // 도감 그리드 — 마블이 늘어 목록이 넘치면 세로 스크롤(덱 빌더 카탈로그와 동일 패턴)
+        GameObject viewportGo = new GameObject("GridViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
+        RectTransform viewport = (RectTransform)viewportGo.transform;
+        viewport.SetParent(panel, false);
+        viewport.anchorMin = viewport.anchorMax = new Vector2(0.5f, 0.5f);
+        viewport.pivot = new Vector2(0.5f, 0.5f);
+        viewport.sizeDelta = new Vector2(720f, 720f);
+        viewport.anchoredPosition = new Vector2(0f, -30f);
+        Image vpImg = viewportGo.GetComponent<Image>();
+        vpImg.sprite = WhiteSprite();
+        vpImg.color = new Color(0f, 0f, 0f, 0.01f); // 휠/드래그 스크롤 수신용(투명 레이캐스트)
+        vpImg.raycastTarget = true;
+
+        collectionGrid = MakeRect(viewport, "Grid", Vector2.zero, new Vector2(720f, 720f));
+        collectionGrid.anchorMin = new Vector2(0.5f, 1f);
+        collectionGrid.anchorMax = new Vector2(0.5f, 1f);
+        collectionGrid.pivot = new Vector2(0.5f, 1f);
+        collectionGrid.anchoredPosition = Vector2.zero;
+
+        collectionScroll = viewportGo.AddComponent<ScrollRect>();
+        collectionScroll.viewport = viewport;
+        collectionScroll.content = collectionGrid;
+        collectionScroll.horizontal = false;
+        collectionScroll.vertical = true;
+        collectionScroll.movementType = ScrollRect.MovementType.Clamped;
+        collectionScroll.scrollSensitivity = 28f;
+
+        // 슬림 스크롤바(우측) — 내용이 넘칠 때만 표시
+        GameObject sbGo = new GameObject("GridScrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+        RectTransform sbRt = (RectTransform)sbGo.transform;
+        sbRt.SetParent(panel, false);
+        sbRt.anchorMin = sbRt.anchorMax = new Vector2(0.5f, 0.5f);
+        sbRt.pivot = new Vector2(0.5f, 0.5f);
+        sbRt.sizeDelta = new Vector2(7f, 720f);
+        sbRt.anchoredPosition = new Vector2(368f, -30f);
+        Image sbBg = sbGo.GetComponent<Image>();
+        sbBg.sprite = WhiteSprite();
+        sbBg.color = new Color(1f, 1f, 1f, 0.06f);
+
+        GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+        RectTransform handleRt = (RectTransform)handleGo.transform;
+        handleRt.SetParent(sbRt, false);
+        handleRt.anchorMin = Vector2.zero; handleRt.anchorMax = Vector2.one;
+        handleRt.offsetMin = Vector2.zero; handleRt.offsetMax = Vector2.zero;
+        Image handleImg = handleGo.GetComponent<Image>();
+        handleImg.sprite = WhiteSprite();
+        handleImg.color = new Color(0.55f, 0.9f, 1f, 0.4f);
+
+        Scrollbar sb = sbGo.GetComponent<Scrollbar>();
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.handleRect = handleRt;
+        sb.targetGraphic = handleImg;
+        collectionScroll.verticalScrollbar = sb;
+        collectionScroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
     }
 
     // ── 뽑기 ──────────────────────────────────────────────
@@ -612,13 +667,22 @@ public class GachaShopUI : MonoBehaviour
 
         int cols = 3;
         float cw = 232f, ch = 138f, gapx = 240f, gapy = 146f;
+        int rows = Mathf.Max(1, (pool.Count + cols - 1) / cols);
+        float block = rows * gapy;
+        float contentH = Mathf.Max(block + 14f, 720f); // 뷰포트(720)보다 작아지지 않게
+        collectionGrid.sizeDelta = new Vector2(720f, contentH);
+        float topPad = (contentH - block) * 0.5f;
+
         for (int k = 0; k < pool.Count; k++)
         {
             int row = k / cols, col = k % cols;
             float x = (col - (cols - 1) * 0.5f) * gapx;
-            float y = 300f - row * gapy;
+            // 아이템 앵커는 컨텐츠 중앙 기준 — 중앙에서 위/아래로 배치(스크롤 초과분은 아래로)
+            float y = contentH * 0.5f - topPad - (row + 0.5f) * gapy;
             BuildCollectionItem(pool[k], new Vector2(x, y), cw, ch);
         }
+
+        if (collectionScroll != null) collectionScroll.verticalNormalizedPosition = 1f; // 갱신 시 맨 위로
     }
 
     void BuildCollectionItem(SpellMarble m, Vector2 pos, float w, float h)

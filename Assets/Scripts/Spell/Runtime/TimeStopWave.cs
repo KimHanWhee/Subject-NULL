@@ -34,7 +34,7 @@ public class TimeStopWave : MonoBehaviour
     private SpriteRenderer ringGlow;  // 뒤따르는 잔광
     private bool completed;
 
-    public static TimeStopWave Spawn(Vector2 center, float radius, float waveDuration, float stopDuration, Material grayMaterial, Color color)
+    public static TimeStopWave Spawn(Vector2 center, float radius, float waveDuration, float stopDuration, Material grayMaterial, Color color, float lethalDamage = 999f)
     {
         GameObject go = new GameObject("TimeStopWave");
         go.transform.position = new Vector3(center.x, center.y, 0f);
@@ -47,6 +47,7 @@ public class TimeStopWave : MonoBehaviour
         w.startTime = Time.unscaledTime;
         w.ring = w.MakeRing(1f);
         w.ringGlow = w.MakeRing(0.3f);
+        TimeStopField.Begin(lethalDamage); // 파동 시작부터 정지 세계 — 이후 발사된 총알은 대기
         return w;
     }
 
@@ -139,6 +140,7 @@ public class TimeStopWave : MonoBehaviour
         // 파동에 맞는 즉시 정지. 남은 파동 시간 + 유지 시간 + 여유(TimeStopField가 주기 갱신으로 이어받음)
         float freezeFor = (startTime + waveDuration - Time.unscaledTime) + stopDuration + 0.3f;
         FreezeStatus.Apply(enemy, freezeFor);
+        TimeStopField.TrackFrozen(enemy); // 종료 시 총알과 동시에 해제
         GrayOut(enemy);
     }
 
@@ -187,7 +189,8 @@ public class TimeStopWave : MonoBehaviour
 
     void OnDestroy()
     {
-        // 파동 도중 파괴(씬 전환 등) 안전망 — Complete 경로에선 이미 비워져 있어 무해
+        // 파동 도중 파괴(씬 전환 등) 안전망 — 필드로 인계되지 못했으면 정지 세계를 여기서 닫는다
+        if (!completed) TimeStopField.End();
         RestoreAll();
         foreach (EnemyBullet b in stoppedBullets)
             if (b != null) b.enabled = true;

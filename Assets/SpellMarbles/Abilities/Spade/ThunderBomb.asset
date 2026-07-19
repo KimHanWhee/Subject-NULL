@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64934e29ebf57ac4ab19c6cb3f918623, type: 3}
+  m_Name: ThunderBomb
+  m_EditorClassIdentifier: Assembly-CSharp::ThunderBombAbility
+  id: ThunderBomb
+  abilityName: "Thunder Bomb"
+  description: "10초간 기본 공격이 비격진천뢰 투하로 바뀐다. 커서 위치에 폭탄이 떨어져 주변 적에게 폭발 피해를 입힌다."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 3390929559245767942, guid: 6ebed8975f804584aa9fe01a2b1ec4ee, type: 3}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  radius: 1.4
+  damage: 2
+  minInterval: 0.25
+  duration: 10
+  vfxColor: {r: 1, g: 0.55, b: 0.15, a: 1}

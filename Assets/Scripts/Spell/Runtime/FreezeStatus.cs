@@ -20,6 +20,17 @@ public class FreezeStatus : MonoBehaviour
         s.remain = Mathf.Max(s.remain, duration);
     }
 
+    // 즉시 해제 — 시간 정지 종료 시 적과 총알을 같은 프레임에 재개시키기 위해 사용.
+    // (적이 늦게 풀리면 EnemyBase가 비활성이라 총알 피격 콜백이 들어오지 않는다)
+    public static void Clear(GameObject enemy)
+    {
+        if (enemy == null) return;
+        FreezeStatus s = enemy.GetComponent<FreezeStatus>();
+        if (s == null) return;
+        s.Restore();
+        Destroy(s);
+    }
+
     bool Bind()
     {
         var list = new System.Collections.Generic.List<Behaviour>();

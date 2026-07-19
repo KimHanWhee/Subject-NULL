@@ -88,6 +88,17 @@ public class ChargerEnemyController : EnemyBase
         base.Die();
     }
 
+    // 돌진 중 플레이어와 충돌하면 즉시 돌진 종료 — 접촉 피해 1회만 주고,
+    // velocity로 플레이어를 계속 밀어붙이지 않는다(끝없이 밀려나는 느낌 방지)
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (state == State.Charging && collision.gameObject.CompareTag("Player"))
+        {
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            Enter(State.Recover);
+        }
+    }
+
     // 빙결(FreezeStatus)이 컨트롤러를 끌 때 정리 — 색 원복 + 돌진 관성 제거
     // (컨트롤러가 꺼지면 EnemyBase의 velocity 초기화도 멈추므로 여기서 지워야 빙결 중 미끄러지지 않음)
     void OnDisable()

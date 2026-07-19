@@ -35,6 +35,13 @@ public interface IPlayerBulletModifier
     void ModifyBullet(Bullet bullet);
 }
 
+// ♠ Railgun(충전)·비격진천뢰(폭탄) — 기본 발사를 통째로 대체(true 반환 시 일반 총알 생성 생략).
+// 여러 개면 먼저 성공한 하나만 발동.
+public interface IPlayerShotOverride
+{
+    bool TryOverrideShot(Vector2 origin, Vector2 direction);
+}
+
 // 버프 HUD 표시용 — 플레이어 자기버프 상태 컴포넌트가 구현하면 PlayerBuffHUD가 GetComponents로
 // 수집해 HP바 아래에 아이콘+숫자로 표시. (허브 없이 인터페이스만 — 기존 규약과 동일)
 public interface IBuffDisplay
@@ -54,5 +61,13 @@ public static class PlayerBulletEvents
     public static void NotifyEnemyHit(GameObject enemy, float damage)
     {
         if (EnemyHit != null) EnemyHit(enemy, damage);
+    }
+
+    // 기본 공격 1회당 1번(개틀링 추가 발 제외) — ♠ 비격진천뢰 등이 구독. 인자 = 커서 월드 좌표.
+    public static System.Action<Vector2> PlayerShot;
+
+    public static void NotifyPlayerShot(Vector2 cursorWorld)
+    {
+        if (PlayerShot != null) PlayerShot(cursorWorld);
     }
 }

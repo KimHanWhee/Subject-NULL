@@ -61,6 +61,9 @@ public class PlayerController : MonoBehaviour
     // 스펠 마블 ♦ Fortress — true면 이동/대시 불가(피해 무효는 FortressStatus가 처리)
     [NonSerialized] public bool movementLocked;
 
+    // 스펠 마블 ♦ Ghost Step — true면 기본 공격 불가(무적 대가)
+    [NonSerialized] public bool attackLocked;
+
     // 스펠 마블 ♥ Adrenaline 등 — 발사 속도 배율(1=기본). 상태 컴포넌트가 관리.
     [NonSerialized] public float fireRateMultiplier = 1f;
 
@@ -156,6 +159,7 @@ public class PlayerController : MonoBehaviour
         if (Mouse.current.leftButton.isPressed
             && currentWeapon != null
             && Time.time >= nextFireTime
+            && !attackLocked            // 스펠 마블 ♦ Ghost Step — 무적 동안 공격 불가
             && !IsSpellSelecting()) // Ctrl 선택 모드 중엔 기본 공격 억제(드래그로 마블만 사용)
         {
             Shoot();
@@ -250,36 +254,71 @@ public class PlayerController : MonoBehaviour
     void Shoot()
     {
         GetComponent<AudioSource>().PlayOneShot(currentWeapon.shotSound);
-    
-        Vector3 muzzle = transform.position + (Vector3)muzzleOffset; // 총구(팔/몸통 높이)
-        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        worldPosition.z = 0;
-        worldPosition -= muzzle;
 
+        Vector3 muzzle = transform.position + (Vector3)muzzleOffset; // 총구(팔/몸통 높이)
+        Vector3 cursor = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        cursor.z = 0;
+        Vector3 baseDir = cursor - muzzle;
+
+        // ♠ Railgun(충전)·비격진천뢰(폭탄 투하) 등 — 기본 발사를 통째로 대체(성공 시 총알 없음)
+        IPlayerShotOverride[] overrides = GetComponents<IPlayerShotOverride>();
+        for (int i = 0; i < overrides.Length; i++)
+            if (overrides[i].TryOverrideShot(muzzle, ((Vector2)baseDir).normalized))
+                return;
+
+        // 기본 공격 발사 통지(♠ Gatling 연사 등) — 대체되지 않은 실제 발사에만
+        PlayerBulletEvents.NotifyPlayerShot(cursor);
+        FireBullet(muzzle, baseDir);
+    }
+
+    // ♠ Gatling 연사 등 — 현재 커서를 다시 조준해 추가 1발.
+    // 피해/속성 파이프라인은 동일 적용, 발사 통지/대체는 건너뛴다(재귀 방지).
+    public void FireExtraShot()
+    {
+        if (currentWeapon == null || attackLocked) return;
+        Vector3 muzzle = transform.position + (Vector3)muzzleOffset;
+        Vector3 cursor = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        cursor.z = 0;
+        FireBullet(muzzle, cursor - muzzle);
+        GetComponent<AudioSource>().PlayOneShot(currentWeapon.shotSound, 0.75f);
+    }
+
+    // 총알 1발 생성 + 피해/속성 파이프라인 적용 — Shoot에서 발수만큼 호출
+    void FireBullet(Vector3 muzzle, Vector3 dir)
+    {
         ObjectPool pool = bulletPoolManager.GetPool(currentWeapon.bulletPrefab);
         GameObject newBullet = pool.Get();
-        if (newBullet != null)
-        {
-            Bullet bulletScript = newBullet.GetComponent<Bullet>();
-            newBullet.transform.position = muzzle;
-            bulletScript.Direction = worldPosition;
-            float dmg = currentWeapon.damage;
-            // 스펠 마블 주는 피해 수정(Counter 반격 배율 등) — 발사 시점 적용
-            IPlayerOutgoingModifier[] outMods = GetComponents<IPlayerOutgoingModifier>();
-            for (int i = 0; i < outMods.Length; i++)
-                dmg = outMods[i].ModifyOutgoingDamage(dmg);
-            bulletScript.damage = dmg;
-            bulletScript.speed = currentWeapon.bulletSpeed;
-            bulletScript.pierce = false; // 풀 재사용 대비 리셋 — 아래 수정자가 필요 시 켬
-            // 스펠 마블 총알 속성 수정(Piercing 관통, Sniper 탄속 등)
-            IPlayerBulletModifier[] bMods = GetComponents<IPlayerBulletModifier>();
-            for (int i = 0; i < bMods.Length; i++)
-                bMods[i].ModifyBullet(bulletScript);
-        }
+        if (newBullet == null) return;
+
+        Bullet bulletScript = newBullet.GetComponent<Bullet>();
+        newBullet.transform.position = muzzle;
+        bulletScript.Direction = dir;
+        float dmg = currentWeapon.damage;
+        // 점수 기반 기본공격 강화 — 적이 강해지는 만큼 같이 오른다(스펠 배율보다 먼저 적용)
+        if (GameManager.Instance != null) dmg += GameManager.Instance.DamageBonus;
+        // 스펠 마블 주는 피해 수정(Counter 반격 배율 등) — 발사 시점 적용
+        IPlayerOutgoingModifier[] outMods = GetComponents<IPlayerOutgoingModifier>();
+        for (int i = 0; i < outMods.Length; i++)
+            dmg = outMods[i].ModifyOutgoingDamage(dmg);
+        bulletScript.damage = dmg;
+        bulletScript.speed = currentWeapon.bulletSpeed;
+        bulletScript.pierce = false; // 풀 재사용 대비 리셋 — 아래 수정자가 필요 시 켬
+        bulletScript.SetFrozen(false); // 풀 재사용 대비 리셋(색 원복 포함)
+        // 스펠 마블 총알 속성 수정(Piercing 관통, Sniper 탄속 등)
+        IPlayerBulletModifier[] bMods = GetComponents<IPlayerBulletModifier>();
+        for (int i = 0; i < bMods.Length; i++)
+            bMods[i].ModifyBullet(bulletScript);
+
+        // ♣ Time Stop — 정지 중 발사한 총알은 제자리에 쌓였다가 해제 순간 일제히 날아간다
+        TimeStopField.HoldBullet(bulletScript);
     }
 
     private void FixedUpdate()
     {
+        // 이동은 Translate/MovePosition 전담(EnemyBase와 동일 규약) — 적 충돌(개구리 돌진 등)로
+        // 물리 엔진이 준 밀림 속도가 잔류하면 감쇠 없이 계속 미끄러지므로 매 스텝 제거
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
         if (movementLocked) return; // 스펠 마블 ♦ Fortress — 이동 불가
         if (TickDash()) return; // Plan SC: FR-05 — 대시 중엔 일반 이동 스킵
         transform.Translate(move * (speed * Time.fixedDeltaTime));
@@ -317,6 +356,7 @@ public class PlayerController : MonoBehaviour
     void TakeHit(float damage, GameObject attacker = null)
     {
         if (IsShieldActive) return; // 스펠 마블 ♦ 실드 — 데미지 무시 (SelfBuffShieldAbility)
+        if (SafeZoneField.Protects(transform.position)) return; // 스펠 마블 ♦ 안전지대 — 구역 안 피해 무효
 
         // 스펠 마블 피해 수정 체인(Iron Skin 감소 / Fortress 무효 / Reflect 반사 / Mirror World 분산)
         IPlayerDamageModifier[] mods = GetComponents<IPlayerDamageModifier>();

@@ -130,6 +130,7 @@ public class LaserEnemyController : EnemyBase
     }
 
     // 빔 실제 길이 — 벽("Wall")에 닿을 때까지. 벽이 없으면 maxLaserRange.
+    // ♦ 전자기장이 켜져 있으면 장막 경계에서 추가로 잘린다(막힌 것처럼 보임 + 판정도 함께 짧아짐).
     float BeamRange()
     {
         RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, laserDir, maxLaserRange);
@@ -137,7 +138,7 @@ public class LaserEnemyController : EnemyBase
         foreach (RaycastHit2D h in hits)
             if (h.collider != null && h.collider.CompareTag("Wall") && h.distance < best)
                 best = h.distance;
-        return best;
+        return EMFieldStatus.ClipBeam(transform.position, laserDir, best);
     }
 
     void DrawLine(float width, Color color)

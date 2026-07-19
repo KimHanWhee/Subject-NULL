@@ -15,13 +15,27 @@ public class FloatingScore : MonoBehaviour
         var go = new GameObject("FloatingScore");
         go.transform.position = worldPos + new Vector3(Random.Range(-0.2f, 0.2f), 0.4f, 0f);
         var f = go.AddComponent<FloatingScore>();
-        f.Init(amount, combo);
+        // 콤보가 높을수록 금색/크게
+        f.Build("+" + amount,
+                combo >= 3 ? new Color(1f, 0.82f, 0.2f) : Color.white,
+                combo >= 3 ? 1.25f : 1f);
     }
 
-    void Init(int amount, int combo)
+    // 임의 문구 팝업(공격력 강화 알림 등) — 점수 팝업과 같은 연출을 재사용
+    public static void SpawnText(Vector3 worldPos, string text, Color color, float scale = 1.3f, float life = 1.2f)
+    {
+        var go = new GameObject("FloatingText");
+        go.transform.position = worldPos + new Vector3(0f, 0.9f, 0f);
+        var f = go.AddComponent<FloatingScore>();
+        f.life = life;
+        f.rise = 1.0f;
+        f.Build(text, color, scale);
+    }
+
+    void Build(string text, Color color, float scale)
     {
         tm = gameObject.AddComponent<TextMesh>();
-        tm.text = "+" + amount;
+        tm.text = text;
         tm.characterSize = 0.035f;
         tm.fontSize = 90;
         tm.anchor = TextAnchor.LowerCenter;
@@ -32,10 +46,9 @@ public class FloatingScore : MonoBehaviour
         if (tm.font == null) tm.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         mr = GetComponent<MeshRenderer>();
         mr.sharedMaterial = tm.font != null ? tm.font.material : mr.sharedMaterial;
-        // 콤보가 높을수록 금색/크게
-        baseColor = combo >= 3 ? new Color(1f, 0.82f, 0.2f) : Color.white;
+        baseColor = color;
         tm.color = baseColor;
-        transform.localScale = Vector3.one * (combo >= 3 ? 1.25f : 1f);
+        transform.localScale = Vector3.one * scale;
         // 최상단 정렬(월드 스프라이트/적 위)
         SortingLayer[] layers = SortingLayer.layers;
         if (layers != null && layers.Length > 0) mr.sortingLayerID = layers[layers.Length - 1].id;

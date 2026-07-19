@@ -42,3 +42,6 @@ crashlytics-build.properties
 sysinfo.txt
 # Local Netlify folder
 .netlify
+
+# 영상 원본(대용량) — 웹 배포본은 Web/intro.mp4 로 압축해서 사용
+/Media/

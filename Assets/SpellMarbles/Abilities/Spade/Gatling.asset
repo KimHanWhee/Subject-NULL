@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9a52bcd4fb8a5441981cb486cd9e7bc, type: 3}
+  m_Name: Gatling
+  m_EditorClassIdentifier: Assembly-CSharp::GatlingAbility
+  id: Gatling
+  abilityName: "Gatling Gun"
+  description: "10초간 한 번의 발사가 빠른 3연사로 바뀐다."
+  icon: {fileID: 0}
+  targetMode: 0
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  extraBullets: 2
+  burstInterval: 0.08
+  duration: 10
+  vfxColor: {r: 1, g: 0.75, b: 0.3, a: 1}

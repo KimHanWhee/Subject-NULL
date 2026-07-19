@@ -24,6 +24,16 @@ public class GameManager : MonoBehaviour
     [Header("Time Score")]
     public float timeScoreRate = 1f;    // 초당 자동 획득 점수(생존 보너스, 원래 기믹 부활)
 
+    [Header("Power (점수 기반 기본공격)")]
+    // 적이 점점 강해지는 만큼 플레이어 기본공격도 같이 올라간다.
+    // 연속 증가는 체감이 안 되므로 단계로 끊어서 "강해졌다"는 순간을 만든다.
+    [Tooltip("점수로 얻는 최대 추가 피해 — 기본 무기(1)에 더해져 최종 3이 된다")]
+    public float maxDamageBonus = 2f;
+    [Tooltip("이 점수에서 추가 피해가 최대치에 도달")]
+    public float damageRampScore = 800f;
+    [Tooltip("추가 피해를 몇 단계로 나눠 올릴지 — 2면 400점에 +1, 800점에 +2")]
+    [Range(1, 5)] public int damageSteps = 2;
+
     // ---- 스폰 가중치 방식 ----
     // 각 값은 "상대 가중치" — (자기 값 ÷ 전체 합)이 실제 등장 비율.
     [Header("Melee (Slime)")]
@@ -66,10 +76,18 @@ public class GameManager : MonoBehaviour
     private float baseSpawnTerm;
     private float timeAfterLastSpawn;
     private float timeScoreAcc;          // 시간 점수 누적(1 이상 쌓이면 정수 가산)
+    private int powerStep;               // 현재 도달한 공격력 단계(0 ~ damageSteps)
 
     private TextMeshProUGUI comboText;
 
     public int Score { get { return score; } }
+
+    // 기본공격에 더해지는 점수 보너스 피해 — PlayerController.Shoot()에서 무기 피해에 가산
+    public float DamageBonus
+    {
+        get { return damageSteps <= 0 ? 0f : maxDamageBonus * powerStep / damageSteps; }
+    }
+    public int PowerStep { get { return powerStep; } }
 
     void Awake()
     {
@@ -100,6 +118,21 @@ public class GameManager : MonoBehaviour
         BuildComboText();
     }
 
+    // 점수가 구간을 넘으면 공격력 단계를 올리고 강화 연출을 띄운다(단계는 내려가지 않음).
+    void UpdatePowerStep()
+    {
+        if (damageSteps <= 0) return;
+        float t = Mathf.Clamp01(score / Mathf.Max(1f, damageRampScore));
+        int step = Mathf.Clamp(Mathf.FloorToInt(t * damageSteps), 0, damageSteps);
+        if (step <= powerStep) return;
+
+        powerStep = step;
+        if (player == null) return;
+        Color c = new Color(1f, 0.6f, 0.35f);
+        FloatingScore.SpawnText(player.transform.position, "공격력 강화!", c);
+        SpellVfx.SpawnRing(player.transform.position, 1.2f, c, 0.5f, 0.1f);
+    }
+
     void Update()
     {
         // 콤보 만료
@@ -113,6 +146,8 @@ public class GameManager : MonoBehaviour
         // 시간 점수(생존 보너스) — 초당 timeScoreRate 만큼 계속 증가
         timeScoreAcc += Time.deltaTime * timeScoreRate;
         if (timeScoreAcc >= 1f) { int add = (int)timeScoreAcc; score += add; timeScoreAcc -= add; }
+
+        UpdatePowerStep(); // 점수 구간 도달 시 기본공격 강화
 
         // 점수 기반 스폰 간격
         float term = Mathf.Lerp(baseSpawnTerm, minSpawnTerm, Mathf.Clamp01(score / spawnRampScore));

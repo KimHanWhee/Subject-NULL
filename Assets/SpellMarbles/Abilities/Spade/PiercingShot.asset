@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PiercingShotAbility
   id: PiercingShot
   abilityName: Piercing Shot
-  description: "5\uCD08\uAC04 \uBC1C\uC0AC\uD558\uB294 \uCD1D\uC54C\uC774 \uC801\uC744
+  description: "10\uCD08\uAC04 \uBC1C\uC0AC\uD558\uB294 \uCD1D\uC54C\uC774 \uC801\uC744
     \uAD00\uD1B5\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0

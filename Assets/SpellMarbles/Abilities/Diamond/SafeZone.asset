@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 431e63558466b7e448dc5b8865df7bb8, type: 3}
+  m_Name: SafeZone
+  m_EditorClassIdentifier: Assembly-CSharp::SafeZoneAbility
+  id: SafeZone
+  abilityName: "Safe Zone"
+  description: "지정한 위치에 안전지대를 펼친다. 범위 안에서는 받는 피해가 모두 무효화되며 적은 내부로 들어오지 못한다."
+  icon: {fileID: 0}
+  targetMode: 1
+  effectPrefab: {fileID: 0}
+  activationSound: {fileID: 0}
+  soundVolume: 1
+  radius: 3
+  duration: 6

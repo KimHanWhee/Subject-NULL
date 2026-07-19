@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimeStopAbility
   id: TimeStop
   abilityName: Time Stop
-  description: "3\uCD08\uAC04 \uD50C\uB808\uC774\uC5B4\uB97C \uC81C\uC678\uD55C \uBAA8\uB4E0
+  description: "5\uCD08\uAC04 \uD50C\uB808\uC774\uC5B4\uB97C \uC81C\uC678\uD55C \uBAA8\uB4E0
     \uAC83\uC744 \uC815\uC9C0\uC2DC\uD0A8\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
@@ -25,4 +25,5 @@ MonoBehaviour:
   waveDuration: 0.7
   waveRadius: 14
   grayscaleMaterial: {fileID: 2100000, guid: 75d4d1bfda10ae44b9086f721acf6d33, type: 2}
+  lethalDamage: 999
   vfxColor: {r: 0.8, g: 0.95, b: 1, a: 1}
