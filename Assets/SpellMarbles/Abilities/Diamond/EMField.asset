@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: EMField
   m_EditorClassIdentifier: Assembly-CSharp::EMFieldAbility
   id: EMField
-  abilityName: "EM Field"
-  description: "6초간 자신 주변으로 들어오는 모든 원거리 공격을 폭발시켜 제거한다. 레이저도 장막에 막힌다."
+  abilityName: EM Field
+  description: "6\uCD08\uAC04 \uC790\uC2E0 \uC8FC\uBCC0\uC73C\uB85C \uB4E4\uC5B4\uC624\uB294
+    \uBAA8\uB4E0 \uC6D0\uAC70\uB9AC \uACF5\uACA9\uC744 \uD3ED\uBC1C\uC2DC\uCF1C \uC81C\uAC70\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}

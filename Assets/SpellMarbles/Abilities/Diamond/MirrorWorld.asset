@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MirrorWorldAbility
   id: MirrorWorld
   abilityName: Mirror World
-  description: "10\uCD08\uAC04 \uC644\uC804 \uBB34\uC801\uC774 \uB418\uBA70, \uBC1B\uC558\uC744
-    \uD53C\uD574\uB97C \uC8FC\uBCC0 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC804\uB7C9
+  description: "10\uCD08\uAC04 \uC644\uC804 \uBB34\uC801\uC774 \uB418\uBA70, \uBC1B\uC740
+    \uD53C\uD574\uB97C \uC8FC\uBCC0 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC804\uBD80
     \uBC18\uC0AC\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0

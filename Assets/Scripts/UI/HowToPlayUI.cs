@@ -56,8 +56,7 @@ public class HowToPlayUI : MonoBehaviour
         "강력한 피해를 줄 수 있으므로,\n" +
         "잘 이용하여 적을 효율적으로 물리쳐보세요!\n\n" +
         "   · <color=#FF7A7A>대숙청</color> — 안전지대 밖 전멸\n" +
-        "   · <color=#FFE066>번개 폭풍</color> — 낙뢰 회피\n" +
-        "   · <color=#C87AFF>집단 혼란</color> — 조작 반전"
+        "   · <color=#FFE066>번개 폭풍</color> — 낙뢰 회피"
     };
 
     TMP_FontAsset font;

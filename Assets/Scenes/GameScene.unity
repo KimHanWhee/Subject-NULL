@@ -4637,7 +4637,7 @@ MonoBehaviour:
   minSpawnTerm: 1
   scoreText: {fileID: 1784521467}
   spawnRampScore: 600
-  maxSimultaneous: 5
+  maxSimultaneous: 8
   simulPerScore: 180
   multiChanceScore: 800
   comboWindow: 2.5

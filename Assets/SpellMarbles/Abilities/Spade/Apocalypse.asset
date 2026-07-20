@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ApocalypseAbility
   id: Apocalypse
   abilityName: Apocalypse
-  description: "\uD654\uBA74 \uC804\uCCB4\uC758 \uC801\uC5D0\uAC8C \uC989\uC2DC \uB300\uB7C9
-    \uD53C\uD574\uB97C \uC785\uD78C\uB2E4."
+  description: "\uBAA8\uB4E0 \uC801\uC5D0\uAC8C \uC989\uC2DC \uB300\uB7C9 \uD53C\uD574\uB97C
+    \uC785\uD78C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}

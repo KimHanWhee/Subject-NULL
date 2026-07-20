@@ -207,7 +207,6 @@ public class SpellCaster : MonoBehaviour
     [Header("Overload (Joker) 기믹 사운드")]
     public AudioClip jokerThunderSound;    // 번개 폭풍 — 낙뢰음(타격마다)
     public AudioClip jokerPurgeSound;      // 대숙청 — 폭발음
-    public AudioClip jokerConfusionSound;  // 집단 혼란 — 발동음
     // 조커 최소 간격 — 마블 속사 사이클링(고의 낭비→조커 즉시 반복) 방지.
     // 반드시 unscaled 기준: 스케일드(Time.time)로 재면 Ctrl/시전 슬로우(0.01배) 동안 거의 안 흘러
     // "조커가 게임당 한 번만 터진다"급으로 길어진다. 정상 덱 한 바퀴(수십 초)보다 짧게 유지할 것.
@@ -227,7 +226,7 @@ public class SpellCaster : MonoBehaviour
         IsOverloaded = true;
         lastJokerTime = Time.unscaledTime;
         JokerSpell.Trigger(player, -1, OnJokerFired, overloadWarningSound,
-            jokerThunderSound, jokerPurgeSound, jokerConfusionSound); // 3초 경고 → 기믹 → 콜백
+            jokerThunderSound, jokerPurgeSound); // 3초 경고 → 기믹 → 콜백
     }
 
     // 기믹 발동 순간: 덱 재셔플 + 손패 즉시 풀 리필(과부하 해소 보상) + Ctrl 잠금 해제

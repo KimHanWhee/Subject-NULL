@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 // 클릭 시 커서 위치에 폭탄 낙하 → 소규모 폭발. 발사 속도는 무기 fireRate를 그대로 따른다.
 public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
 {
+    const float ZoomMultiplier = 1.75f; // 커서로 착탄점을 조준하므로 넓은 시야가 유리(시야 5 → 8.75)
+
     private float radius;
     private float damage;
     private float minInterval;
@@ -22,7 +24,11 @@ public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDispla
                              float duration, GameObject explosionPrefab, SpellMarble marble = null)
     {
         ThunderBombStatus s = player.GetComponent<ThunderBombStatus>();
-        if (s == null) s = player.AddComponent<ThunderBombStatus>();
+        if (s == null)
+        {
+            s = player.AddComponent<ThunderBombStatus>();
+            CameraZoom.Request(s, ZoomMultiplier); // 투하 중 시야 확대
+        }
         s.radius = radius;
         s.damage = damage;
         s.minInterval = minInterval;
@@ -52,4 +58,6 @@ public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDispla
         remain -= Time.deltaTime;
         if (remain <= 0f) Destroy(this);
     }
+
+    void OnDisable() { CameraZoom.Release(this); }
 }

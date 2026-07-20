@@ -92,6 +92,10 @@ public class MainMenuRanking : MonoBehaviour
         btn.targetGraphic = img;
         btn.onClick.AddListener(ToggleOverlay);
 
+        // 다른 메뉴 버튼과 동일한 호버 글로우/사운드.
+        // MainMenuIntro는 이 버튼이 생기기 전에 Start()가 끝나므로 여기서 직접 붙인다.
+        go.AddComponent<MenuButtonFx>().Init(Resources.Load<AudioClip>("Sounds/UIHover"));
+
         MakeText(rt, "랭킹", 26, Vector2.zero, new Color(0.88f, 0.95f, 1f), FontStyles.Bold)
             .rectTransform.sizeDelta = rt.sizeDelta;
     }

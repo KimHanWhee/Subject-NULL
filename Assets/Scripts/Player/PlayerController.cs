@@ -76,7 +76,8 @@ public class PlayerController : MonoBehaviour
     public bool IsShieldActive => Time.time <= shieldUntil;
     public void GrantShield(float duration) => shieldUntil = Mathf.Max(shieldUntil, Time.time + duration);
 
-    // 조커 집단 혼란 — 이 시각까지 조작 반전(입력 방향의 반대로 이동). 시각 표시는 JokerSpell 담당.
+    // 조작 반전 훅 — 이 시각까지 입력 방향의 반대로 이동. (조커 집단 혼란 제거로 현재 사용처 없음,
+    // 향후 교란 계열 기믹/마블에서 재사용 가능하도록 유지)
     private float invertUntil;
     public bool ControlsInverted => Time.time <= invertUntil;
     public void ApplyControlInvert(float duration) => invertUntil = Mathf.Max(invertUntil, Time.time + duration);
@@ -146,7 +147,7 @@ public class PlayerController : MonoBehaviour
         
         move = move.normalized;
 
-        if (ControlsInverted && move.magnitude > 0f) move = -move; // 조커 집단 혼란 — 조작 반전
+        if (ControlsInverted && move.magnitude > 0f) move = -move; // 조작 반전 훅(ApplyControlInvert)
 
         if (move.magnitude > 0) lastMoveDir = move; // Plan SC: FR-02 — 폴백용 마지막 이동 방향
 

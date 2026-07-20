@@ -15,7 +15,8 @@ MonoBehaviour:
   id: TimeStop
   abilityName: Time Stop
   description: "5\uCD08\uAC04 \uD50C\uB808\uC774\uC5B4\uB97C \uC81C\uC678\uD55C \uBAA8\uB4E0
-    \uAC83\uC744 \uC815\uC9C0\uC2DC\uD0A8\uB2E4."
+    \uAC83\uC744 \uC815\uC9C0\uC2DC\uD0A8\uB2E4. \uC815\uC9C0 \uC2DC\uAC04\uC18D
+    \uD50C\uB808\uC774\uC5B4\uC758 \uACF5\uACA9\uB825\uC774 \uB9E4\uC6B0 \uC99D\uAC00\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}

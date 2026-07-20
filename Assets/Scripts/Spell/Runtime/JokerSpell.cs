@@ -4,27 +4,25 @@ using UnityEngine;
 
 // 조커 스펠 — 덱의 스펠마블을 전부 소모하면(셔플백 1바퀴) 과부하가 걸려
 // 여러 기믹 중 하나가 랜덤 발동한다. SpellCaster.DrawNext의 재셔플 시점에서 Trigger됨.
-// 기믹: ①대숙청(안전지대 밖 전멸) ②번개 폭풍(0.5초 경고 낙뢰 연타) ③집단 혼란
+// 기믹: ①대숙청(안전지대 밖 전멸) ②번개 폭풍(0.5초 경고 낙뢰 연타)
 public class JokerSpell : MonoBehaviour
 {
-    const int GimmickCount = 3;
+    const int GimmickCount = 2;
 
     // 기믹 효과음(SpellCaster가 인스펙터 클립을 주입) — null이면 무음(Sfx.Play2D가 안전 처리)
     private AudioClip thunderSound;   // 번개 폭풍 — 낙뢰가 떨어질 때마다
     private AudioClip purgeSound;     // 대숙청 — 폭발(심판) 순간
-    private AudioClip confusionSound; // 집단 혼란 — 발동 순간
 
     // forceIndex: 테스트/디버그용 강제 선택(-1 = 랜덤)
     // onGimmickStart: 3초 경고가 끝나고 기믹이 실제 발동하는 순간 호출(SpellCaster의 덱 리셋 훅)
     // warnSound: 경고 사이렌(점멸 동안 루프 재생, 종료 시 정지)
-    // thunder/purge/confusion: 각 기믹 효과음
+    // thunder/purge: 각 기믹 효과음
     public static void Trigger(GameObject player, int forceIndex = -1, System.Action onGimmickStart = null, AudioClip warnSound = null,
-        AudioClip thunderSound = null, AudioClip purgeSound = null, AudioClip confusionSound = null)
+        AudioClip thunderSound = null, AudioClip purgeSound = null)
     {
         JokerSpell j = new GameObject("JokerSpell").AddComponent<JokerSpell>();
         j.thunderSound = thunderSound;
         j.purgeSound = purgeSound;
-        j.confusionSound = confusionSound;
         j.StartCoroutine(j.Sequence(player, forceIndex, onGimmickStart, warnSound));
     }
 
@@ -145,8 +143,7 @@ public class JokerSpell : MonoBehaviour
         switch (pick)
         {
             case 0: StartCoroutine(Purge(player)); break;
-            case 1: StartCoroutine(LightningStorm(player)); break;
-            default: StartCoroutine(MassConfusion(player)); break;
+            default: StartCoroutine(LightningStorm(player)); break;
         }
     }
 
@@ -279,36 +276,6 @@ public class JokerSpell : MonoBehaviour
             lr.SetPosition(i, p);
         }
         return lr;
-    }
-
-    // ---- ③ 집단 혼란: 6초간 모든 적이 방향 감각 상실 ----
-    IEnumerator MassConfusion(GameObject player)
-    {
-        const float duration = 6f;
-        Color c = new Color(0.8f, 0.45f, 1f);
-        Overload(player, "집단 혼란", c);
-        Sfx.Play2D(confusionSound, 0.9f); // 집단 혼란 발동음
-
-        // 플레이어도 혼란 — 지속시간 동안 조작 반전(입력 반대로 이동) + 시각 표시(보라 궤도)
-        if (player != null)
-        {
-            PlayerController pc = player.GetComponent<PlayerController>();
-            if (pc != null) pc.ApplyControlInvert(duration);
-            SpellParticleVfx.SpawnOrbit(player.transform, 0.6f, c, duration);
-        }
-
-        float end = Time.time + duration;
-        while (Time.time < end)
-        {
-            foreach (EnemyBase e in Object.FindObjectsOfType<EnemyBase>())
-                if (e.gameObject.activeInHierarchy && e.GetComponent<ConfusionStatus>() == null)
-                {
-                    ConfusionStatus.Apply(e.gameObject, end - Time.time);
-                    SpellParticleVfx.SpawnOrbit(e.transform, 0.5f, c, end - Time.time);
-                }
-            yield return new WaitForSeconds(1f);
-        }
-        Destroy(gameObject);
     }
 
     // ---- 연출 헬퍼 ----

@@ -7,6 +7,8 @@ using UnityEngine.InputSystem;
 // 경로상 모든 적에게 강한 피해 + 넉백, 플레이어도 반동으로 미세 넉백.
 public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
 {
+    const float ZoomMultiplier = 1.85f; // 시야 5 → 9.25
+
     private PlayerController pc;
     private int charges;
     private float damage;
@@ -33,6 +35,7 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
         {
             s = player.AddComponent<RailgunStatus>();
             s.pc = player.GetComponent<PlayerController>();
+            CameraZoom.Request(s, ZoomMultiplier); // 맵 끝까지 뻗는 빔 — 조준선을 길게 볼 수 있게
         }
         s.charges = Mathf.Max(s.charges, 0) + charges; // 중복 발동 시 횟수 누적
         s.damage = damage;
@@ -81,12 +84,13 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
 
     void FireBeam(Vector2 origin, Vector2 dir)
     {
-        RailBeamVfx.Spawn(origin, dir, beamLength, beamWidth); // 번개 궤적(스프라이트+라인 합성)
+        float range = BeamRange(origin, dir);
+        RailBeamVfx.Spawn(origin, dir, range, beamWidth); // 번개 궤적(스프라이트+라인 합성)
 
         // 판정: 빔 중심선을 따라 박스(폭 = beamWidth) — 경로상 모든 적 관통 타격
-        Vector2 center = origin + dir * (beamLength * 0.5f);
+        Vector2 center = origin + dir * (range * 0.5f);
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        Collider2D[] hits = Physics2D.OverlapBoxAll(center, new Vector2(beamLength, beamWidth), angle);
+        Collider2D[] hits = Physics2D.OverlapBoxAll(center, new Vector2(range, beamWidth), angle);
         for (int i = 0; i < hits.Length; i++)
         {
             if (!hits[i].CompareTag("Enemy")) continue;
@@ -105,4 +109,22 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
         // 플레이어 반동(미세) — 발사 반대 방향
         if (pc != null) pc.transform.position -= (Vector3)(dir * playerRecoil);
     }
+
+    // 빔 실제 길이 — 맵 끝(벽)까지 뻗는다. 벽이 없으면 beamLength(에셋 값)를 상한으로 사용.
+    // LaserEnemyController.BeamRange()와 동일 규약.
+    float BeamRange(Vector2 origin, Vector2 dir)
+    {
+        float max = Mathf.Max(beamLength, MaxRange);
+        RaycastHit2D[] hits = Physics2D.RaycastAll(origin, dir, max);
+        float best = max;
+        for (int i = 0; i < hits.Length; i++)
+            if (hits[i].collider != null && hits[i].collider.CompareTag("Wall") && hits[i].distance < best)
+                best = hits[i].distance;
+        return best;
+    }
+
+    // 어떤 맵에서도 반대편 벽에 닿고 남을 충분한 상한
+    const float MaxRange = 60f;
+
+    void OnDisable() { CameraZoom.Release(this); }
 }

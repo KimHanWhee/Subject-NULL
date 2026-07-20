@@ -3,6 +3,8 @@ using UnityEngine;
 // ♠ Sniper Mode 상태 — 지속시간 동안 총알 속도/데미지 배율(기본 3배), 대신 이동속도 감소.
 public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulletModifier, IBuffDisplay
 {
+    const float ZoomMultiplier = 1.95f; // 사거리/탄속이 길어지는 만큼 가장 넓게(시야 5 → 9.75)
+
     private PlayerController pc;
     private float originalSpeed;
     private float damageMult;
@@ -25,6 +27,7 @@ public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulle
             if (s.pc == null) { Destroy(s); return; }
             s.originalSpeed = s.pc.speed;
             s.pc.speed = s.originalSpeed * Mathf.Clamp01(moveMult); // 이동속도 감소
+            CameraZoom.Request(s, ZoomMultiplier);                  // 저격 중 시야 확대
         }
         s.damageMult = damageMult;
         s.bulletSpeedMult = bulletSpeedMult;
@@ -45,6 +48,7 @@ public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulle
     void Restore()
     {
         if (pc != null) pc.speed = originalSpeed;
+        CameraZoom.Release(this);
         pc = null;
     }
 

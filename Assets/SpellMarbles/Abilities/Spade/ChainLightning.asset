@@ -16,7 +16,7 @@ MonoBehaviour:
   abilityName: Chain Lightning
   description: "10\uCD08\uAC04 \uCD1D\uC54C\uC774 \uC801\uC5D0\uAC8C \uBA85\uC911\uD558\uBA74
     \uC8FC\uBCC0 \uC801\uC5D0\uAC8C \uBC88\uAC1C\uAC00 \uC5F0\uC1C4\uC801\uC73C\uB85C
-    \uD284\uB2E4."
+    \uC804\uAC00\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 9010030949432228466, guid: e56f415875b2752458c30c5fa1c30c75, type: 3}

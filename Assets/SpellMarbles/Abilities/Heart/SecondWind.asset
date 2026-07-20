@@ -15,8 +15,8 @@ MonoBehaviour:
   id: SecondWind
   abilityName: Second Wind
   description: "10\uCD08\uAC04 \uB300\uC2DC\uAC00 \uC2A4\uD0DC\uBBF8\uB108\uB97C
-    \uC18C\uBAA8\uD558\uC9C0 \uC54A\uB294\uB2E4. \uB9C8\uC74C\uAECF \uC9C8\uC8FC\uD558\uBA70
-    \uD68C\uD53C\uD558\uB77C."
+    \uC18C\uBAA8\uD558\uC9C0 \uC54A\uC73C\uBA70, \uB300\uC2DC \uCFE8\uD0C0\uC784\uC774
+    \uB300\uD3ED \uAC10\uC18C\uD55C\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}

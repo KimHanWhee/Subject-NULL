@@ -13,8 +13,11 @@ MonoBehaviour:
   m_Name: Railgun
   m_EditorClassIdentifier: Assembly-CSharp::RailgunAbility
   id: Railgun
-  abilityName: "Railgun"
-  description: "다음 3번의 공격이 레일건으로 바뀐다. 0.5초간 기를 모은 뒤 커서 방향으로 관통 빔을 발사해 강력한 피해를 주고 적중한 모든 적을 넉백시킨다. 반동으로 플레이어도 살짝 밀려난다."
+  abilityName: Railgun
+  description: "\uB2E4\uC74C 3\uBC88\uC758 \uACF5\uACA9\uC774 \uB808\uC77C\uAC74\uC73C\uB85C
+    \uBC14\uB010\uB2E4. \uCEE4\uC11C \uBC29\uD5A5\uC73C\uB85C \uB808\uC77C\uAC74\uC744
+    \uBC1C\uC0AC\uD574 \uAC15\uB825\uD55C \uD53C\uD574\uB97C \uC8FC\uACE0 \uC801\uC911\uD55C
+    \uBAA8\uB4E0 \uC801\uC744 \uB109\uBC31\uC2DC\uD0A8\uB2E4."
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}
