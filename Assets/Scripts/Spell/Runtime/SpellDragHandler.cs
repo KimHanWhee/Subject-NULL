@@ -66,7 +66,7 @@ public class SpellDragHandler : MonoBehaviour
         // 한글 글리프가 사라지고, 레이아웃이 텍스트 크기를 따라가 박스까지 쭈그라든다.
         if (tooltipText != null)
         {
-            Font kr = Resources.Load<Font>("Fonts/malgun");
+            Font kr = Resources.Load<Font>("Fonts/Pretendard-Regular");
             if (kr != null) tooltipText.font = kr;
         }
     }

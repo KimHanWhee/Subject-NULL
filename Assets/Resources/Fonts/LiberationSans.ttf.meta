@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 62b81e38f9229cc42b9be397539578eb
+guid: d919825e9903cde4084090956ca87d25
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Malgun Gothic
+  - Liberation Sans
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

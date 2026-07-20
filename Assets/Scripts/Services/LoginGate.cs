@@ -211,7 +211,7 @@ public class LoginGate : MonoBehaviour
 
     static Font UiFont()
     {
-        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
+        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/Pretendard-Regular"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
         if (uiFont == null) uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return uiFont;
     }

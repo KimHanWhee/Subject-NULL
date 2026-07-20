@@ -41,8 +41,8 @@ public class HowToPlayUI : MonoBehaviour
         "스펠 마블은 특수 능력을 발동시키는 마법 구슬입니다.\n" +
         "덱에서 직접 원하는 스펠 마블을 편성하여 사용할 수 있습니다.\n\n" +
         "<b>타입</b>\n" +
-        "   <color=#7FB0FF>♠ 스페이드 (공격)</color>   <color=#FF7F8A>♥ 하트 (버프)</color>\n" +
-        "   <color=#7FE08A>♣ 클로버 (유틸)</color>   <color=#C8A0FF>◆ 다이아몬드 (방어)</color>\n\n" +
+        "   <color=#7FB0FF>스페이드 (공격)</color>   <color=#FF7F8A>하트 (버프)</color>\n" +
+        "   <color=#7FE08A>클로버 (유틸)</color>   <color=#C8A0FF>다이아몬드 (방어)</color>\n\n" +
         "<b>등급</b>   일반 → <color=#FFD24A>골드</color> → <color=#66D0FF>다이아</color> → <color=#FF8AF0>레전드</color>\n" +
         "   높은 등급일수록 강한 능력.\n" +
         "   골드 이상은 <b>마블 뽑기</b> 및 구슬 조각 교환으로 획득.\n\n" +
@@ -154,6 +154,12 @@ public class HowToPlayUI : MonoBehaviour
         Button back = MakeButton(root, "BackButton", "← 뒤로", 30f, BACK_COL, Color.white,
             new Vector2(-810f, 476f), new Vector2(220f, 68f));
         back.onClick.AddListener(OnBack);
+
+        // --- 오픈소스 고지 (하단 중앙, 탭과 무관하게 상시 표시) ---
+        // SIL OFL 1.1은 폰트 재배포 시 저작권 고지를 함께 제공할 것을 요구한다.
+        MakeText(root, "Credits", "Pretendard © Kil Hyung-jin · SIL Open Font License 1.1", 18f,
+            new Color(0.45f, 0.5f, 0.6f, 1f), TextAlignmentOptions.Center,
+            new Vector2(0f, -505f), new Vector2(1200f, 28f), FontStyles.Normal);
     }
 
     void ShowTab(int index)

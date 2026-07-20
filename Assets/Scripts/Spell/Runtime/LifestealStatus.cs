@@ -1,6 +1,8 @@
 using UnityEngine;
 
-// ♥ Lifesteal 상태 — 지속시간 동안 총알이 적에게 명중할 때마다 체력 회복(기본 1).
+// ♥ Lifesteal 상태 — 지속시간 동안 총알이 적에게 명중할 때마다 체력 회복(고정량).
+// 고정량인 이유: 피해 비율로 하면 점수 기반 공격력 강화(GameManager.DamageBonus)와 함께
+// 회복량이 커져 후반에 오히려 강해진다. 일반 등급 마블이므로 항상 같은 값으로 묶는다.
 // PlayerBulletEvents.EnemyHit 구독(구독 해제는 OnDisable/OnDestroy 책임).
 public class LifestealStatus : MonoBehaviour, IBuffDisplay
 {

@@ -224,32 +224,40 @@ public class GachaShopUI : MonoBehaviour
         }
 
         // 표: 등급 | 스킬명 | 확률(%)
+        // 헤더와 하단 요약은 패널에 고정하고, 목록만 스크롤한다.
+        // (마블이 늘어도 요약/주석이 패널 밖으로 밀려나지 않게)
         const float colGrade = -260f, colName = -40f, colRate = 240f;
-        float y = 295f;
         const float rowH = 38f;
         Color headCol = new Color(0.65f, 0.7f, 0.85f);
-        MakeText(panel, "HGrade", new Vector2(colGrade, y), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>등급</b>", headCol);
-        MakeText(panel, "HName", new Vector2(colName, y), new Vector2(300f, 30f), 18, TextAnchor.MiddleLeft, "<b>스킬명</b>", headCol);
-        MakeText(panel, "HRate", new Vector2(colRate, y), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>확률(%)</b>", headCol);
-        MakeImage(panel, "HLine", new Vector2(0f, y - rowH * 0.55f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
-        y -= rowH + 6f;
+        const float headY = 295f;
+        MakeText(panel, "HGrade", new Vector2(colGrade, headY), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>등급</b>", headCol);
+        MakeText(panel, "HName", new Vector2(colName, headY), new Vector2(300f, 30f), 18, TextAnchor.MiddleLeft, "<b>스킬명</b>", headCol);
+        MakeText(panel, "HRate", new Vector2(colRate, headY), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>확률(%)</b>", headCol);
+        MakeImage(panel, "HLine", new Vector2(0f, headY - rowH * 0.55f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
 
+        const float viewH = 570f;
+        float contentH = Mathf.Max(pool.Count * rowH + 14f, viewH);
+        RectTransform rows = MakeRateScroll(panel, new Vector2(0f, -30f), new Vector2(700f, viewH), contentH);
+
+        // MakeText/MakeImage는 자식을 부모 "중앙"에 앵커링한다(도감 그리드와 동일 규약).
+        // 따라서 행 좌표는 콘텐츠 상단이 아니라 중앙 기준으로 계산해야 한다.
+        float y = contentH * 0.5f - 6f - rowH * 0.5f;
         for (int i = 0; i < pool.Count; i++)
         {
             SpellMarble m = pool[i];
-            if ((i & 1) == 0) MakeImage(panel, "RowBG" + i, new Vector2(0f, y), new Vector2(680f, rowH - 4f), new Color(1f, 1f, 1f, 0.045f));
+            if ((i & 1) == 0) MakeImage(rows, "RowBG" + i, new Vector2(0f, y), new Vector2(680f, rowH - 4f), new Color(1f, 1f, 1f, 0.045f));
             int cnt = countOf[m.grade];
             float pct = totalWeight > 0f && cnt > 0 ? cfg.Weight(m.grade) / totalWeight / cnt * 100f : 0f;
             Color gc = GradePalette.ColorOf(m.grade);
             string name = m.ability != null ? m.ability.abilityName : m.marbleName;
-            MakeText(panel, "RG" + i, new Vector2(colGrade, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, "<b>" + GradeLabel(m.grade) + "</b>", gc);
-            MakeText(panel, "RN" + i, new Vector2(colName, y), new Vector2(300f, 30f), 17, TextAnchor.MiddleLeft, name, Color.white);
-            MakeText(panel, "RR" + i, new Vector2(colRate, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, pct.ToString("0.##") + "%", new Color(0.85f, 0.9f, 1f));
+            MakeText(rows, "RG" + i, new Vector2(colGrade, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, "<b>" + GradeLabel(m.grade) + "</b>", gc);
+            MakeText(rows, "RN" + i, new Vector2(colName, y), new Vector2(300f, 30f), 17, TextAnchor.MiddleLeft, name, Color.white);
+            MakeText(rows, "RR" + i, new Vector2(colRate, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, pct.ToString("0.##") + "%", new Color(0.85f, 0.9f, 1f));
             y -= rowH;
         }
 
-        // 등급 합계 요약
-        MakeImage(panel, "FLine", new Vector2(0f, y + rowH * 0.45f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
+        // 등급 합계 요약 — 패널 하단 고정(스크롤과 무관하게 항상 보임)
+        MakeImage(panel, "FLine", new Vector2(0f, -332f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
         string sum = "등급 합계 — ";
         Grade[] grades = { Grade.Gold, Grade.Diamond, Grade.Legend };
         for (int g = 0; g < grades.Length; g++)
@@ -259,8 +267,68 @@ public class GachaShopUI : MonoBehaviour
             sum += "<color=#" + ColorUtility.ToHtmlStringRGB(gc) + ">" + GradeLabel(grades[g]) + " " + gp.ToString("0.##") + "%</color>";
             if (g < grades.Length - 1) sum += " · ";
         }
-        MakeText(panel, "Sum", new Vector2(0f, y - 6f), new Vector2(700f, 30f), 17, TextAnchor.MiddleCenter, sum, Color.white);
-        MakeText(panel, "Note", new Vector2(0f, y - 40f), new Vector2(700f, 26f), 14, TextAnchor.MiddleCenter, "<color=#8A8A98>일반 등급 14종은 기본 보유로 뽑기 대상이 아닙니다 · 중복 획득 시 조각으로 환급됩니다</color>", Color.white);
+        MakeText(panel, "Sum", new Vector2(0f, -362f), new Vector2(700f, 30f), 17, TextAnchor.MiddleCenter, sum, Color.white);
+        MakeText(panel, "Note", new Vector2(0f, -400f), new Vector2(700f, 44f), 14, TextAnchor.UpperCenter, "<color=#8A8A98>일반 등급 14종은 기본 보유로 뽑기 대상이 아닙니다 · 중복 획득 시 조각으로 환급됩니다</color>", Color.white);
+    }
+
+    // 확률표 전용 세로 스크롤 영역 — 도감 그리드와 동일 패턴(뷰포트+RectMask2D+슬림 스크롤바).
+    // 반환값은 행을 붙일 콘텐츠(pivot=top). 내용이 뷰포트보다 짧으면 스크롤바는 자동 숨김.
+    RectTransform MakeRateScroll(RectTransform panel, Vector2 center, Vector2 viewSize, float contentH)
+    {
+        GameObject viewportGo = new GameObject("RateViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
+        RectTransform viewport = (RectTransform)viewportGo.transform;
+        viewport.SetParent(panel, false);
+        viewport.anchorMin = viewport.anchorMax = new Vector2(0.5f, 0.5f);
+        viewport.pivot = new Vector2(0.5f, 0.5f);
+        viewport.sizeDelta = viewSize;
+        viewport.anchoredPosition = center;
+        Image vpImg = viewportGo.GetComponent<Image>();
+        vpImg.sprite = WhiteSprite();
+        vpImg.color = new Color(0f, 0f, 0f, 0.01f); // 휠/드래그 스크롤 수신용(투명 레이캐스트)
+        vpImg.raycastTarget = true;
+
+        RectTransform content = MakeRect(viewport, "RateRows", Vector2.zero, new Vector2(viewSize.x, contentH));
+        content.anchorMin = new Vector2(0.5f, 1f);
+        content.anchorMax = new Vector2(0.5f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.anchoredPosition = Vector2.zero;
+
+        ScrollRect scroll = viewportGo.AddComponent<ScrollRect>();
+        scroll.viewport = viewport;
+        scroll.content = content;
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.movementType = ScrollRect.MovementType.Clamped;
+        scroll.scrollSensitivity = 28f;
+
+        GameObject sbGo = new GameObject("RateScrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+        RectTransform sbRt = (RectTransform)sbGo.transform;
+        sbRt.SetParent(panel, false);
+        sbRt.anchorMin = sbRt.anchorMax = new Vector2(0.5f, 0.5f);
+        sbRt.pivot = new Vector2(0.5f, 0.5f);
+        sbRt.sizeDelta = new Vector2(7f, viewSize.y);
+        sbRt.anchoredPosition = new Vector2(viewSize.x * 0.5f + 12f, center.y);
+        Image sbBg = sbGo.GetComponent<Image>();
+        sbBg.sprite = WhiteSprite();
+        sbBg.color = new Color(1f, 1f, 1f, 0.06f);
+
+        GameObject handleGo = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+        RectTransform handleRt = (RectTransform)handleGo.transform;
+        handleRt.SetParent(sbRt, false);
+        handleRt.anchorMin = Vector2.zero; handleRt.anchorMax = Vector2.one;
+        handleRt.offsetMin = Vector2.zero; handleRt.offsetMax = Vector2.zero;
+        Image handleImg = handleGo.GetComponent<Image>();
+        handleImg.sprite = WhiteSprite();
+        handleImg.color = new Color(0.55f, 0.9f, 1f, 0.4f);
+
+        Scrollbar sb = sbGo.GetComponent<Scrollbar>();
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.handleRect = handleRt;
+        sb.targetGraphic = handleImg;
+        scroll.verticalScrollbar = sb;
+        scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+        scroll.verticalNormalizedPosition = 1f; // 항상 목록 맨 위에서 시작(기본값은 하단)
+        return content;
     }
 
     void BuildCollectionPanel(RectTransform root)
@@ -803,7 +871,8 @@ public class GachaShopUI : MonoBehaviour
             return;
         }
         // TODO(단계 3b): PayPal createOrder → 승인 → captureOrder → 서버 GEM 지급. sandbox 키 연결 후 구현.
-        ShowFeedback("PayPal 결제 연결 예정입니다 (" + p.label + ")", true);
+        // 문구는 결제 수단을 노출하지 않는다(연동 전 사용자 혼선 방지).
+        ShowFeedback("결제 서비스 준비 중입니다 (" + p.label + ")", true);
     }
 
     // ── 갱신/헬퍼 ─────────────────────────────────────────
@@ -858,7 +927,7 @@ public class GachaShopUI : MonoBehaviour
     // ── UI 프리미티브 ─────────────────────────────────────
     static Font UiFont()
     {
-        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
+        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/Pretendard-Regular"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
         if (uiFont == null) uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return uiFont;
     }

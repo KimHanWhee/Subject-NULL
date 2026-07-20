@@ -13,28 +13,18 @@ MonoBehaviour:
   m_Name: DefaultDeck
   m_EditorClassIdentifier: Assembly-CSharp::DeckData
   marbles:
-  - {fileID: 11400000, guid: 364d4dd92f4787447a5cda2ab3ae6cb7, type: 2}
   - {fileID: 11400000, guid: 0a07df7de3b663b48aa652b6c02fb7ff, type: 2}
+  - {fileID: 11400000, guid: 364d4dd92f4787447a5cda2ab3ae6cb7, type: 2}
+  - {fileID: 11400000, guid: 22450c04496441a79a59a32dec181746, type: 2}
+  - {fileID: 11400000, guid: c3ab81ac8c8b7314dbd7b420d55de71b, type: 2}
+  - {fileID: 11400000, guid: 05474842282bd204ebe641fe8c245e2c, type: 2}
   - {fileID: 11400000, guid: 20072e6683814d64b8cf646c4bae1e51, type: 2}
+  - {fileID: 11400000, guid: 5a8c1712f68ae994ab8f6b364f66e109, type: 2}
   - {fileID: 11400000, guid: 3a776a8281444cc43933e81ae85a14c1, type: 2}
+  - {fileID: 11400000, guid: f69235bb9aa38ee42a1a4241139c8811, type: 2}
+  - {fileID: 11400000, guid: 78c3df005d4cf9c4da2a7ca4d580d0cf, type: 2}
   - {fileID: 11400000, guid: baee452109937d34ab46ca974e451140, type: 2}
-  - {fileID: 11400000, guid: 6fb8c9a0385ac10488fa5fd13771c876, type: 2}
   - {fileID: 11400000, guid: 2653455cc2168744598e321a0ec65db1, type: 2}
   - {fileID: 11400000, guid: c14cdbaca462acb4e91ffb8a3d1911c1, type: 2}
   - {fileID: 11400000, guid: 14dd42f713ba4fc4cb64b8148fc2307b, type: 2}
-  - {fileID: 11400000, guid: a1de117fade31c348bf7ff993dc3e396, type: 2}
-  - {fileID: 11400000, guid: 5561f9bfd20dc434e9186e8e3d1e6d84, type: 2}
-  - {fileID: 11400000, guid: 5a8c1712f68ae994ab8f6b364f66e109, type: 2}
-  - {fileID: 11400000, guid: 300ce4c30b55b07449512a44d5e34835, type: 2}
-  - {fileID: 11400000, guid: 74b97617c84a57f478546041608ac608, type: 2}
-  - {fileID: 11400000, guid: 72c65a6a7ea2eed4d8d4ba31b865bc02, type: 2}
-  - {fileID: 11400000, guid: df59d3bb87dd6074bb768d198eb9235b, type: 2}
-  - {fileID: 11400000, guid: 05474842282bd204ebe641fe8c245e2c, type: 2}
-  - {fileID: 11400000, guid: beb9a9b8f093f4e4da152186bf99efbb, type: 2}
-  - {fileID: 11400000, guid: 11828348a2d2cd0458acd189635dc3e9, type: 2}
-  - {fileID: 11400000, guid: 80f4da2429c42ef478b8a3b630e33239, type: 2}
-  - {fileID: 11400000, guid: aeae9f1d70a6b4d478c425dfeaed9a47, type: 2}
-  - {fileID: 11400000, guid: 169147963ae25b541be8cf04fe1a2b62, type: 2}
-  - {fileID: 11400000, guid: 587e0083ea3d61742a3e66df8c942238, type: 2}
-  - {fileID: 11400000, guid: f69235bb9aa38ee42a1a4241139c8811, type: 2}
-  - {fileID: 11400000, guid: 78c3df005d4cf9c4da2a7ca4d580d0cf, type: 2}
+  - {fileID: 11400000, guid: 490348ef3770fb44cbec06c1c1834b79, type: 2}

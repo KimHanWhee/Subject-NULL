@@ -1,11 +1,12 @@
 using UnityEngine;
 
-// ♥ Lifesteal (Normal, SelfBuff) — 10초간 적에게 총알이 명중할 때마다 체력 1 회복.
+// ♥ Lifesteal (Normal, SelfBuff) — 지속시간 동안 총알이 적에게 명중할 때마다 체력 0.5 회복.
 [CreateAssetMenu(fileName = "Lifesteal", menuName = "Spell/Abilities/Lifesteal")]
 public class LifestealAbility : SpellAbility
 {
-    public float healPerHit = 1f;
-    public float duration = 10f;
+    [Tooltip("명중 1회당 회복량(고정). 기본 공격 피해 1의 절반")]
+    public float healPerHit = 0.5f;
+    public float duration = 5f;
 
     [Header("Code VFX (effectPrefab 미지정 시)")]
     public Color vfxColor = new Color(0.9f, 0.2f, 0.4f, 1f); // 진홍(흡혈)

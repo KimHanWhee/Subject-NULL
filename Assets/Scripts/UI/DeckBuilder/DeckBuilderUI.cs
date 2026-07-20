@@ -43,7 +43,7 @@ public class DeckBuilderUI : MonoBehaviour
     private Image[] slotRings;                    // 덱 슬롯 등급 테두리
     private Image[] slotFrames;                   // 덱 슬롯 카드 프레임(슈트색)
     private Image[] slotArts;                     // 덱 슬롯 스킬 아이콘
-    private Text[] slotSuitTags;                  // 덱 슬롯 좌상단 슈트 기호
+    private Image[] slotSuitTags;                 // 덱 슬롯 좌상단 슈트 아이콘(스프라이트)
     private Text counterText;
     private Text feedbackText;
     private Button saveButton;
@@ -330,8 +330,14 @@ public class DeckBuilderUI : MonoBehaviour
             tabImg.raycastTarget = true;
             tabBgs[s] = tabImg;
 
-            Text tabLbl = MakeText(tabImg.rectTransform, "Label", Vector2.zero, new Vector2(tabW, 52f), 22, TextAnchor.MiddleCenter);
-            tabLbl.text = SuitInfo.Symbol(suit) + " " + SuitInfo.Role(suit);
+            // 문양은 스프라이트 아이콘(폰트 글리프 아님) + 역할어 텍스트를 나란히 배치
+            // 아이콘은 왼쪽 여백, 라벨은 남은 폭 중앙 — 서로 겹치지 않게 분리
+            Image tabIcon = MakeImage(tabImg.rectTransform, "SuitIcon", new Vector2(-tabW * 0.5f + 30f, 0f), new Vector2(24f, 24f), SuitInfo.ColorOf(suit));
+            tabIcon.sprite = SuitInfo.Icon(suit);
+            tabIcon.raycastTarget = false;
+
+            Text tabLbl = MakeText(tabImg.rectTransform, "Label", new Vector2(16f, 0f), new Vector2(tabW - 60f, 52f), 22, TextAnchor.MiddleCenter);
+            tabLbl.text = SuitInfo.Role(suit);
             tabLabels[s] = tabLbl;
 
             Suit captured = suit;
@@ -492,9 +498,9 @@ public class DeckBuilderUI : MonoBehaviour
         // 슈트 뱃지(좌상단, 작게)
         Image badgeBg = MakeImage(card, "SuitBadge", new Vector2(-w * 0.5f + 24f, h * 0.5f - 24f), new Vector2(34f, 34f), new Color(0.05f, 0.05f, 0.08f, 0.9f));
         badgeBg.sprite = CircleSprite();
-        Text suitTxt = MakeText(badgeBg.rectTransform, "Symbol", new Vector2(0f, 1f), new Vector2(34f, 34f), 20, TextAnchor.MiddleCenter);
-        suitTxt.text = SuitInfo.Symbol(m.suit);
-        suitTxt.color = SuitInfo.ColorOf(m.suit);
+        Image suitIcon = MakeImage(badgeBg.rectTransform, "Symbol", Vector2.zero, new Vector2(20f, 20f), SuitInfo.ColorOf(m.suit));
+        suitIcon.sprite = SuitInfo.Icon(m.suit);
+        suitIcon.raycastTarget = false;
 
         // 등급 보석(우상단)
         Image gem = MakeImage(card, "GradeGem", new Vector2(w * 0.5f - 24f, h * 0.5f - 24f), new Vector2(20f, 20f), gradeCol);
@@ -547,7 +553,7 @@ public class DeckBuilderUI : MonoBehaviour
         slotRings = new Image[n];
         slotFrames = new Image[n];
         slotArts = new Image[n];
-        slotSuitTags = new Text[n];
+        slotSuitTags = new Image[n];
         slotLegend = new bool[n];
         float gx0 = -slotSpacing * 2f; // 5칸 중앙 정렬
         float gy0 = 290f;
@@ -572,7 +578,8 @@ public class DeckBuilderUI : MonoBehaviour
             art.preserveAspect = true;
             slotArts[i] = art;
 
-            Text tag = MakeText(frame.rectTransform, "SuitTag", new Vector2(-slotSize * 0.5f + 13f, slotSize * 0.5f - 12f), new Vector2(22f, 22f), 15, TextAnchor.MiddleCenter);
+            Image tag = MakeImage(frame.rectTransform, "SuitTag", new Vector2(-slotSize * 0.5f + 13f, slotSize * 0.5f - 12f), new Vector2(16f, 16f), Color.white);
+            tag.raycastTarget = false;
             slotSuitTags[i] = tag;
 
             int captured = i;
@@ -636,8 +643,9 @@ public class DeckBuilderUI : MonoBehaviour
                 slotArts[i].sprite = ArtOf(m);
                 slotArts[i].enabled = slotArts[i].sprite != null;
                 slotArts[i].color = Color.white;
-                slotSuitTags[i].text = SuitInfo.Symbol(m.suit);
+                slotSuitTags[i].sprite = SuitInfo.Icon(m.suit);
                 slotSuitTags[i].color = SuitInfo.ColorOf(m.suit);
+                slotSuitTags[i].enabled = true;
                 slotLegend[i] = m.grade == Grade.Legend; // Update에서 무지개 순환
             }
             else
@@ -645,7 +653,7 @@ public class DeckBuilderUI : MonoBehaviour
                 slotFrames[i].color = new Color(1f, 1f, 1f, 0.04f); // 빈 칸(희미한 카드)
                 slotRings[i].color = new Color(1f, 1f, 1f, 0.06f);
                 slotArts[i].enabled = false;
-                slotSuitTags[i].text = "";
+                slotSuitTags[i].enabled = false;
                 slotLegend[i] = false;
             }
         }
@@ -772,7 +780,7 @@ public class DeckBuilderUI : MonoBehaviour
     // 한글 표시용 legacy 폰트(프로젝트 툴팁과 동일 계열 — TMP 기본 폰트는 한글 글리프 없음)
     static Font UiFont()
     {
-        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/malgun"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
+        if (uiFont == null) uiFont = Resources.Load<Font>("Fonts/Pretendard-Regular"); // 한글 폰트 — WebGL은 OS 폰트 폴백이 없어 내장 필수
         if (uiFont == null) uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         return uiFont;
     }
