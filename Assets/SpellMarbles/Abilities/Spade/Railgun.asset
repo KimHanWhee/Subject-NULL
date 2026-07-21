@@ -21,7 +21,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}
-  activationSound: {fileID: 0}
+  activationSound: {fileID: 8300000, guid: d56a6bf1e5f16e44a9497d63a0c6939e, type: 3}
   soundVolume: 1
   charges: 3
   damage: 12

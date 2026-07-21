@@ -19,7 +19,7 @@ MonoBehaviour:
   icon: {fileID: 0}
   targetMode: 0
   effectPrefab: {fileID: 0}
-  activationSound: {fileID: 0}
+  activationSound: {fileID: 8300000, guid: 5ae5319c741c84f408686e64f5eb2a58, type: 3}
   soundVolume: 1
   radius: 4
   knockbackDistance: 3.2
