@@ -9,7 +9,7 @@ public class TimeStopAbility : SpellAbility
     [Header("Wave (정지 파동)")]
     public float waveDuration = 0.7f;   // 파동이 다 퍼지는 시간(초, unscaled)
     public float waveRadius = 14f;      // 파동 최대 반경(화면 전체 커버)
-    public Material grayscaleMaterial;  // 파장에 맞은 개체 회색화(MiniGungeon/SpriteGrayscale)
+    public Material grayscaleMaterial;  // 파장에 맞은 개체 회색화(SubjectNull/SpriteGrayscale)
 
     [Header("Stored Volley (정지 중 사격)")]
     [Tooltip("정지 중 발사한 총알이 해제 순간 주는 피해 — 맞은 적이 소멸하도록 크게 잡는다")]

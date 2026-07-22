@@ -102,10 +102,10 @@ public static class RankingService
     // UGS 규칙: 공백 불가, 최대 50자. 뒤의 #숫자 태그는 서버가 자동 부여.
     public static async Task<string> SetNameAsync(string name)
     {
-        if (!ServicesBootstrap.IsSignedIn) return "로그인 상태가 아닙니다";
+        if (!ServicesBootstrap.IsSignedIn) return Loc.T("rank.errNotSignedIn");
         name = name == null ? "" : name.Trim();
-        if (name.Length < 2 || name.Length > 16) return "닉네임은 2~16자로 입력하세요";
-        if (name.Contains(" ")) return "닉네임에 공백은 쓸 수 없습니다";
+        if (name.Length < 2 || name.Length > 16) return Loc.T("rank.errNameLen");
+        if (name.Contains(" ")) return Loc.T("rank.errNameSpace");
         try
         {
             await AuthenticationService.Instance.UpdatePlayerNameAsync(name);
@@ -114,12 +114,12 @@ public static class RankingService
         catch (Exception e)
         {
             Debug.LogWarning("[Ranking] 닉네임 변경 실패: " + e.Message);
-            return "닉네임 변경에 실패했습니다";
+            return Loc.T("rank.errNameFail");
         }
     }
 
     static string Shorten(string playerId)
     {
-        return string.IsNullOrEmpty(playerId) ? "?" : "실험체-" + playerId.Substring(0, Mathf.Min(6, playerId.Length));
+        return string.IsNullOrEmpty(playerId) ? "?" : Loc.T("rank.anon") + playerId.Substring(0, Mathf.Min(6, playerId.Length));
     }
 }

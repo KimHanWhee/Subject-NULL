@@ -132,7 +132,7 @@ public class GameManager : MonoBehaviour
         powerStep = step;
         if (player == null) return;
         Color c = new Color(1f, 0.6f, 0.35f);
-        FloatingScore.SpawnText(player.transform.position, "공격력 강화!", c);
+        FloatingScore.SpawnText(player.transform.position, Loc.T("game.powerUp"), c);
         SpellVfx.SpawnRing(player.transform.position, 1.2f, c, 0.5f, 0.1f);
     }
 

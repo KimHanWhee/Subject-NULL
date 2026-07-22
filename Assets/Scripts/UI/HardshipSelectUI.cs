@@ -31,6 +31,12 @@ public class HardshipSelectUI : MonoBehaviour
             if (onDone != null) onDone();
             return;
         }
+        // 모든 고난이 최대 중첩이면 고를 게 없다 — 화면을 띄우면 선택 불가로 진행이 막히므로 건너뛴다.
+        if (HardshipSystem.AvailableCount <= 0)
+        {
+            if (onDone != null) onDone();
+            return;
+        }
         GameObject go = new GameObject("HardshipSelectUI");
         HardshipSelectUI ui = go.AddComponent<HardshipSelectUI>();
         ui.onDone = onDone;
@@ -63,19 +69,20 @@ public class HardshipSelectUI : MonoBehaviour
         dim.rectTransform.offsetMax = Vector2.zero;
         dim.raycastTarget = true; // 뒤쪽 클릭 차단
 
-        MakeText(dim.transform, "Title", "실험 프로토콜 투여", 54, new Vector2(0f, 330f), new Vector2(1200f, 70f),
+        MakeText(dim.transform, "Title", Loc.T("hardship.title"), 54, new Vector2(0f, 330f), new Vector2(1200f, 70f),
             new Color(1f, 0.55f, 0.45f), FontStyles.Bold);
-        MakeText(dim.transform, "Sub", "덱을 모두 소진했습니다 — 개체 강화 항목 1개를 선택하십시오", 22,
+        MakeText(dim.transform, "Sub", Loc.T("hardship.sub"), 22,
             new Vector2(0f, 272f), new Vector2(1200f, 34f), new Color(0.6f, 0.72f, 0.82f), FontStyles.Normal);
 
         HardshipId[] picks = HardshipSystem.PickChoices(ChoiceCount);
+        // 카드 수만큼 중앙 정렬(1~3장) — 남은 고난이 적으면 그만큼만 뜬다
         const float cardW = 380f, cardH = 380f, gap = 40f;
-        float total = ChoiceCount * cardW + (ChoiceCount - 1) * gap;
+        float total = picks.Length * cardW + (picks.Length - 1) * gap;
         float x0 = -total * 0.5f + cardW * 0.5f;
         for (int i = 0; i < picks.Length; i++)
             BuildCard(dim.transform, picks[i], new Vector2(x0 + i * (cardW + gap), 0f), new Vector2(cardW, cardH));
 
-        MakeText(dim.transform, "Foot", "고난은 누적됩니다 · 스펠을 아껴 쓸수록 덱이 늦게 돌아갑니다", 18,
+        MakeText(dim.transform, "Foot", Loc.T("hardship.foot"), 18,
             new Vector2(0f, -290f), new Vector2(1200f, 30f), new Color(0.5f, 0.55f, 0.65f), FontStyles.Normal);
     }
 
@@ -92,16 +99,16 @@ public class HardshipSelectUI : MonoBehaviour
         // 상단 색 띠 — 고난별 아이덴티티(아이콘 없이도 구분되게)
         MakeImage(card.transform, "Accent", new Vector2(0f, size.y * 0.5f - 34f), new Vector2(size.x - 60f, 5f), def.color);
 
-        MakeText(card.transform, "Name", def.name, 34, new Vector2(0f, size.y * 0.5f - 82f),
+        MakeText(card.transform, "Name", def.Name, 34, new Vector2(0f, size.y * 0.5f - 82f),
             new Vector2(size.x - 50f, 46f), def.color, FontStyles.Bold);
 
-        MakeText(card.transform, "Desc", def.desc, 22, new Vector2(0f, 20f),
+        MakeText(card.transform, "Desc", def.Desc, 22, new Vector2(0f, 20f),
             new Vector2(size.x - 70f, 90f), Ink, FontStyles.Normal);
 
         // 현재 누적 — 같은 것을 또 고르면 얼마나 쌓이는지 보여준다
         string stackTxt = owned > 0
-            ? "<color=#FFD24A>현재 " + owned + "중첩</color>  →  " + (owned + 1) + "중첩"
-            : "<color=#7A8090>미적용</color>";
+            ? "<color=#FFD24A>" + Loc.T("hardship.stacks", owned) + "</color>  →  " + Loc.T("hardship.stacks", owned + 1)
+            : "<color=#7A8090>" + Loc.T("hardship.none") + "</color>";
         MakeText(card.transform, "Stack", stackTxt, 20, new Vector2(0f, -size.y * 0.5f + 96f),
             new Vector2(size.x - 50f, 30f), Ink, FontStyles.Normal);
 
@@ -117,7 +124,7 @@ public class HardshipSelectUI : MonoBehaviour
         HardshipId captured = id;
         btn.onClick.AddListener(() => Choose(captured));
 
-        MakeText(card.transform, "Pick", "선택", 24, new Vector2(0f, -size.y * 0.5f + 46f),
+        MakeText(card.transform, "Pick", Loc.T("hardship.pick"), 24, new Vector2(0f, -size.y * 0.5f + 46f),
             new Vector2(size.x - 60f, 34f), new Color(0.55f, 0.9f, 1f), FontStyles.Bold);
     }
 

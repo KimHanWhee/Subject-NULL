@@ -1,6 +1,6 @@
 // Time Stop 회색화용 스프라이트 셰이더 — 원본 색을 휘도 기반 회색으로 출력.
 // Sprites/Default와 동일한 블렌딩(premultiplied) — 머티리얼 스왑만으로 적용 가능.
-Shader "MiniGungeon/SpriteGrayscale"
+Shader "SubjectNull/SpriteGrayscale"
 {
     Properties
     {

@@ -63,34 +63,34 @@ public class AccountUI : MonoBehaviour
         Image bg = MakeImage(canvasRoot, "BG", Vector2.zero, new Vector2(1920f, 1080f), BG);
         Stretch(bg.rectTransform);
 
-        MakeText(canvasRoot, "Title", new Vector2(0f, 430f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>계정</b>", new Color(1f, 0.86f, 0.4f));
-        statusText = MakeText(canvasRoot, "Status", new Vector2(0f, 340f), new Vector2(1300f, 44f), 24, TextAnchor.MiddleCenter, "<color=#E0A06A>서버 연결 중...</color>", new Color(0.8f, 0.85f, 0.95f));
+        MakeText(canvasRoot, "Title", new Vector2(0f, 430f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>" + Loc.T("acc.title") + "</b>", new Color(1f, 0.86f, 0.4f));
+        statusText = MakeText(canvasRoot, "Status", new Vector2(0f, 340f), new Vector2(1300f, 44f), 24, TextAnchor.MiddleCenter, "<color=#E0A06A>" + Loc.T("acc.connecting") + "</color>", new Color(0.8f, 0.85f, 0.95f));
 
         // 중앙 패널
         RectTransform panel = MakePanel(canvasRoot, "Panel", new Vector2(0f, -40f), new Vector2(720f, 460f));
 
         MakeText(panel, "Info", new Vector2(0f, 150f), new Vector2(640f, 100f), 18, TextAnchor.UpperCenter,
-            "<color=#9AA>게스트 진행상황(GEM·마블)은 이 브라우저에만 저장됩니다.\nGoogle 계정을 연결하면 어떤 기기에서든 이어할 수 있습니다.</color>", Color.white);
+            "<color=#9AA>" + Loc.T("acc.guestNotice") + "</color>", Color.white);
 
         // 닉네임(리더보드 표시명) + 변경 — 인라인 입력 전환
         nickText = MakeText(panel, "Nick", new Vector2(-40f, -122f), new Vector2(460f, 30f), 18, TextAnchor.MiddleCenter, "", new Color(0.75f, 0.85f, 0.95f));
-        nickBtn = MakeButton(panel, "NickEdit", new Vector2(230f, -122f), new Vector2(90f, 44f), "변경", new Color(0.3f, 0.32f, 0.44f), OnNickButton);
+        nickBtn = MakeButton(panel, "NickEdit", new Vector2(230f, -122f), new Vector2(90f, 44f), Loc.T("acc.change"), new Color(0.3f, 0.32f, 0.44f), OnNickButton);
         nickBtn.gameObject.SetActive(false);
 
         // 플레이어 ID(운영/문의 대응용) + 복사 — 패널 하단에 작게
         playerIdText = MakeText(panel, "PlayerId", new Vector2(-40f, -170f), new Vector2(460f, 30f), 16, TextAnchor.MiddleCenter, "", new Color(0.55f, 0.6f, 0.72f));
-        copyIdBtn = MakeButton(panel, "CopyId", new Vector2(230f, -170f), new Vector2(90f, 44f), "복사", new Color(0.3f, 0.32f, 0.44f), OnCopyId);
+        copyIdBtn = MakeButton(panel, "CopyId", new Vector2(230f, -170f), new Vector2(90f, 44f), Loc.T("acc.copy"), new Color(0.3f, 0.32f, 0.44f), OnCopyId);
         copyIdBtn.gameObject.SetActive(false);
 
-        linkBtn = MakeButton(panel, "LinkGoogle", new Vector2(0f, 30f), new Vector2(460f, 76f), "Google 계정 연결", new Color(0.28f, 0.4f, 0.34f), OnLinkGoogle);
+        linkBtn = MakeButton(panel, "LinkGoogle", new Vector2(0f, 30f), new Vector2(460f, 76f), Loc.T("acc.linkGoogle"), new Color(0.28f, 0.4f, 0.34f), OnLinkGoogle);
         // 게스트 전용: 이미 다른 플레이어에 연결된 Google 계정으로 갈아타는 출구(로그인 선택 화면으로)
-        switchBtn = MakeButton(panel, "SwitchAccount", new Vector2(0f, -70f), new Vector2(460f, 64f), "다른 계정으로 로그인", new Color(0.3f, 0.32f, 0.44f), OnSwitchAccount);
-        logoutBtn = MakeButton(panel, "Logout", new Vector2(0f, -80f), new Vector2(460f, 64f), "로그아웃", new Color(0.42f, 0.28f, 0.28f), OnLogout);
+        switchBtn = MakeButton(panel, "SwitchAccount", new Vector2(0f, -70f), new Vector2(460f, 64f), Loc.T("acc.switch"), new Color(0.3f, 0.32f, 0.44f), OnSwitchAccount);
+        logoutBtn = MakeButton(panel, "Logout", new Vector2(0f, -80f), new Vector2(460f, 64f), Loc.T("acc.logout"), new Color(0.42f, 0.28f, 0.28f), OnLogout);
 
         feedbackText = MakeText(canvasRoot, "Feedback", new Vector2(0f, -360f), new Vector2(1200f, 40f), 22, TextAnchor.MiddleCenter, "", new Color(1f, 0.6f, 0.55f));
         feedbackText.enabled = false;
 
-        MakeButton(canvasRoot, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), "← 뒤로", new Color(0.25f, 0.25f, 0.32f), () => SceneLoader.Load("MainMenuScene"));
+        MakeButton(canvasRoot, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), Loc.T("common.back"), new Color(0.25f, 0.25f, 0.32f), () => SceneLoader.Load("MainMenuScene"));
 
         linkBtn.gameObject.SetActive(false);
         switchBtn.gameObject.SetActive(false);
@@ -103,11 +103,11 @@ public class AccountUI : MonoBehaviour
         if (statusText != null)
         {
             if (!ServicesBootstrap.IsSignedIn)
-                statusText.text = "<color=#E0A06A>서버에 연결하지 못했습니다</color>";
+                statusText.text = "<color=#E0A06A>" + Loc.T("acc.failed") + "</color>";
             else if (googleLinked)
-                statusText.text = "현재 계정: <b><color=#7FE08A>Google 연결됨</color></b> (영구 · 어느 기기서든 복구 가능)";
+                statusText.text = Loc.T("acc.linked");
             else
-                statusText.text = "현재 계정: <color=#E0A06A>게스트</color> — 아직 이 브라우저에만 저장됩니다";
+                statusText.text = Loc.T("acc.guest");
         }
         bool signedIn = ServicesBootstrap.IsSignedIn;
         if (linkBtn != null)
@@ -116,7 +116,7 @@ public class AccountUI : MonoBehaviour
             linkBtn.interactable = !busy && GoogleAuth.IsSupported;
             Text label = linkBtn.GetComponentInChildren<Text>();
             if (label != null && !GoogleAuth.IsSupported)
-                label.text = "Google 계정 연결 (웹 빌드 전용)";
+                label.text = Loc.T("acc.linkGoogleWeb");
         }
         if (logoutBtn != null)
         {
@@ -133,13 +133,13 @@ public class AccountUI : MonoBehaviour
         if (playerIdText != null)
         {
             string pid = CurrentPlayerId();
-            playerIdText.text = string.IsNullOrEmpty(pid) ? "" : "플레이어 ID: " + pid;
+            playerIdText.text = string.IsNullOrEmpty(pid) ? "" : Loc.T("acc.playerId") + pid;
             if (copyIdBtn != null) copyIdBtn.gameObject.SetActive(!string.IsNullOrEmpty(pid));
         }
         if (nickText != null && !editingNick)
         {
             string nick = RankingService.CurrentName;
-            nickText.text = string.IsNullOrEmpty(nick) ? "" : "닉네임: <b>" + nick + "</b>";
+            nickText.text = string.IsNullOrEmpty(nick) ? "" : Loc.T("acc.nickname") + "<b>" + nick + "</b>";
             if (nickBtn != null)
             {
                 nickBtn.gameObject.SetActive(signedIn && !string.IsNullOrEmpty(nick));
@@ -161,7 +161,7 @@ public class AccountUI : MonoBehaviour
         editingNick = true;
         nickText.gameObject.SetActive(false);
         Text label = nickBtn.GetComponentInChildren<Text>();
-        if (label != null) label.text = "저장";
+        if (label != null) label.text = Loc.T("acc.save");
 
         var go = new GameObject("NickInput", typeof(RectTransform), typeof(Image), typeof(InputField));
         RectTransform rt = go.GetComponent<RectTransform>();
@@ -198,7 +198,7 @@ public class AccountUI : MonoBehaviour
         {
             string err = await RankingService.SetNameAsync(nickInput.text);
             if (err != null) { ShowFeedback(err); return; } // 편집 상태 유지, 재시도 가능
-            ShowFeedback("닉네임이 변경되었습니다", true);
+            ShowFeedback(Loc.T("acc.msgNickSaved"), true);
             EndNickEdit();
         }
         finally { busy = false; RefreshStatus(); }
@@ -210,7 +210,7 @@ public class AccountUI : MonoBehaviour
         if (nickInput != null) { Destroy(nickInput.gameObject); nickInput = null; }
         nickText.gameObject.SetActive(true);
         Text label = nickBtn.GetComponentInChildren<Text>();
-        if (label != null) label.text = "변경";
+        if (label != null) label.text = Loc.T("acc.change");
     }
 
     static string CurrentPlayerId()
@@ -224,7 +224,7 @@ public class AccountUI : MonoBehaviour
         string pid = CurrentPlayerId();
         if (string.IsNullOrEmpty(pid)) return;
         ClipboardUtil.Copy(pid);
-        ShowFeedback("플레이어 ID를 복사했습니다", true);
+        ShowFeedback(Loc.T("acc.msgIdCopied"), true);
     }
 
     // 게스트 → 로그인 선택 화면. 지금 게스트 계정은 복구 불가라 2번 클릭으로 확인.
@@ -235,8 +235,8 @@ public class AccountUI : MonoBehaviour
         {
             switchConfirm = true;
             Text label = switchBtn.GetComponentInChildren<Text>();
-            if (label != null) label.text = "지금 게스트 진행상황을 잃습니다 — 한 번 더 클릭";
-            ShowFeedback("이 브라우저의 게스트 계정(GEM·마블)은 복구할 수 없게 됩니다.");
+            if (label != null) label.text = Loc.T("acc.warnSwitch");
+            ShowFeedback(Loc.T("acc.warnSwitch2"));
             return;
         }
         OnLogout(); // 세션 토큰 제거 → 로그인 화면(게스트/Google 선택)
@@ -250,7 +250,7 @@ public class AccountUI : MonoBehaviour
         {
             string err = await ServicesBootstrap.LinkGoogleAsync();
             await AccountService.RefreshAsync();
-            if (AccountService.IsLinked) ShowFeedback("Google 계정 연결 완료! 이제 어느 기기에서든 이어할 수 있어요.", true);
+            if (AccountService.IsLinked) ShowFeedback(Loc.T("acc.msgLinked"), true);
             else if (!string.IsNullOrEmpty(err)) ShowFeedback(err);
         }
         finally { busy = false; RefreshStatus(); }

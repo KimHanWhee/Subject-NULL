@@ -24,7 +24,11 @@ public class MapThemeController : MonoBehaviour
     private ParticleSystem ambient;
     private AudioSource bgmSource;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    // ⚠️ 맵 테마(연구실/불/눈/풀/던전)는 비활성화되어 있다.
+    //    틴트·오버레이·환경 파티클이 배경과 적의 대비를 떨어뜨려 적이 잘 안 보였다.
+    //    되살리려면 아래 [RuntimeInitializeOnLoadMethod] 주석을 해제하면 된다
+    //    (스크립트와 Resources/MapThemes 에셋은 그대로 보존해 둠).
+    // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Bootstrap()
     {
         SceneManager.sceneLoaded += (scene, _) => TryCreate(scene);

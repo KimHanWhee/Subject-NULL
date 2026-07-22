@@ -59,12 +59,29 @@ public static class HardshipSystem
         if (OnChanged != null) OnChanged();
     }
 
+    // 종류당 최대 중첩. 이 수치에 도달한 고난은 선택지에 더 이상 나오지 않는다.
+    public const int MaxStack = 3;
+
     public static int Stack(HardshipId id) { return stacks[(int)id]; }
+
+    public static bool IsMaxed(HardshipId id) { return stacks[(int)id] >= MaxStack; }
 
     public static void Add(HardshipId id)
     {
+        if (stacks[(int)id] >= MaxStack) return; // 상한 초과 방어(선택지에서 걸러지지만 이중 안전)
         stacks[(int)id]++;
         if (OnChanged != null) OnChanged();
+    }
+
+    // 아직 더 쌓을 수 있는 고난 수 — 선택지를 몇 장 띄울지 결정할 때 쓴다.
+    public static int AvailableCount
+    {
+        get
+        {
+            int n = 0;
+            for (int i = 0; i < Count; i++) if (stacks[i] < MaxStack) n++;
+            return n;
+        }
     }
 
     public static int TotalStacks
@@ -109,48 +126,55 @@ public static class HardshipSystem
 
     // ---- 표시용 정의 ----
 
+    // 표시 문자열은 키로만 들고 있고, 실제 글자는 Loc가 현재 언어로 돌려준다.
     public struct Def
     {
         public HardshipId id;
-        public string name;
-        public string desc;   // 스택 1당 효과
+        public string key;    // "hs.muscle" → 이름 ".n" / 설명 ".d"
         public Color color;
+
+        public string Name { get { return Loc.T(key + ".n"); } }
+        public string Desc { get { return Loc.T(key + ".d"); } }
     }
 
     static readonly Def[] defs = new Def[]
     {
-        Def_(HardshipId.Muscle,       "근섬유 강화", "적 최대 체력 +25%",            new Color(1f, 0.55f, 0.45f)),
-        Def_(HardshipId.Nerve,        "신경 가속",   "적 이동·공격속도 +15%",        new Color(0.6f, 0.9f, 1f)),
-        Def_(HardshipId.Instinct,     "공격 본능",   "적 공격력 +25%",               new Color(1f, 0.45f, 0.55f)),
-        Def_(HardshipId.Overcrowd,    "과밀 배양",   "동시 등장 수 +1",              new Color(1f, 0.8f, 0.4f)),
-        Def_(HardshipId.RapidCulture, "급속 배양",   "등장 간격 -15%",               new Color(1f, 0.7f, 0.35f)),
-        Def_(HardshipId.Hardened,     "경화 외피",   "받는 피해 -20%, 넉백 저항",    new Color(0.75f, 0.78f, 0.85f)),
-        Def_(HardshipId.Volatile,     "자폭 조직",   "적 사망 시 폭발",              new Color(1f, 0.6f, 0.2f)),
-        Def_(HardshipId.Regen,        "재생 조직",   "적이 초당 체력 1% 회복",       new Color(0.6f, 1f, 0.7f)),
-        Def_(HardshipId.Frenzy,       "광폭화",      "빈사(30%) 시 속도 2배",        new Color(1f, 0.4f, 0.75f)),
-        Def_(HardshipId.Velocity,     "탄속 개선",   "적 탄속 +25%",                 new Color(0.8f, 0.7f, 1f)),
+        Def_(HardshipId.Muscle,       "hs.muscle",   new Color(1f, 0.55f, 0.45f)),
+        Def_(HardshipId.Nerve,        "hs.nerve",    new Color(0.6f, 0.9f, 1f)),
+        Def_(HardshipId.Instinct,     "hs.instinct", new Color(1f, 0.45f, 0.55f)),
+        Def_(HardshipId.Overcrowd,    "hs.crowd",    new Color(1f, 0.8f, 0.4f)),
+        Def_(HardshipId.RapidCulture, "hs.rapid",    new Color(1f, 0.7f, 0.35f)),
+        Def_(HardshipId.Hardened,     "hs.hard",     new Color(0.75f, 0.78f, 0.85f)),
+        Def_(HardshipId.Volatile,     "hs.volatile", new Color(1f, 0.6f, 0.2f)),
+        Def_(HardshipId.Regen,        "hs.regen",    new Color(0.6f, 1f, 0.7f)),
+        Def_(HardshipId.Frenzy,       "hs.frenzy",   new Color(1f, 0.4f, 0.75f)),
+        Def_(HardshipId.Velocity,     "hs.velocity", new Color(0.8f, 0.7f, 1f)),
     };
 
-    static Def Def_(HardshipId id, string n, string d, Color c)
+    static Def Def_(HardshipId id, string key, Color c)
     {
-        Def x; x.id = id; x.name = n; x.desc = d; x.color = c; return x;
+        Def x; x.id = id; x.key = key; x.color = c; return x;
     }
 
     public static Def GetDef(HardshipId id) { return defs[(int)id]; }
 
-    // 선택지 n개 추첨(중복 없이). 이미 쌓인 고난도 후보에 포함 — 한 종류에 몰아주는 전략 허용.
+    // 선택지 n개 추첨(중복 없이). 최대 중첩에 도달한 고난은 후보에서 제외한다.
+    // 남은 후보가 n보다 적으면 있는 만큼만 반환하고, 하나도 없으면 빈 배열을 준다
+    // (호출부는 빈 배열일 때 선택 화면을 건너뛰어야 한다 — 안 그러면 진행이 막힌다).
     public static HardshipId[] PickChoices(int n)
     {
-        int[] pool = new int[Count];
-        for (int i = 0; i < Count; i++) pool[i] = i;
-        for (int i = Count - 1; i > 0; i--)
+        System.Collections.Generic.List<int> pool = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < Count; i++) if (stacks[i] < MaxStack) pool.Add(i);
+
+        for (int i = pool.Count - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
             int t = pool[i]; pool[i] = pool[j]; pool[j] = t;
         }
-        n = Mathf.Clamp(n, 1, Count);
-        HardshipId[] res = new HardshipId[n];
-        for (int i = 0; i < n; i++) res[i] = (HardshipId)pool[i];
+
+        int take = Mathf.Min(Mathf.Max(n, 0), pool.Count);
+        HardshipId[] res = new HardshipId[take];
+        for (int i = 0; i < take; i++) res[i] = (HardshipId)pool[i];
         return res;
     }
 }

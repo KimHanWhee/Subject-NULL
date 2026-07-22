@@ -37,6 +37,24 @@ public class PauseMenu : MonoBehaviour
         EnsureEventSystem();
         BuildUI();
         panel.SetActive(false);
+        Loc.OnChanged += Rebuild; // 게임 중 설정에서 언어를 바꾸면 즉시 반영
+    }
+
+    void OnDestroy() { Loc.OnChanged -= Rebuild; }
+
+    // 이 메뉴는 Start에서 한 번만 만들어지므로, 언어가 바뀌어도 이미 생성된 라벨은 그대로 남는다.
+    // 라벨 참조를 일일이 들고 있기보다 통째로 다시 만드는 편이 누락이 없다(생성 비용도 미미).
+    void Rebuild()
+    {
+        bool wasPaused = paused;
+        Transform old = transform.Find("PauseCanvas");
+        if (old != null)
+        {
+            old.gameObject.SetActive(false); // Destroy는 프레임 끝에 반영 — 한 프레임 중복 렌더 방지
+            Destroy(old.gameObject);
+        }
+        BuildUI();
+        panel.SetActive(wasPaused);
     }
 
     void Update()
@@ -140,15 +158,17 @@ public class PauseMenu : MonoBehaviour
         }
 
         // 제목 + 실험실 플레이버
-        var title = MakeText(content, "일시정지", 60, new Vector2(0f, 200f));
+        var title = MakeText(content, Loc.T("pause.title"), 60, new Vector2(0f, 200f));
         title.fontStyle = FontStyles.Bold;
         title.color = new Color(1f, 0.86f, 0.4f);
-        var sub = MakeText(content, "── 실험 일시 중단 ──", 22, new Vector2(0f, 142f));
+        var sub = MakeText(content, Loc.T("pause.sub"), 22, new Vector2(0f, 142f));
         sub.color = new Color(0.55f, 0.75f, 0.8f);
 
-        MakeButton(content, "재개", new Vector2(0f, 40f), new Color(0.30f, 0.62f, 0.35f), Resume);
-        MakeButton(content, "다시시작", new Vector2(0f, -75f), new Color(0.32f, 0.44f, 0.66f), Restart);
-        MakeButton(content, "메인메뉴", new Vector2(0f, -190f), new Color(0.55f, 0.32f, 0.34f), MainMenu);
+        // 4개로 늘어나 간격을 100으로 조정(버튼 높이 92 + 여백 8)
+        MakeButton(content, Loc.T("pause.resume"), new Vector2(0f, 75f), new Color(0.30f, 0.62f, 0.35f), Resume);
+        MakeButton(content, Loc.T("menu.settings"), new Vector2(0f, -25f), new Color(0.34f, 0.40f, 0.52f), SettingsUI.Open);
+        MakeButton(content, Loc.T("pause.restart"), new Vector2(0f, -125f), new Color(0.32f, 0.44f, 0.66f), Restart);
+        MakeButton(content, Loc.T("pause.mainmenu"), new Vector2(0f, -225f), new Color(0.55f, 0.32f, 0.34f), MainMenu);
     }
 
     // 우측 상단 일시정지 버튼(⏸) — 클릭 = Esc와 동일 토글. 점수(우상단 텍스트) 바로 위 코너.

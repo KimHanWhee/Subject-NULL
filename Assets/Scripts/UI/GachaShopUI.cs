@@ -117,12 +117,12 @@ public class GachaShopUI : MonoBehaviour
         Image bg = MakeImage(root, "BG", Vector2.zero, new Vector2(1920f, 1080f), BG);
         Stretch(bg.rectTransform);
 
-        MakeText(root, "Title", new Vector2(0f, 495f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>마블 뽑기</b>", new Color(1f, 0.86f, 0.4f));
+        MakeText(root, "Title", new Vector2(0f, 495f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.title") + "</b>", new Color(1f, 0.86f, 0.4f));
 
         // 재화(상단 우측, 세로로 쌓기 — 화면 안에)
         gemText = MakeText(root, "Gem", new Vector2(770f, 505f), new Vector2(320f, 36f), 24, TextAnchor.MiddleRight, "", GEM_COL);
         shardText = MakeText(root, "Shard", new Vector2(770f, 468f), new Vector2(320f, 34f), 22, TextAnchor.MiddleRight, "", SHARD_COL);
-        MakeButton(root, "Charge", new Vector2(700f, 418f), new Vector2(250f, 56f), "＋ GEM 충전", new Color(0.2f, 0.5f, 0.42f), OpenChargeOverlay);
+        MakeButton(root, "Charge", new Vector2(700f, 418f), new Vector2(250f, 56f), Loc.T("gacha.charge"), new Color(0.2f, 0.5f, 0.42f), OpenChargeOverlay);
 
         BuildPullPanel(root);
         BuildCollectionPanel(root);
@@ -131,7 +131,7 @@ public class GachaShopUI : MonoBehaviour
         feedbackText.enabled = false;
 
         // 뒤로 버튼: 좌상단 통일 규격(덱/가챠/플레이방법 동일)
-        MakeButton(root, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), "← 뒤로", new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
+        MakeButton(root, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), Loc.T("common.back"), new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
 
         BuildTooltip(root); // 마지막에 생성 → 항상 최상단
     }
@@ -166,9 +166,9 @@ public class GachaShopUI : MonoBehaviour
         tooltipRoot.gameObject.SetActive(true);
         tooltipRoot.SetAsLastSibling(); // 이후에 만들어진 오버레이/피드백 위로
         tooltipText.text =
-            "<b>" + m.ability.abilityName + "</b>\n" +
+            "<b>" + SpellText.Name(m.ability) + "</b>\n" +
             SuitInfo.RichLabel(m.suit) + "  <color=#FFD24A>[" + GradeLabel(m.grade) + "]</color>\n" +
-            m.ability.description;
+            SpellText.Desc(m.ability);
         tooltipIcon.sprite = ArtOf(m);
         tooltipIcon.enabled = tooltipIcon.sprite != null;
         if (Mouse.current != null)
@@ -183,16 +183,16 @@ public class GachaShopUI : MonoBehaviour
     void BuildPullPanel(RectTransform root)
     {
         RectTransform panel = MakePanel(root, "PullPanel", new Vector2(-540f, -30f), new Vector2(720f, 860f));
-        MakeText(panel, "PullHeader", new Vector2(0f, 380f), new Vector2(660f, 34f), 24, TextAnchor.MiddleCenter, "<b>뽑기</b>", Color.white);
+        MakeText(panel, "PullHeader", new Vector2(0f, 380f), new Vector2(660f, 34f), 24, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.pullPanel") + "</b>", Color.white);
 
         // 결과 카드 슬롯(뽑을 때마다 플립 카드 생성)
         revealSlot = MakeRect(panel, "RevealSlot", new Vector2(0f, 70f), new Vector2(320f, 440f));
-        revealPlaceholder = MakeText(revealSlot, "Placeholder", Vector2.zero, new Vector2(300f, 60f), 20, TextAnchor.MiddleCenter, "여기에 결과가 표시됩니다", new Color(0.6f, 0.6f, 0.72f));
+        revealPlaceholder = MakeText(revealSlot, "Placeholder", Vector2.zero, new Vector2(300f, 60f), 20, TextAnchor.MiddleCenter, Loc.T("gacha.resultHint"), new Color(0.6f, 0.6f, 0.72f));
 
         pullButton = MakeButton(panel, "Pull1Btn", new Vector2(-175f, -330f), new Vector2(330f, 84f), "", new Color(0.32f, 0.28f, 0.5f), () => OnPull(1));
         pullButton10 = MakeButton(panel, "Pull10Btn", new Vector2(175f, -330f), new Vector2(330f, 84f), "", new Color(0.42f, 0.3f, 0.55f), () => OnPull(10));
 
-        MakeButton(panel, "RateBtn", new Vector2(0f, -243f), new Vector2(230f, 50f), "확률 상세 보기", new Color(0.24f, 0.3f, 0.42f), OpenRateOverlay);
+        MakeButton(panel, "RateBtn", new Vector2(0f, -243f), new Vector2(230f, 50f), Loc.T("gacha.rateBtn"), new Color(0.24f, 0.3f, 0.42f), OpenRateOverlay);
     }
 
     // ── 확률 상세(공시) ────────────────────────────────────
@@ -204,8 +204,8 @@ public class GachaShopUI : MonoBehaviour
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
         RectTransform panel = MakePanel(dim.rectTransform, "RatePanel", Vector2.zero, new Vector2(780f, 880f));
-        MakeText(panel, "RT", new Vector2(0f, 385f), new Vector2(700f, 40f), 30, TextAnchor.MiddleCenter, "<b>뽑기 확률 상세</b>", new Color(1f, 0.86f, 0.4f));
-        MakeText(panel, "RTsub", new Vector2(0f, 345f), new Vector2(700f, 26f), 15, TextAnchor.MiddleCenter, "<color=#9AA>등급을 먼저 추첨한 뒤, 같은 등급 안에서는 균등 확률로 결정됩니다</color>", Color.white);
+        MakeText(panel, "RT", new Vector2(0f, 385f), new Vector2(700f, 40f), 30, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.rateTitle") + "</b>", new Color(1f, 0.86f, 0.4f));
+        MakeText(panel, "RTsub", new Vector2(0f, 345f), new Vector2(700f, 26f), 15, TextAnchor.MiddleCenter, "<color=#9AA>" + Loc.T("gacha.rateSub") + "</color>", Color.white);
         MakeButton(panel, "Close", new Vector2(330f, 400f), new Vector2(60f, 52f), "✕", new Color(0.3f, 0.3f, 0.38f), () => Destroy(dim.gameObject));
 
         // 뽑기 풀(도감과 동일: Normal 제외, 등급→이름 정렬)
@@ -230,9 +230,9 @@ public class GachaShopUI : MonoBehaviour
         const float rowH = 38f;
         Color headCol = new Color(0.65f, 0.7f, 0.85f);
         const float headY = 295f;
-        MakeText(panel, "HGrade", new Vector2(colGrade, headY), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>등급</b>", headCol);
-        MakeText(panel, "HName", new Vector2(colName, headY), new Vector2(300f, 30f), 18, TextAnchor.MiddleLeft, "<b>스킬명</b>", headCol);
-        MakeText(panel, "HRate", new Vector2(colRate, headY), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>확률(%)</b>", headCol);
+        MakeText(panel, "HGrade", new Vector2(colGrade, headY), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.colGrade") + "</b>", headCol);
+        MakeText(panel, "HName", new Vector2(colName, headY), new Vector2(300f, 30f), 18, TextAnchor.MiddleLeft, "<b>" + Loc.T("gacha.colSkill") + "</b>", headCol);
+        MakeText(panel, "HRate", new Vector2(colRate, headY), new Vector2(160f, 30f), 18, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.colRate") + "</b>", headCol);
         MakeImage(panel, "HLine", new Vector2(0f, headY - rowH * 0.55f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
 
         const float viewH = 570f;
@@ -249,7 +249,7 @@ public class GachaShopUI : MonoBehaviour
             int cnt = countOf[m.grade];
             float pct = totalWeight > 0f && cnt > 0 ? cfg.Weight(m.grade) / totalWeight / cnt * 100f : 0f;
             Color gc = GradePalette.ColorOf(m.grade);
-            string name = m.ability != null ? m.ability.abilityName : m.marbleName;
+            string name = m.ability != null ? SpellText.Name(m.ability) : m.marbleName;
             MakeText(rows, "RG" + i, new Vector2(colGrade, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, "<b>" + GradeLabel(m.grade) + "</b>", gc);
             MakeText(rows, "RN" + i, new Vector2(colName, y), new Vector2(300f, 30f), 17, TextAnchor.MiddleLeft, name, Color.white);
             MakeText(rows, "RR" + i, new Vector2(colRate, y), new Vector2(160f, 30f), 17, TextAnchor.MiddleCenter, pct.ToString("0.##") + "%", new Color(0.85f, 0.9f, 1f));
@@ -258,7 +258,7 @@ public class GachaShopUI : MonoBehaviour
 
         // 등급 합계 요약 — 패널 하단 고정(스크롤과 무관하게 항상 보임)
         MakeImage(panel, "FLine", new Vector2(0f, -332f), new Vector2(680f, 2f), new Color(1f, 1f, 1f, 0.25f));
-        string sum = "등급 합계 — ";
+        string sum = Loc.T("gacha.rateSum");
         Grade[] grades = { Grade.Gold, Grade.Diamond, Grade.Legend };
         for (int g = 0; g < grades.Length; g++)
         {
@@ -268,7 +268,7 @@ public class GachaShopUI : MonoBehaviour
             if (g < grades.Length - 1) sum += " · ";
         }
         MakeText(panel, "Sum", new Vector2(0f, -362f), new Vector2(700f, 30f), 17, TextAnchor.MiddleCenter, sum, Color.white);
-        MakeText(panel, "Note", new Vector2(0f, -400f), new Vector2(700f, 44f), 14, TextAnchor.UpperCenter, "<color=#8A8A98>일반 등급 14종은 기본 보유로 뽑기 대상이 아닙니다 · 중복 획득 시 조각으로 환급됩니다</color>", Color.white);
+        MakeText(panel, "Note", new Vector2(0f, -400f), new Vector2(700f, 44f), 14, TextAnchor.UpperCenter, "<color=#8A8A98>" + Loc.T("gacha.rateNote") + "</color>", Color.white);
     }
 
     // 확률표 전용 세로 스크롤 영역 — 도감 그리드와 동일 패턴(뷰포트+RectMask2D+슬림 스크롤바).
@@ -334,7 +334,7 @@ public class GachaShopUI : MonoBehaviour
     void BuildCollectionPanel(RectTransform root)
     {
         RectTransform panel = MakePanel(root, "CollectionPanel", new Vector2(560f, -30f), new Vector2(760f, 860f));
-        MakeText(panel, "ColHeader", new Vector2(0f, 385f), new Vector2(700f, 34f), 22, TextAnchor.MiddleLeft, "<b>도감 · 조각 교환</b>", Color.white);
+        MakeText(panel, "ColHeader", new Vector2(0f, 385f), new Vector2(700f, 34f), 22, TextAnchor.MiddleLeft, "<b>" + Loc.T("gacha.collection") + "</b>", Color.white);
 
         // 도감 그리드 — 마블이 늘어 목록이 넘치면 세로 스크롤(덱 빌더 카탈로그와 동일 패턴)
         GameObject viewportGo = new GameObject("GridViewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
@@ -399,18 +399,18 @@ public class GachaShopUI : MonoBehaviour
         if (pulling) return;
         int unit = GachaConfig.Instance.pullCostGem;
         int cost = unit * count;
-        if (PlayerProfileService.Gem < cost) { ShowFeedback("GEM이 부족합니다 (필요 " + cost + ")"); return; }
+        if (PlayerProfileService.Gem < cost) { ShowFeedback(Loc.T("gacha.msgNoGem", cost)); return; }
 
         pulling = true;
         SetPullButtons(false);
-        LoadingOverlay.Get().Show("로딩 중"); // 서버 뽑기 동안 반투명 로딩 오버레이
+        LoadingOverlay.Get().Show(Loc.T("gacha.loading")); // 서버 뽑기 동안 반투명 로딩 오버레이
         try
         {
             if (count <= 1)
             {
                 GachaService.PullResult r = await GachaService.PullAsync();
                 if (r == null || !string.IsNullOrEmpty(r.error))
-                { ShowFeedback(r != null && r.error == "INSUFFICIENT_GEM" ? "GEM이 부족합니다" : "뽑기에 실패했습니다"); return; }
+                { ShowFeedback(r != null && r.error == "INSUFFICIENT_GEM" ? Loc.T("gacha.msgNoGemShort") : Loc.T("gacha.msgPullFail")); return; }
                 PlayerProfileService.ApplyPull(r);
                 StopAllCoroutines();
                 SingleReveal(ToReward(r));
@@ -426,11 +426,11 @@ public class GachaShopUI : MonoBehaviour
                     PlayerProfileService.ApplyPull(r);
                     rewards.Add(ToReward(r));
                 }
-                if (rewards.Count == 0) { ShowFeedback("뽑기에 실패했습니다"); return; }
+                if (rewards.Count == 0) { ShowFeedback(Loc.T("gacha.msgPullFail")); return; }
                 ShowMultiResults(rewards);
             }
         }
-        catch (Exception e) { Debug.LogError("[Gacha] pull 실패: " + e); ShowFeedback("네트워크 오류로 뽑기 실패"); }
+        catch (Exception e) { Debug.LogError("[Gacha] pull 실패: " + e); ShowFeedback(Loc.T("gacha.msgPullNet")); }
         finally
         {
             LoadingOverlay.Get().Hide();
@@ -456,7 +456,7 @@ public class GachaShopUI : MonoBehaviour
         Image dim = MakeImage(canvasRoot, "MultiOverlay", Vector2.zero, new Vector2(1920f, 1080f), new Color(0f, 0f, 0f, 0.9f));
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
-        MakeText(dim.rectTransform, "Title", new Vector2(0f, 430f), new Vector2(1000f, 52f), 34, TextAnchor.MiddleCenter, "<b>" + results.Count + "연 뽑기</b>", new Color(1f, 0.86f, 0.4f));
+        MakeText(dim.rectTransform, "Title", new Vector2(0f, 430f), new Vector2(1000f, 52f), 34, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.multiTitle", results.Count) + "</b>", new Color(1f, 0.86f, 0.4f));
 
         int newCnt = 0, shardSum = 0;
         foreach (var r in results) { if (r.isNew) newCnt++; shardSum += r.shardsGained; }
@@ -475,7 +475,7 @@ public class GachaShopUI : MonoBehaviour
         }
 
         Text sum = MakeText(dim.rectTransform, "Sum", new Vector2(0f, -388f), new Vector2(1000f, 34f), 20, TextAnchor.MiddleCenter, "", Color.white);
-        Button action = MakeButton(dim.rectTransform, "Action", new Vector2(0f, -440f), new Vector2(220f, 56f), "전체 공개", new Color(0.32f, 0.28f, 0.5f), null);
+        Button action = MakeButton(dim.rectTransform, "Action", new Vector2(0f, -440f), new Vector2(220f, 56f), Loc.T("gacha.revealAll"), new Color(0.32f, 0.28f, 0.5f), null);
         action.onClick.AddListener(() => StartCoroutine(RevealAll(cards)));
         StartCoroutine(MultiWatch(cards, sum, action, dim, newCnt, shardSum));
     }
@@ -506,8 +506,8 @@ public class GachaShopUI : MonoBehaviour
             if (all) break;
             yield return null;
         }
-        sum.text = "신규 <color=#7FE08A>" + newCnt + "종</color>  ·  <color=#C8A0FF>+조각 " + shardSum + "</color>";
-        Text sl = action.GetComponentInChildren<Text>(); if (sl != null) sl.text = "확인";
+        sum.text = Loc.T("gacha.multiSum", newCnt, shardSum);
+        Text sl = action.GetComponentInChildren<Text>(); if (sl != null) sl.text = Loc.T("gacha.confirm");
         action.onClick.RemoveAllListeners();
         action.onClick.AddListener(() => Destroy(overlay.gameObject));
     }
@@ -554,11 +554,11 @@ public class GachaShopUI : MonoBehaviour
         float artS = Mathf.Min(w - 64f, h * 0.4f);
         Image art = MakeImage(content, "Art", new Vector2(0f, h * 0.16f), new Vector2(artS, artS), Color.white);
         if (r.marble != null) { art.sprite = ArtOf(r.marble); art.preserveAspect = true; }
-        string name = r.marble == null ? "?" : (r.marble.ability != null ? r.marble.ability.abilityName : r.marble.marbleName);
+        string name = r.marble == null ? "?" : (SpellText.Name(r.marble));
         int nameSize = Mathf.RoundToInt(Mathf.Clamp(w * 0.085f, 13f, 22f));
         MakeText(content, "Name", new Vector2(0f, -h * 0.15f), new Vector2(w - 24f, 44f), nameSize, TextAnchor.UpperCenter, "<b>" + name + "</b>", Color.white);
         MakeText(content, "Grade", new Vector2(0f, -h * 0.30f), new Vector2(w - 24f, 26f), Mathf.RoundToInt(nameSize * 0.75f), TextAnchor.UpperCenter, "<color=#FFD24A>[" + GradeLabel(grade) + "]</color>", Color.white);
-        string tag = r.isNew ? "<color=#7FE08A><b>NEW</b></color>" : "<color=#CFC080>중복 +조각 " + r.shardsGained + "</color>";
+        string tag = r.isNew ? "<color=#7FE08A><b>NEW</b></color>" : "<color=#CFC080>" + Loc.T("gacha.dupShard", r.shardsGained) + "</color>";
         MakeText(content, "Tag", new Vector2(0f, -h * 0.5f + 20f), new Vector2(w - 24f, 24f), Mathf.RoundToInt(nameSize * 0.72f), TextAnchor.MiddleCenter, tag, Color.white);
         edge.gameObject.SetActive(false);
         cv.front = edge.rectTransform;
@@ -781,18 +781,18 @@ public class GachaShopUI : MonoBehaviour
         art.sprite = ArtOf(m);
         art.preserveAspect = true;
 
-        string name = m.ability != null ? m.ability.abilityName : m.marbleName;
+        string name = m.ability != null ? SpellText.Name(m.ability) : m.marbleName;
         MakeText(body.rectTransform, "Name", new Vector2(24f, 30f), new Vector2(w - 100f, 30f), 17, TextAnchor.MiddleLeft, "<b>" + name + "</b>", Color.white);
         MakeText(body.rectTransform, "Grade", new Vector2(24f, 6f), new Vector2(w - 100f, 22f), 13, TextAnchor.MiddleLeft, "<color=#FFD24A>[" + GradeLabel(m.grade) + "]</color>", Color.white);
 
         if (owned)
         {
-            MakeText(body.rectTransform, "Owned", new Vector2(0f, -42f), new Vector2(w - 20f, 28f), 17, TextAnchor.MiddleCenter, "<color=#7FE08A><b>보유중</b></color>", Color.white);
+            MakeText(body.rectTransform, "Owned", new Vector2(0f, -42f), new Vector2(w - 20f, 28f), 17, TextAnchor.MiddleCenter, "<color=#7FE08A><b>" + Loc.T("gacha.owned") + "</b></color>", Color.white);
         }
         else
         {
             int cost = GachaConfig.Instance.ExchangeCost(m.grade);
-            Button ex = MakeButton(body.rectTransform, "Exchange", new Vector2(0f, -42f), new Vector2(w - 30f, 42f), "조각 " + cost + " 교환", new Color(0.32f, 0.28f, 0.5f), null);
+            Button ex = MakeButton(body.rectTransform, "Exchange", new Vector2(0f, -42f), new Vector2(w - 30f, 42f), Loc.T("gacha.exchange", cost), new Color(0.32f, 0.28f, 0.5f), null);
             SpellMarble captured = m;
             ex.onClick.AddListener(() => OnExchange(captured));
             // 어둡게(미보유)
@@ -805,7 +805,7 @@ public class GachaShopUI : MonoBehaviour
     {
         if (OwnedMarblesService.IsOwned(m)) return;
         int cost = GachaConfig.Instance.ExchangeCost(m.grade);
-        if (PlayerProfileService.Shards < cost) { ShowFeedback("조각이 부족합니다 (필요 " + cost + ")"); return; }
+        if (PlayerProfileService.Shards < cost) { ShowFeedback(Loc.T("gacha.msgNoShard", cost)); return; }
         try
         {
             GachaService.ExchangeResult res = await GachaService.ExchangeAsync(m.marbleName);
@@ -813,15 +813,15 @@ public class GachaShopUI : MonoBehaviour
             {
                 OwnedMarblesService.MirrorGrant(m.marbleName);
                 await PlayerProfileService.RefreshAsync();
-                string name = m.ability != null ? m.ability.abilityName : m.marbleName;
-                ShowFeedback("'" + name + "' 교환 완료!", true);
+                string name = m.ability != null ? SpellText.Name(m.ability) : m.marbleName;
+                ShowFeedback(Loc.T("gacha.msgExchanged", name), true);
             }
             else
             {
-                ShowFeedback("교환 실패" + (res != null && !string.IsNullOrEmpty(res.error) ? " (" + res.error + ")" : ""));
+                ShowFeedback(Loc.T("gacha.msgExchFail") + (res != null && !string.IsNullOrEmpty(res.error) ? " (" + res.error + ")" : ""));
             }
         }
-        catch (Exception e) { Debug.LogError("[Gacha] 교환 실패: " + e); ShowFeedback("네트워크 오류로 교환 실패"); }
+        catch (Exception e) { Debug.LogError("[Gacha] 교환 실패: " + e); ShowFeedback(Loc.T("gacha.msgExchNet")); }
         finally { RefreshCurrency(); RebuildCollection(); }
     }
 
@@ -833,18 +833,18 @@ public class GachaShopUI : MonoBehaviour
         Stretch(dim.rectTransform);
         dim.raycastTarget = true;
         RectTransform panel = MakePanel(dim.rectTransform, "ChargePanel", Vector2.zero, new Vector2(720f, 720f));
-        MakeText(panel, "CH", new Vector2(0f, 300f), new Vector2(680f, 40f), 30, TextAnchor.MiddleCenter, "<b>GEM 충전</b>", new Color(1f, 0.86f, 0.4f));
-        MakeText(panel, "CHsub", new Vector2(0f, 258f), new Vector2(660f, 28f), 15, TextAnchor.MiddleCenter, "<color=#9AA>결제하면 서버 계정에 GEM이 즉시 지급됩니다.</color>", Color.white);
+        MakeText(panel, "CH", new Vector2(0f, 300f), new Vector2(680f, 40f), 30, TextAnchor.MiddleCenter, "<b>" + Loc.T("gacha.chargeTitle") + "</b>", new Color(1f, 0.86f, 0.4f));
+        MakeText(panel, "CHsub", new Vector2(0f, 258f), new Vector2(660f, 28f), 15, TextAnchor.MiddleCenter, "<color=#9AA>" + Loc.T("gacha.chargeSub") + "</color>", Color.white);
         MakeButton(panel, "Close", new Vector2(300f, 320f), new Vector2(60f, 52f), "✕", new Color(0.3f, 0.3f, 0.38f), () => Destroy(dim.gameObject));
 
-        Text loading = MakeText(panel, "Loading", Vector2.zero, new Vector2(600f, 40f), 20, TextAnchor.MiddleCenter, "상품 불러오는 중...", new Color(0.7f, 0.7f, 0.8f));
+        Text loading = MakeText(panel, "Loading", Vector2.zero, new Vector2(600f, 40f), 20, TextAnchor.MiddleCenter, Loc.T("gacha.pkgLoading"), new Color(0.7f, 0.7f, 0.8f));
         List<GachaService.GemPackage> pkgs = null;
         try { pkgs = await GachaService.GetGemPackagesAsync(); }
         catch (Exception e) { Debug.LogError("[Gacha] packages: " + e); }
         if (dim == null) return;
         if (loading != null) Destroy(loading.gameObject);
         if (pkgs == null || pkgs.Count == 0)
-        { MakeText(panel, "Err", Vector2.zero, new Vector2(600f, 40f), 20, TextAnchor.MiddleCenter, "상품을 불러오지 못했습니다", new Color(1f, 0.6f, 0.55f)); return; }
+        { MakeText(panel, "Err", Vector2.zero, new Vector2(600f, 40f), 20, TextAnchor.MiddleCenter, Loc.T("gacha.pkgFail"), new Color(1f, 0.6f, 0.55f)); return; }
 
         for (int i = 0; i < pkgs.Count; i++)
             BuildChargeCard(panel, pkgs[i], new Vector2(0f, 190f - i * 108f), dim);
@@ -857,7 +857,7 @@ public class GachaShopUI : MonoBehaviour
         MakeText(row.rectTransform, "L", new Vector2(-110f, 16f), new Vector2(380f, 34f), 24, TextAnchor.MiddleLeft, label, Color.white);
         MakeText(row.rectTransform, "P", new Vector2(-110f, -22f), new Vector2(380f, 26f), 16, TextAnchor.MiddleLeft, "<color=#9AA>$" + p.priceUsd + "</color>", Color.white);
         GachaService.GemPackage cap = p;
-        MakeButton(row.rectTransform, "Buy", new Vector2(230f, 0f), new Vector2(150f, 60f), "구매", new Color(0.2f, 0.5f, 0.42f), () => OnBuyGem(cap, overlay));
+        MakeButton(row.rectTransform, "Buy", new Vector2(230f, 0f), new Vector2(150f, 60f), Loc.T("gacha.buy"), new Color(0.2f, 0.5f, 0.42f), () => OnBuyGem(cap, overlay));
     }
 
     void OnBuyGem(GachaService.GemPackage p, Image overlay)
@@ -865,14 +865,14 @@ public class GachaShopUI : MonoBehaviour
         // 계정 게이트(하이브리드): 게스트(미연결)면 결제 불가 → 계정 만들기 유도.
         if (!AccountService.IsLinked)
         {
-            ShowFeedback("구매하려면 계정이 필요합니다 — 계정 화면으로 이동합니다");
+            ShowFeedback(Loc.T("gacha.msgNeedAccount"));
             if (overlay != null) Destroy(overlay.gameObject);
             SceneLoader.Load("AccountScene");
             return;
         }
         // TODO(단계 3b): PayPal createOrder → 승인 → captureOrder → 서버 GEM 지급. sandbox 키 연결 후 구현.
         // 문구는 결제 수단을 노출하지 않는다(연동 전 사용자 혼선 방지).
-        ShowFeedback("결제 서비스 준비 중입니다 (" + p.label + ")", true);
+        ShowFeedback(Loc.T("gacha.msgPaymentSoon", p.label), true);
     }
 
     // ── 갱신/헬퍼 ─────────────────────────────────────────
@@ -880,18 +880,18 @@ public class GachaShopUI : MonoBehaviour
     {
         long gem = PlayerProfileService.Gem;
         if (gemText != null) gemText.text = "GEM <b>" + gem + "</b>";
-        if (shardText != null) shardText.text = "조각 <b>" + PlayerProfileService.Shards + "</b>";
+        if (shardText != null) shardText.text = Loc.T("gacha.shards") + " <b>" + PlayerProfileService.Shards + "</b>";
         int cost = GachaConfig.Instance.pullCostGem;
         if (pullButton != null)
         {
             Text lbl = pullButton.GetComponentInChildren<Text>();
-            if (lbl != null) lbl.text = "<b>1회 뽑기</b>\n<size=15>" + cost + " GEM</size>";
+            if (lbl != null) lbl.text = "<b>" + Loc.T("gacha.pull1") + "</b>\n<size=15>" + cost + " GEM</size>";
             pullButton.interactable = !pulling && gem >= cost;
         }
         if (pullButton10 != null)
         {
             Text lbl = pullButton10.GetComponentInChildren<Text>();
-            if (lbl != null) lbl.text = "<b>10회 뽑기</b>\n<size=15>" + (cost * 10) + " GEM</size>";
+            if (lbl != null) lbl.text = "<b>" + Loc.T("gacha.pull10") + "</b>\n<size=15>" + (cost * 10) + " GEM</size>";
             pullButton10.interactable = !pulling && gem >= cost * 10;
         }
     }
@@ -921,7 +921,7 @@ public class GachaShopUI : MonoBehaviour
 
     static string GradeLabel(Grade g)
     {
-        switch (g) { case Grade.Normal: return "일반"; case Grade.Gold: return "골드"; case Grade.Diamond: return "다이아"; case Grade.Legend: return "레전드"; default: return g.ToString(); }
+        switch (g) { case Grade.Normal: return Loc.T("grade.normal"); case Grade.Gold: return Loc.T("grade.gold"); case Grade.Diamond: return Loc.T("grade.diamond"); case Grade.Legend: return Loc.T("grade.legend"); default: return g.ToString(); }
     }
 
     // ── UI 프리미티브 ─────────────────────────────────────

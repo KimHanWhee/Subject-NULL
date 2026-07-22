@@ -132,7 +132,8 @@ public class JokerSpell : MonoBehaviour
         if (siren != null) { siren.Stop(); Destroy(siren); }
 
         onGimmickStart?.Invoke(); // 덱 재셔플·리필·Ctrl 잠금 해제(SpellCaster)
-        MapThemeController.RandomizeCurrent(); // 조커 과부하 → 랜덤 테마 전환(연출)
+        // 조커 시 랜덤 테마 전환은 제거 — 불/눈/풀 테마의 틴트·오버레이가
+        // 배경 대비를 떨어뜨려 적이 잘 보이지 않는 문제가 있었다.
         Run(player, forceIndex);
     }
 
@@ -157,6 +158,14 @@ public class JokerSpell : MonoBehaviour
     }
 
     // ---- ① 대숙청: 안전지대 밖 모든 생명체 사망 ----
+    // 대숙청 경고 중에는 적의 공격이 플레이어에게 통하지 않는다.
+    // 제한 시간 안에 안전지대까지 가는 것 자체가 과제인데 적 공격까지 피해야 하면
+    // 회피가 사실상 불가능했다. 심판(원 밖 즉사) 직전에 반드시 해제된다.
+    public static bool EnemyAttacksSuppressed { get; private set; }
+
+    // 안전망 — 씬 전환·재시작 등으로 코루틴이 중간에 끊겨도 무적 상태가 남지 않게 한다.
+    void OnDestroy() { EnemyAttacksSuppressed = false; }
+
     IEnumerator Purge(GameObject player)
     {
         const float warnTime = 3.5f;
@@ -169,6 +178,7 @@ public class JokerSpell : MonoBehaviour
         // 안전지대 원 표시(지속) + 주기 펄스 링으로 시선 유도 + 시야 밖이면 방향 화살표
         LineRenderer circle = DrawCircle(safe, safeRadius, new Color(0.4f, 1f, 0.55f, 0.9f));
         OffscreenArrow arrow = OffscreenArrow.Show(safe, new Color(0.4f, 1f, 0.55f, 1f));
+        EnemyAttacksSuppressed = true;   // 이동에만 집중할 수 있게 — 심판 직전 해제
         float t = 0f;
         while (t < warnTime)
         {
@@ -176,6 +186,7 @@ public class JokerSpell : MonoBehaviour
             yield return new WaitForSeconds(0.6f);
             t += 0.6f;
         }
+        EnemyAttacksSuppressed = false;  // 대숙청 자체의 피해는 정상 적용되어야 하므로 여기서 해제
         Destroy(circle.gameObject);
         if (arrow != null) Destroy(arrow.gameObject);
 

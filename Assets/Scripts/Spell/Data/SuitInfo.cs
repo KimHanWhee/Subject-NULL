@@ -35,10 +35,10 @@ public static class SuitInfo
     {
         switch (s)
         {
-            case Suit.Spade:   return "공격";
-            case Suit.Heart:   return "회복";
-            case Suit.Club:    return "유틸";
-            case Suit.Diamond: return "방어";
+            case Suit.Spade:   return Loc.T("suit.spade");
+            case Suit.Heart:   return Loc.T("suit.heart");
+            case Suit.Club:    return Loc.T("suit.club");
+            case Suit.Diamond: return Loc.T("suit.diamond");
             default:           return "";
         }
     }

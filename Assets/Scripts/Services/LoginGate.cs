@@ -13,10 +13,8 @@ public class LoginGate : MonoBehaviour
     [SerializeField] private Text promptText;                 // 상태/안내 문구
     [SerializeField] private float failTimeout = 10f;         // 이 시간 넘게 초기화 안 되면 실패 처리
 
-    [Header("Messages")]
-    [SerializeField] private string connectingMsg = "연결 중...";
-    [SerializeField] private string readyMsg = "Press Any Key to Start";
-    [SerializeField] private string failMsg = "연결 실패 — 아무 키나 눌러 재시도";
+    // 안내 문구는 Loc(login.*)에서 현재 언어로 가져온다.
+    // 예전엔 인스펙터 문자열이었으나, 씬에 직렬화된 한국어가 언어 설정을 덮어써 버려서 제거했다.
 
     enum Phase { Connecting, Choice, SigningIn, Ready, Failed }
     Phase phase = Phase.Connecting;
@@ -45,9 +43,9 @@ public class LoginGate : MonoBehaviour
                 {
                     // 세션 재개 실패(만료 등) — 초기화만 됐다면 선택 화면으로 복귀, 아니면 재시도 안내
                     if (ServicesBootstrap.IsInitialized) EnterChoice();
-                    else { phase = Phase.Failed; SetPrompt(failMsg); }
+                    else { phase = Phase.Failed; SetPrompt(Loc.T("login.fail")); }
                 }
-                else SetPrompt(connectingMsg);
+                else SetPrompt(Loc.T("login.connecting"));
                 return;
 
             case Phase.Choice:
@@ -55,7 +53,7 @@ public class LoginGate : MonoBehaviour
                 return;
 
             case Phase.SigningIn:
-                SetPrompt(connectingMsg);
+                SetPrompt(Loc.T("login.connecting"));
                 return;
 
             case Phase.Ready:
@@ -73,7 +71,7 @@ public class LoginGate : MonoBehaviour
         phase = Phase.Ready;
         if (choiceRoot != null) choiceRoot.SetActive(false);
         if (promptBox != null) promptBox.SetActive(true);
-        SetPrompt(readyMsg);
+        SetPrompt(Loc.T("login.ready"));
     }
 
     void EnterChoice()
@@ -159,8 +157,8 @@ public class LoginGate : MonoBehaviour
             : new Vector2(0f, -220f);
         root.sizeDelta = new Vector2(760f, 200f);
 
-        MakeButton(root, "GuestBtn", new Vector2(-190f, 20f), new Vector2(340f, 76f), "게스트로 시작", OnGuest);
-        MakeButton(root, "GoogleBtn", new Vector2(190f, 20f), new Vector2(340f, 76f), "Google로 시작", OnGoogle);
+        MakeButton(root, "GuestBtn", new Vector2(-190f, 20f), new Vector2(340f, 76f), Loc.T("login.guest"), OnGuest);
+        MakeButton(root, "GoogleBtn", new Vector2(190f, 20f), new Vector2(340f, 76f), Loc.T("login.google"), OnGoogle);
 
         GameObject fb = new GameObject("Feedback", typeof(RectTransform));
         RectTransform frt = fb.GetComponent<RectTransform>();

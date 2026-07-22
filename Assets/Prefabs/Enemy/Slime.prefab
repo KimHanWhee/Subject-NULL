@@ -171,7 +171,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8aa6ab4b8df50a40914d79158a5b4c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  speed: 5
+  speed: 4.2
   scoreValue: 10
   flashMaterial: {fileID: 2100000, guid: 0be162bc4ebf69d45aa3d022ad56be1a, type: 2}
   defaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}

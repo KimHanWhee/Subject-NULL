@@ -96,8 +96,15 @@ public class MainMenuRanking : MonoBehaviour
         // MainMenuIntro는 이 버튼이 생기기 전에 Start()가 끝나므로 여기서 직접 붙인다.
         go.AddComponent<MenuButtonFx>().Init(Resources.Load<AudioClip>("Sounds/UIHover"));
 
-        MakeText(rt, "랭킹", 26, Vector2.zero, new Color(0.88f, 0.95f, 1f), FontStyles.Bold)
-            .rectTransform.sizeDelta = rt.sizeDelta;
+        // 라벨은 생성 시점에 직접 번역해 넣는다.
+        // (외부 로컬라이저가 나중에 훑는 방식은 이 버튼이 늦게 생성되면 놓친다)
+        TMPro.TextMeshProUGUI lbl = MakeText(rt, Loc.T("menu.ranking"), 26, Vector2.zero,
+            new Color(0.88f, 0.95f, 1f), FontStyles.Bold);
+        lbl.rectTransform.sizeDelta = rt.sizeDelta;
+
+        System.Action refresh = () => { if (lbl != null) lbl.text = Loc.T("menu.ranking"); };
+        Loc.OnChanged += refresh;
+        LocBinder.Attach(go, refresh);
     }
 
     void ToggleOverlay()
@@ -141,7 +148,7 @@ public class MainMenuRanking : MonoBehaviour
         else pImg.color = new Color(0.1f, 0.11f, 0.16f, 0.97f);
         pImg.raycastTarget = true; // 패널 클릭이 뒤 배경막(닫기)으로 새지 않게
 
-        MakeText(prt, "글로벌 랭킹", 36, new Vector2(0f, 305f), new Color(1f, 0.86f, 0.4f), FontStyles.Bold);
+        MakeText(prt, Loc.T("rank.title"), 36, new Vector2(0f, 305f), new Color(1f, 0.86f, 0.4f), FontStyles.Bold);
 
         // 닫기
         GameObject closeGo = new GameObject("Close", typeof(RectTransform), typeof(Image), typeof(Button));
@@ -164,7 +171,7 @@ public class MainMenuRanking : MonoBehaviour
 
     async void LoadRanking(Transform panel)
     {
-        var loading = MakeText(panel, "불러오는 중...", 22, Vector2.zero,
+        var loading = MakeText(panel, Loc.T("rank.loading"), 22, Vector2.zero,
                                new Color(0.6f, 0.65f, 0.75f), FontStyles.Normal);
         await ServicesBootstrap.WaitSignedInAsync();
         if (this == null || panel == null) return; // 오버레이 닫힘/씬 이탈 안전망
@@ -173,7 +180,7 @@ public class MainMenuRanking : MonoBehaviour
         {
             // 에디터에서 MainMenuScene 직접 플레이 등 — 로그인 경유가 없으면 데이터 접근 불가
             Destroy(loading.gameObject);
-            MakeText(panel, "로그인 후 이용할 수 있습니다", 22, Vector2.zero,
+            MakeText(panel, Loc.T("rank.needLogin"), 22, Vector2.zero,
                      new Color(0.75f, 0.65f, 0.55f), FontStyles.Normal);
             return;
         }
@@ -185,13 +192,13 @@ public class MainMenuRanking : MonoBehaviour
 
         if (top == null)
         {
-            MakeText(panel, "랭킹을 불러오지 못했습니다", 22, Vector2.zero,
+            MakeText(panel, Loc.T("rank.failed"), 22, Vector2.zero,
                      new Color(0.75f, 0.55f, 0.55f), FontStyles.Normal);
             return;
         }
         if (top.Count == 0)
         {
-            MakeText(panel, "아직 기록이 없습니다", 22, Vector2.zero,
+            MakeText(panel, Loc.T("rank.empty"), 22, Vector2.zero,
                      new Color(0.6f, 0.65f, 0.75f), FontStyles.Normal);
             return;
         }
@@ -226,7 +233,7 @@ public class MainMenuRanking : MonoBehaviour
             bool inTop = false;
             foreach (var e in top) if (e.isMe) { inTop = true; break; }
             if (!inTop)
-                MakeText(panel, "내 순위  " + me.rank + "위 · " + me.score.ToString("N0"), 26,
+                MakeText(panel, Loc.T("rank.myRank", me.rank, me.score.ToString("N0")), 26,
                          new Vector2(0f, -300f), new Color(0.6f, 1f, 0.7f), FontStyles.Bold);
         }
     }

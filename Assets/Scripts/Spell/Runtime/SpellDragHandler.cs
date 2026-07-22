@@ -314,9 +314,9 @@ public class SpellDragHandler : MonoBehaviour
         tooltipRoot.SetActive(true);
         if (tooltipText != null)
             tooltipText.text =
-                "<b>" + m.ability.abilityName + "</b>\n" +
+                "<b>" + SpellText.Name(m.ability) + "</b>\n" +
                 SuitInfo.RichLabel(m.suit) + "  <color=#FFD24A>[" + m.grade + "]</color>\n" +
-                m.ability.description;
+                SpellText.Desc(m.ability);
         if (tooltipIcon != null)
         {
             Sprite ic = m.icon != null ? m.icon : m.ability.icon; // 스킬 고유 아이콘(SpellMarble.icon) 우선, 없으면 능력 아이콘 폴백

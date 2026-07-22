@@ -186,19 +186,18 @@ public class DeckBuilderUI : MonoBehaviour
     {
         if (!OwnedMarblesService.IsOwned(m))
         {
-            ShowFeedback("미보유 마블입니다 — 뽑기로 획득하세요", false);
+            ShowFeedback(Loc.T("deck.msgNotOwned"), false);
             return;
         }
         if (deckList.Count >= DeckSaveService.MaxSize)
         {
-            ShowFeedback("덱이 가득 찼습니다 (최대 " + DeckSaveService.MaxSize + "개)", false);
+            ShowFeedback(Loc.T("deck.msgFull", DeckSaveService.MaxSize), false);
             return;
         }
         int max = DeckRules.Instance.MaxCopies(m.grade);
         if (CountInDeck(m) >= max)
         {
-            string skill = m.ability != null ? m.ability.abilityName : m.marbleName;
-            ShowFeedback("'" + skill + "'은(는) 최대 " + max + "개까지 (" + GradeLabel(m.grade) + " 등급)", false);
+            ShowFeedback(Loc.T("deck.msgMaxCopies", SpellText.Name(m), max, GradeLabel(m.grade)), false);
             return;
         }
         deckList.Add(m);
@@ -210,10 +209,10 @@ public class DeckBuilderUI : MonoBehaviour
     {
         switch (g)
         {
-            case Grade.Normal:  return "일반";
-            case Grade.Gold:    return "골드";
-            case Grade.Diamond: return "다이아";
-            case Grade.Legend:  return "레전드";
+            case Grade.Normal:  return Loc.T("grade.normal");
+            case Grade.Gold:    return Loc.T("grade.gold");
+            case Grade.Diamond: return Loc.T("grade.diamond");
+            case Grade.Legend:  return Loc.T("grade.legend");
             default:            return g.ToString();
         }
     }
@@ -230,11 +229,11 @@ public class DeckBuilderUI : MonoBehaviour
     {
         if (deckList.Count < DeckSaveService.MinSize || deckList.Count > DeckSaveService.MaxSize)
         {
-            ShowFeedback("덱은 " + DeckSaveService.MinSize + "~" + DeckSaveService.MaxSize + "개여야 합니다", false);
+            ShowFeedback(Loc.T("deck.msgSize", DeckSaveService.MinSize, DeckSaveService.MaxSize), false);
             return;
         }
         DeckSaveService.Save(deckList);
-        ShowFeedback("덱 저장 완료!", true);
+        ShowFeedback(Loc.T("deck.msgSaved"), true);
     }
 
     void AutoFill()
@@ -255,7 +254,7 @@ public class DeckBuilderUI : MonoBehaviour
         }
         deckList.Sort(CompareMarble);
         RefreshAll();
-        ShowFeedback("남은 칸을 무작위로 채웠습니다", true);
+        ShowFeedback(Loc.T("deck.msgFilled"), true);
     }
 
     void ClearDeck()
@@ -300,7 +299,7 @@ public class DeckBuilderUI : MonoBehaviour
 
         // 타이틀
         Text title = MakeText(root, "Title", new Vector2(0f, 495f), new Vector2(900f, 60f), 40, TextAnchor.MiddleCenter);
-        title.text = "<b>스펠 마블 덱 편성</b>";
+        title.text = "<b>" + Loc.T("deck.title") + "</b>";
         title.color = new Color(0.95f, 0.93f, 0.85f);
 
         BuildCollectionPanel(root);
@@ -313,7 +312,7 @@ public class DeckBuilderUI : MonoBehaviour
         collectionPanel = MakePanel(root, "Collection", new Vector2(-320f, -75f), new Vector2(1220f, 890f));
 
         Text header = MakeText(collectionPanel, "Header", new Vector2(0f, 418f), new Vector2(1150f, 32f), 20, TextAnchor.MiddleLeft);
-        header.text = "<b>마블 카탈로그</b>  <size=15><color=#9999AA>카드 클릭=덱 추가 · <b>스킬마다</b> 개별 중복 제한(등급 높을수록 적게: 일반6/골드3/다이아2/레전드1)</color></size>";
+        header.text = "<b>" + Loc.T("deck.catalog") + "</b>  <size=15><color=#9999AA>" + Loc.T("deck.catalogHint") + "</color></size>";
 
         // 슈트 탭 4개(중앙 정렬)
         tabBgs = new Image[4];
@@ -508,11 +507,11 @@ public class DeckBuilderUI : MonoBehaviour
 
         // 이름
         Text name = MakeText(card, "Name", new Vector2(0f, -46f), new Vector2(w - 40f, 28f), 19, TextAnchor.MiddleCenter);
-        name.text = "<b>" + (m.ability != null ? m.ability.abilityName : m.marbleName) + "</b>";
+        name.text = "<b>" + (m.ability != null ? SpellText.Name(m.ability) : m.marbleName) + "</b>";
 
         // 설명(하단 — 넘치면 잘림)
         Text desc = MakeText(card, "Desc", new Vector2(0f, -102f), new Vector2(w - 48f, 74f), 13, TextAnchor.UpperCenter);
-        desc.text = m.ability != null ? m.ability.description : "";
+        desc.text = SpellText.Desc(m);
         desc.color = new Color(0.82f, 0.82f, 0.88f);
         desc.verticalOverflow = VerticalWrapMode.Truncate;
 
@@ -534,7 +533,7 @@ public class DeckBuilderUI : MonoBehaviour
             lockOv.sprite = RoundedSprite();
             lockOv.type = Image.Type.Sliced;
             Text lockTxt = MakeText(card, "LockTxt", new Vector2(0f, 8f), new Vector2(w - 20f, 64f), 20, TextAnchor.MiddleCenter);
-            lockTxt.text = "<b>미보유</b>\n<size=13><color=#CFC080>뽑기로 획득</color></size>";
+            lockTxt.text = "<b>" + Loc.T("deck.locked") + "</b>\n<size=13><color=#CFC080>" + Loc.T("deck.lockedHint") + "</color></size>";
             lockTxt.color = new Color(1f, 0.85f, 0.45f);
         }
     }
@@ -544,7 +543,7 @@ public class DeckBuilderUI : MonoBehaviour
         RectTransform panel = MakePanel(root, "Deck", new Vector2(620f, -75f), new Vector2(600f, 890f));
 
         Text header = MakeText(panel, "Header", new Vector2(0f, 418f), new Vector2(540f, 32f), 20, TextAnchor.MiddleLeft);
-        header.text = "<b>내 덱</b>  <size=15><color=#9999AA>클릭하면 제거됩니다</color></size>";
+        header.text = "<b>" + Loc.T("deck.mydeck") + "</b>  <size=15><color=#9999AA>" + Loc.T("deck.mydeckHint") + "</color></size>";
 
         counterText = MakeText(panel, "Counter", new Vector2(0f, 418f), new Vector2(540f, 32f), 22, TextAnchor.MiddleRight);
 
@@ -590,11 +589,11 @@ public class DeckBuilderUI : MonoBehaviour
         }
 
         // 하단 버튼들
-        saveButton = MakeButton(panel, "SaveBtn", new Vector2(-150f, -350f), new Vector2(220f, 62f), "덱 저장", new Color(0.22f, 0.5f, 0.3f), SaveDeck);
-        MakeButton(panel, "AutoBtn", new Vector2(90f, -350f), new Vector2(200f, 62f), "자동 채우기", new Color(0.28f, 0.3f, 0.45f), AutoFill);
-        MakeButton(panel, "ClearBtn", new Vector2(240f, -350f), new Vector2(80f, 62f), "비우기", new Color(0.45f, 0.25f, 0.25f), ClearDeck);
+        saveButton = MakeButton(panel, "SaveBtn", new Vector2(-150f, -350f), new Vector2(220f, 62f), Loc.T("deck.save"), new Color(0.22f, 0.5f, 0.3f), SaveDeck);
+        MakeButton(panel, "AutoBtn", new Vector2(90f, -350f), new Vector2(200f, 62f), Loc.T("deck.autofill"), new Color(0.28f, 0.3f, 0.45f), AutoFill);
+        MakeButton(panel, "ClearBtn", new Vector2(240f, -350f), new Vector2(80f, 62f), Loc.T("deck.clear"), new Color(0.45f, 0.25f, 0.25f), ClearDeck);
         // 뒤로 버튼: 좌상단 통일 규격(덱/가챠/플레이방법 동일)
-        MakeButton(root, "BackBtn", new Vector2(-810f, 476f), new Vector2(220f, 68f), "← 뒤로", new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
+        MakeButton(root, "BackBtn", new Vector2(-810f, 476f), new Vector2(220f, 68f), Loc.T("common.back"), new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
 
         // 저장/오류 피드백(버튼 위)
         feedbackText = MakeText(panel, "Feedback", new Vector2(0f, -298f), new Vector2(540f, 30f), 18, TextAnchor.MiddleCenter);
@@ -692,9 +691,9 @@ public class DeckBuilderUI : MonoBehaviour
         if (tooltipRoot == null || m == null || m.ability == null) return;
         tooltipRoot.gameObject.SetActive(true);
         tooltipText.text =
-            "<b>" + m.ability.abilityName + "</b>\n" +
+            "<b>" + SpellText.Name(m.ability) + "</b>\n" +
             SuitInfo.RichLabel(m.suit) + "  <color=#FFD24A>[" + m.grade + "]</color>\n" +
-            m.ability.description;
+            SpellText.Desc(m.ability);
         tooltipIcon.sprite = ArtOf(m);
         tooltipIcon.enabled = tooltipIcon.sprite != null;
         if (Mouse.current != null)

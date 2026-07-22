@@ -35,11 +35,11 @@ public class GameOverStats : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920, 1080);
 
         bool nb = GameStats.isNewBest;
-        MakeText(canvasGo.transform, font, "점수  " + GameStats.lastScore, 84, new Vector2(0f, 300f), Color.white, FontStyles.Bold);
-        MakeText(canvasGo.transform, font, "최고기록  " + GameStats.bestScore, 52, new Vector2(0f, 210f),
+        MakeText(canvasGo.transform, font, Loc.T("over.score", GameStats.lastScore), 84, new Vector2(0f, 300f), Color.white, FontStyles.Bold);
+        MakeText(canvasGo.transform, font, Loc.T("over.best", GameStats.bestScore), 52, new Vector2(0f, 210f),
                  new Color(1f, 0.85f, 0.35f), FontStyles.Normal);
         if (nb)
-            MakeText(canvasGo.transform, font, "★ 신기록! ★", 46, new Vector2(0f, 150f),
+            MakeText(canvasGo.transform, font, Loc.T("over.newBest"), 46, new Vector2(0f, 150f),
                      new Color(1f, 0.5f, 0.5f), FontStyles.Bold);
 
         BuildRankingPanel(canvasGo.transform, font);
@@ -60,14 +60,14 @@ public class GameOverStats : MonoBehaviour
         rt.sizeDelta = new Vector2(470f, 640f);
         rt.anchoredPosition = new Vector2(620f, -70f);
 
-        MakeText(panelGo.transform, font, "글로벌 랭킹", 34, new Vector2(0f, 275f),
+        MakeText(panelGo.transform, font, Loc.T("rank.title"), 34, new Vector2(0f, 275f),
                  new Color(1f, 0.86f, 0.4f), FontStyles.Bold);
         LoadRanking(panelGo.transform, font);
     }
 
     async void LoadRanking(Transform panel, TMP_FontAsset font)
     {
-        var loading = MakeText(panel, font, "불러오는 중...", 22, Vector2.zero,
+        var loading = MakeText(panel, font, Loc.T("rank.loading"), 22, Vector2.zero,
                                new Color(0.6f, 0.65f, 0.75f), FontStyles.Normal);
         await ServicesBootstrap.WaitSignedInAsync();
         var top = await RankingService.GetTopAsync(10);
@@ -77,13 +77,13 @@ public class GameOverStats : MonoBehaviour
 
         if (top == null)
         {
-            MakeText(panel, font, "랭킹을 불러오지 못했습니다", 22, Vector2.zero,
+            MakeText(panel, font, Loc.T("rank.failed"), 22, Vector2.zero,
                      new Color(0.75f, 0.55f, 0.55f), FontStyles.Normal);
             return;
         }
         if (top.Count == 0)
         {
-            MakeText(panel, font, "아직 기록이 없습니다", 22, Vector2.zero,
+            MakeText(panel, font, Loc.T("rank.empty"), 22, Vector2.zero,
                      new Color(0.6f, 0.65f, 0.75f), FontStyles.Normal);
             return;
         }
@@ -118,7 +118,7 @@ public class GameOverStats : MonoBehaviour
             bool inTop = false;
             foreach (var e in top) if (e.isMe) { inTop = true; break; }
             if (!inTop)
-                MakeText(panel, font, "내 순위  " + me.rank + "위 · " + me.score.ToString("N0"), 24,
+                MakeText(panel, font, Loc.T("rank.myRank", me.rank, me.score.ToString("N0")), 24,
                          new Vector2(0f, -272f), new Color(0.6f, 1f, 0.7f), FontStyles.Bold);
         }
     }

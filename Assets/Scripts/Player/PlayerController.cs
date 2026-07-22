@@ -322,7 +322,13 @@ public class PlayerController : MonoBehaviour
 
         if (movementLocked) return; // 스펠 마블 ♦ Fortress — 이동 불가
         if (TickDash()) return; // Plan SC: FR-05 — 대시 중엔 일반 이동 스킵
-        transform.Translate(move * (speed * Time.fixedDeltaTime));
+
+        // 대시와 동일하게 MovePosition으로 이동한다.
+        // transform.Translate는 물리 솔버를 건너뛰고 좌표를 직접 옮기기 때문에,
+        // 적(슬라임 등)이 벽 쪽으로 밀어붙이면 벽 안으로 파고들다 반대편으로 빠져나간다.
+        Vector2 delta = (Vector2)move * (speed * Time.fixedDeltaTime);
+        if (rb != null) rb.MovePosition(rb.position + delta);
+        else transform.Translate(delta);
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -359,6 +365,9 @@ public class PlayerController : MonoBehaviour
     {
         if (IsShieldActive) return; // 스펠 마블 ♦ 실드 — 데미지 무시 (SelfBuffShieldAbility)
         if (SafeZoneField.Protects(transform.position)) return; // 스펠 마블 ♦ 안전지대 — 구역 안 피해 무효
+        // 조커 대숙청 경고 중 — 안전지대까지 이동에만 집중하도록 적 공격 무효.
+        // 대숙청 자체의 피해는 이 플래그가 해제된 뒤에 들어오므로 정상 적용된다.
+        if (JokerSpell.EnemyAttacksSuppressed) return;
 
         // 스펠 마블 피해 수정 체인(Iron Skin 감소 / Fortress 무효 / Reflect 반사 / Mirror World 분산)
         IPlayerDamageModifier[] mods = GetComponents<IPlayerDamageModifier>();

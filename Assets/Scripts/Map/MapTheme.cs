@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 // 타일 아트 없이도 틴트+오버레이+환경 파티클+BGM만으로 분위기 전환이 가능하고,
 // 테마 전용 타일셋이 생기면 fromTiles/toTiles 쌍으로 교체까지 확장한다.
 // 에셋 위치: Assets/Resources/MapThemes/ (MapThemeController가 LoadAll로 수집)
-[CreateAssetMenu(fileName = "MapTheme", menuName = "MiniGungeon/Map Theme")]
+[CreateAssetMenu(fileName = "MapTheme", menuName = "SubjectNull/Map Theme")]
 public class MapTheme : ScriptableObject
 {
     // 환경 파티클 스타일 — MapThemeController가 절차 생성(프리팹 불필요)
