@@ -330,7 +330,8 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.tag == "Enemy" && Time.time >= nextDamageTime)
         {
             nextDamageTime = Time.time + damageInterval;
-            TakeHit(1, collision.gameObject); // 적 접촉 데미지(공격자 전달 — Reflect 반사 대상)
+            // 적 접촉 데미지(공격자 전달 — Reflect 반사 대상). 고난 "공격 본능"이 배율로 적용된다.
+            TakeHit(1f * HardshipSystem.EnemyDamageMult, collision.gameObject);
         }
     }
 

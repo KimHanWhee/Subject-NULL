@@ -26,6 +26,27 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     protected Animator anim;
     protected Rigidbody2D rb;
 
+    // ---- 고난(HardshipSystem) ----
+    // 프리팹 원본 maxHp를 Awake에서 1회 캐시(풀 재사용 시 배율 중첩 방지).
+    private float baseMaxHp;
+    private float regenCarry;   // 재생 조직 — 1 미만 회복량 누적
+
+    // 적의 "체감 속도" 배율 = 외부 감속(localTimeScale) × 고난 가속.
+    // ⚠️ speed 필드를 직접 건드리지 않는 이유: 그 필드는 SlowStatus가 원본을 캐시해 쓰므로
+    //    매 프레임 덮어쓰면 감속 스펠이 무효화된다. 시간 배율로 처리하면 둘이 곱연산으로 공존한다.
+    //    이동(Translate dt)·공격 타이머·돌진 속도가 한 번에 스케일되는 이점도 있다.
+    public float TimeMult
+    {
+        get
+        {
+            float m = localTimeScale * HardshipSystem.EnemySpeedMult; // 신경 가속
+            if (HardshipSystem.FrenzyOn && character != null
+                && character.HpRatio > 0f && character.HpRatio <= HardshipSystem.FrenzyHpThreshold)
+                m *= HardshipSystem.FrenzySpeedMult;                  // 광폭화(빈사 시)
+            return m;
+        }
+    }
+
     // ---- HP 바(코드 생성 월드 스프라이트) ----
     private Character character;
     private Transform hpBarRoot;
@@ -43,6 +64,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         if (rb != null) rb.freezeRotation = true;
 
         character = GetComponent<Character>();
+        if (character != null) baseMaxHp = character.maxHp;
         BuildHpBar();
     }
 
@@ -109,6 +131,13 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         phase = Phase.Spawning;
         localTimeScale = 1f;                        // 풀 재사용 시 감속 잔존 방지
         transform.rotation = Quaternion.identity; // 풀 재사용 시 남은 회전값 초기화
+
+        // 고난 적용 — 항상 "프리팹 원본값 × 현재 배율"로 계산(누적 중첩 방지).
+        // Initialize() 앞에서 maxHp를 바꿔야 현재 HP도 강화된 값으로 시작한다.
+        // (속도는 TimeMult가 매 프레임 반영하므로 여기서 만지지 않는다)
+        regenCarry = 0f;
+        if (character != null) character.maxHp = baseMaxHp * HardshipSystem.EnemyHpMult;
+
         GetComponent<Character>().Initialize();
         anim.SetTrigger("Spawn");
         GetComponent<Collider2D>().enabled = false;
@@ -128,7 +157,24 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         if (rb != null) rb.linearVelocity = Vector2.zero;
 
         if (phase != Phase.Active || target == null) return;
-        Tick(target.transform.position - transform.position, Time.fixedDeltaTime * localTimeScale);
+        float dt = Time.fixedDeltaTime * TimeMult;
+        TickHardship(dt);
+        Tick(target.transform.position - transform.position, dt);
+    }
+
+    // 고난 중 매 프레임 갱신이 필요한 것(재생 조직). dt에 TimeMult가 반영돼 있어
+    // 빙결/감속 중에는 재생도 함께 느려진다(광폭화는 TimeMult가 처리).
+    void TickHardship(float dt)
+    {
+        if (character == null) return;
+
+        // 재생 조직 — 초당 최대 체력의 일정 비율. 소수 회복이 묻히지 않게 누적 후 반영.
+        float ratePerSec = HardshipSystem.RegenRatioPerSec;
+        if (ratePerSec > 0f && character.HpRatio > 0f && character.HpRatio < 1f)
+        {
+            regenCarry += character.maxHp * ratePerSec * dt;
+            if (regenCarry >= 0.05f) { character.Heal(regenCarry); regenCarry = 0f; }
+        }
     }
 
     // 자식 구현: 이동+공격 행동. toTarget = 추적 대상까지의 벡터, dt = 고정 스텝
@@ -145,6 +191,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public void ApplyHit(float damage)
     {
         if (phase == Phase.Dying) return; // 이미 죽는 중이면 중복 처리 방지
+
+        damage *= HardshipSystem.DamageTakenMult; // 경화 외피(체감형 — 0이 되지 않아 불사 불가)
+
         if (GetComponent<Character>().Hit(damage))
             Flash();
         else
@@ -165,6 +214,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     protected virtual void Die()
     {
         phase = Phase.Dying;
+        if (HardshipSystem.VolatileOn) VolatileBurst.Spawn(transform.position); // 자폭 조직 — 시체가 터진다
         if (GameManager.Instance != null) GameManager.Instance.ReportKill(scoreValue, transform.position); // 처치 점수/콤보
         GetComponent<Collider2D>().enabled = false; // 사망 애니메이션 중 접촉 데미지/중복 피격 방지
         anim.speed = 1f; // 빙결(FreezeStatus)로 애니메이터가 정지 중이어도 사망 연출은 재생

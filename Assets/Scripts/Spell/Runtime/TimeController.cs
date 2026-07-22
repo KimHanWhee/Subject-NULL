@@ -74,7 +74,9 @@ public class TimeController : MonoBehaviour
         if (Mathf.Approximately(scale, appliedScale)) return;
         appliedScale = scale;
         Time.timeScale = scale;
-        Time.fixedDeltaTime = defaultFixedDelta * scale; // 물리도 비례(끊김 방지)
+        // 물리도 비례(끊김 방지). 단 scale=0(완전 정지, 고난 선택 등)일 때 fixedDeltaTime이
+        // 0이 되면 Unity가 예외를 던지므로 하한을 둔다 — 정지 중엔 FixedUpdate가 안 돌아 무해.
+        Time.fixedDeltaTime = defaultFixedDelta * Mathf.Max(scale, 0.01f);
     }
 
     // 안전망: 비활성/씬 전환 시 시간 정상화.

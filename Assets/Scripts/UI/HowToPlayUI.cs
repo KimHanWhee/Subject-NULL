@@ -52,11 +52,14 @@ public class HowToPlayUI : MonoBehaviour
         // 조커
         "덱에 편성된 스펠 마블을 <b>모두 사용</b>하면\n" +
         "<color=#FFD24A><b>JOKER</b></color> 가 발동됩니다.\n\n" +
-        "JOKER는 <b>플레이어와 적 모두에게</b>\n" +
-        "강력한 피해를 줄 수 있으므로,\n" +
-        "잘 이용하여 적을 효율적으로 물리쳐보세요!\n\n" +
+        "<b>조커의 장난</b>   적을 강화합니다\n" +
+        "   플레이어는 제시된 <b>3가지 중 하나</b>를 직접 고를 수 있습니다.\n" +
+        "   효과는 <color=#FF8A7A>판이 끝날 때까지 누적</color>됩니다.\n\n" +
+        "<b>조커의 심판</b>   선택 직후 발동\n" +
         "   · <color=#FF7A7A>대숙청</color> — 안전지대 밖 전멸\n" +
-        "   · <color=#FFE066>번개 폭풍</color> — 낙뢰 회피"
+        "   · <color=#FFE066>번개 폭풍</color> — 낙뢰 회피\n" +
+        "   <b>플레이어와 적 모두에게</b> 적용되니\n" +
+        "   잘 이용해 적을 효율적으로 물리쳐보세요!"
     };
 
     TMP_FontAsset font;

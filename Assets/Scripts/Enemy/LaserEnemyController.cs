@@ -166,7 +166,7 @@ public class LaserEnemyController : EnemyBase
         if (distToBeam <= beamWidth * 0.5f + 0.35f)
         {
             damageDealt = true;
-            pc.ApplyRangedHit(damage, gameObject); // 총알처럼 대시 무적 적용
+            pc.ApplyRangedHit(damage * HardshipSystem.EnemyDamageMult, gameObject); // 총알처럼 대시 무적 적용
         }
     }
 

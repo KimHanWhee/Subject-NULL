@@ -20,6 +20,7 @@ public class KnockbackStatus : MonoBehaviour
             s = target.AddComponent<KnockbackStatus>();
             if (!s.Bind()) { Destroy(s); return; } // EnemyBase가 없는 대상이면 무시
         }
+        distance *= HardshipSystem.KnockbackMult; // 고난 "경화 외피" — 넉백 저항
         Vector2 d = (Vector2)target.transform.position - fromPoint;
         s.dir = d.sqrMagnitude > 0.0001f ? d.normalized : Random.insideUnitCircle.normalized;
         s.knockTime = Mathf.Max(0.05f, knockDuration);

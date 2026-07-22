@@ -61,7 +61,8 @@ public class ChargerEnemyController : EnemyBase
                 // ⚠️ Translate 금지 — 물리 우회라 고속에서 벽 관통(스텝당 침투 > 엔진 보정).
                 // EnemyBase.FixedUpdate가 매 스텝 velocity를 0으로 만든 뒤 Tick을 부르므로
                 // 여기서 다시 세팅하면 "이번 스텝만 유효한" 돌진 속도가 되고, 벽은 엔진이 막는다.
-                if (rb != null) rb.linearVelocity = chargeDir * (chargeSpeed * localTimeScale);
+                // TimeMult = 외부 감속 × 고난 가속 — 돌진도 신경가속/광폭화의 영향을 받는다
+                if (rb != null) rb.linearVelocity = chargeDir * (chargeSpeed * TimeMult);
                 else transform.Translate(chargeDir * (chargeSpeed * dt));
                 if (stateTimer >= chargeTime) Enter(State.Recover);
                 break;

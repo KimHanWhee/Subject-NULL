@@ -38,6 +38,8 @@ public class GameManager : MonoBehaviour
     // 각 값은 "상대 가중치" — (자기 값 ÷ 전체 합)이 실제 등장 비율.
     [Header("Melee (Slime)")]
     [Range(0f, 1f)] public float meleeWeight = 0.4f;
+    [Tooltip("슬라임이 차지할 최소 등장 비율 — 후반에도 기본 적으로 계속 나오게 하는 바닥값")]
+    [Range(0f, 0.6f)] public float meleeMinShare = 0.25f;
 
     [Header("Ranged Enemy")]
     public ObjectPool rangedPool;
@@ -92,6 +94,7 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        HardshipSystem.ResetAll(); // 고난은 판 단위 — 새 게임 시작 시 누적 초기화
     }
 
     void OnDestroy()
@@ -151,6 +154,7 @@ public class GameManager : MonoBehaviour
 
         // 점수 기반 스폰 간격
         float term = Mathf.Lerp(baseSpawnTerm, minSpawnTerm, Mathf.Clamp01(score / spawnRampScore));
+        term *= HardshipSystem.SpawnIntervalMult; // 고난 "급속 배양"
 
         timeAfterLastSpawn += Time.deltaTime;
         if (timeAfterLastSpawn >= term)
@@ -176,7 +180,9 @@ public class GameManager : MonoBehaviour
     // 동시 스폰 — 점수가 오를수록 한 번에 여러 마리(최대 maxSimultaneous)
     void SpawnWave()
     {
-        int maxSimul = Mathf.Clamp(1 + (int)(score / simulPerScore), 1, maxSimultaneous);
+        // 고난 "과밀 배양"은 점수 상한 자체를 끌어올린다(초반부터 체감되도록)
+        int cap = maxSimultaneous + HardshipSystem.SpawnBonus;
+        int maxSimul = Mathf.Clamp(1 + (int)(score / simulPerScore) + HardshipSystem.SpawnBonus, 1, cap);
         float p = Mathf.Clamp01(score / multiChanceScore);
         int count = 1;
         for (int k = 1; k < maxSimul; k++)
@@ -223,6 +229,19 @@ public class GameManager : MonoBehaviour
             }
             total += eff[i];
         }
+
+        // 슬라임 최소 비율 보장.
+        // 강한 적의 가중치는 점수에 비례해 무한히 커지는 반면 근접은 0.25배까지 줄어들기만 해서,
+        // 그대로 두면 후반에 슬라임이 사실상 사라진다(3000점 기준 약 2%).
+        // 여기서 "전체의 meleeMinShare 이상"이 되도록 바닥을 깔아준다.
+        int mi = pools.Length - 1;
+        if (pools[mi] != null && meleeMinShare > 0f)
+        {
+            float others = total - eff[mi];
+            float need = others * meleeMinShare / Mathf.Max(0.0001f, 1f - meleeMinShare);
+            if (eff[mi] < need) { total += need - eff[mi]; eff[mi] = need; }
+        }
+
         if (total <= 0f) return melee;
 
         float r = Random.value * total;

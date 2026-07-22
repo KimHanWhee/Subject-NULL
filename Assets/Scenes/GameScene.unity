@@ -1550,7 +1550,7 @@ MonoBehaviour:
   dashGhostTint: {r: 0.55, g: 0.85, b: 1, a: 0.55}
   dashGhostInterval: 0.035
   scoreAtkFullAt: 1000
-  scoreAtkMaxBonus: 0.8
+  scoreAtkMaxBonus: 1
 --- !u!212 &940892624
 SpriteRenderer:
   serializedVersion: 2

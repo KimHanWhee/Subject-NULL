@@ -225,8 +225,11 @@ public class SpellCaster : MonoBehaviour
         if (Time.unscaledTime < lastJokerTime + jokerCooldown) return;
         IsOverloaded = true;
         lastJokerTime = Time.unscaledTime;
-        JokerSpell.Trigger(player, -1, OnJokerFired, overloadWarningSound,
-            jokerThunderSound, jokerPurgeSound); // 3초 경고 → 기믹 → 콜백
+        // 덱 한 바퀴 소진 = ①고난 3중 1택(시간 정지) → ②조커 3초 경고 → ③기믹 발동.
+        // 고난을 앞에 두면 경고 3초가 "내가 고른 재앙에 대비하는 시간"이 된다.
+        HardshipSelectUI.Show(() =>
+            JokerSpell.Trigger(player, -1, OnJokerFired, overloadWarningSound,
+                jokerThunderSound, jokerPurgeSound));
     }
 
     // 기믹 발동 순간: 덱 재셔플 + 손패 즉시 풀 리필(과부하 해소 보상) + Ctrl 잠금 해제

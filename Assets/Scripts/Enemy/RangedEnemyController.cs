@@ -79,8 +79,8 @@ public class RangedEnemyController : EnemyBase
             b.transform.position = transform.position;
             EnemyBullet eb = b.GetComponent<EnemyBullet>();
             eb.Direction = shotDir;
-            eb.speed = bulletSpeed;
-            eb.damage = bulletDamage;
+            eb.speed = bulletSpeed * HardshipSystem.EnemyBulletSpeedMult; // 고난 "탄속 개선"
+            eb.damage = bulletDamage * HardshipSystem.EnemyDamageMult;    // 고난 "공격 본능"
 
             // 총알 풀은 박쥐 종류 간 공유 → 매 발사 시 자기 색으로 칠함(잔존 색 방지)
             SpriteRenderer bsr = b.GetComponent<SpriteRenderer>();
