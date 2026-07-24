@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>{{{ PRODUCT_NAME }}}</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <!-- 파비콘: 루트 favicon.ico를 우선 참조(브라우저가 /favicon.ico를 자동 요청하므로 루트에도 파일을 둔다).
+         구식 rel="shortcut icon" 대신 rel="icon"을 쓰고, 캐시 무력화용 쿼리를 붙였다. -->
+    <link rel="icon" href="favicon.ico?v=2" sizes="any">
+    <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="TemplateData/style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
