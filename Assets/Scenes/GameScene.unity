@@ -748,7 +748,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 6.5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -5160,7 +5160,7 @@ MonoBehaviour:
   raisedScale: 2.4
   raiseSpeed: 10
   slowScale: 0.01
-  zoomedOrthoSize: 9
+  zoomedOrthoSize: 11.7
   zoomSpeed: 8
 --- !u!114 &1854239514
 MonoBehaviour:

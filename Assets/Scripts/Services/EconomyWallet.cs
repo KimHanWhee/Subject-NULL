@@ -47,26 +47,9 @@ public static class EconomyWallet
         }
     }
 
-    // ⚠️ 개발 전용: Cloud Code DevGrantGem 호출로 GEM 지급 후 잔액 갱신.
-    //    라이브 전 반드시 제거/차단(치트 통로). 실제 지급은 PayPalCapture(2단계).
-    public static async Task<bool> DevGrantAsync(int amount)
-    {
-        if (!Ready || amount <= 0) return false;
-        try
-        {
-            var args = new Dictionary<string, object>
-            {
-                { "currencyId", GemCurrencyId },
-                { "amount", amount }
-            };
-            await CloudCodeService.Instance.CallEndpointAsync<object>("DevGrantGem", args);
-            await RefreshAsync();
-            return true;
-        }
-        catch (Exception e)
-        {
-            Debug.LogError("[EconomyWallet] DevGrantGem 실패: " + e);
-            return false;
-        }
-    }
+    // GEM 지급 경로는 클라이언트에 두지 않는다.
+    // 예전에는 DevGrantGem(Cloud Code)을 직접 호출하는 개발용 지급 함수가 여기 있었는데,
+    // 그 스크립트는 호출자 제한이 없어 로그인만 하면 누구나 GEM을 무제한 발행할 수 있었다.
+    // → 스크립트를 서버에서 삭제하고 이 함수도 함께 제거했다.
+    //   정상 지급 경로는 결제를 서버에서 검증하는 CapturePaypalOrder 하나뿐이다.
 }

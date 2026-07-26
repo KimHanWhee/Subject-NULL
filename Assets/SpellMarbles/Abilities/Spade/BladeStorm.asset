@@ -22,7 +22,7 @@ MonoBehaviour:
   activationSound: {fileID: 0}
   soundVolume: 1
   bladeCount: 3
-  orbitRadius: 1.2
+  orbitRadius: 2.1
   damagePerHit: 1
   duration: 5
-  angularSpeed: 240
+  angularSpeed: 400

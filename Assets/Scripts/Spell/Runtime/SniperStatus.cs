@@ -6,7 +6,6 @@ public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulle
     const float ZoomMultiplier = 1.95f; // 사거리/탄속이 길어지는 만큼 가장 넓게(시야 5 → 9.75)
 
     private PlayerController pc;
-    private float originalSpeed;
     private float damageMult;
     private float bulletSpeedMult;
     private float remain;
@@ -25,10 +24,10 @@ public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulle
             s = player.AddComponent<SniperStatus>();
             s.pc = player.GetComponent<PlayerController>();
             if (s.pc == null) { Destroy(s); return; }
-            s.originalSpeed = s.pc.speed;
-            s.pc.speed = s.originalSpeed * Mathf.Clamp01(moveMult); // 이동속도 감소
             CameraZoom.Request(s, ZoomMultiplier);                  // 저격 중 시야 확대
         }
+        // 이동속도 감소는 배율로 등록 — 다른 속도 버프와 겹쳐도 서로를 덮어쓰지 않는다.
+        PlayerSpeedModifiers.Set(s, Mathf.Clamp01(moveMult));
         s.damageMult = damageMult;
         s.bulletSpeedMult = bulletSpeedMult;
         s.marble = marble;
@@ -47,7 +46,7 @@ public class SniperStatus : MonoBehaviour, IPlayerOutgoingModifier, IPlayerBulle
 
     void Restore()
     {
-        if (pc != null) pc.speed = originalSpeed;
+        PlayerSpeedModifiers.Clear(this);
         CameraZoom.Release(this);
         pc = null;
     }

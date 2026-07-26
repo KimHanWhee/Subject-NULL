@@ -10,6 +10,9 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="TemplateData/style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- PayPal 결제 SDK. client-id는 공개값(브라우저 노출 전제) — Secret은 서버(Cloud Code)에만 있다.
+         Sandbox/Live 전환 시 이 client-id도 함께 바꿔야 한다. -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AcuPRkJ0kVFZsDixZHRgsQqeeEZRDFBsU7pjR3VTFThPyGhaKYQS1Gx3U_sRuuMKOwoZlXQYfV45V0bo&currency=USD"></script>
     <style>
       /* SUBJECT:NULL — 창 크기에 맞춰 16:9 유지(레터박스) */
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #07090c; overflow: hidden; }

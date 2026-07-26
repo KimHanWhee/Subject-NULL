@@ -860,7 +860,7 @@ public class GachaShopUI : MonoBehaviour
         MakeButton(row.rectTransform, "Buy", new Vector2(230f, 0f), new Vector2(150f, 60f), Loc.T("gacha.buy"), new Color(0.2f, 0.5f, 0.42f), () => OnBuyGem(cap, overlay));
     }
 
-    void OnBuyGem(GachaService.GemPackage p, Image overlay)
+    async void OnBuyGem(GachaService.GemPackage p, Image overlay)
     {
         // 계정 게이트(하이브리드): 게스트(미연결)면 결제 불가 → 계정 만들기 유도.
         if (!AccountService.IsLinked)
@@ -870,9 +870,39 @@ public class GachaShopUI : MonoBehaviour
             SceneLoader.Load("AccountScene");
             return;
         }
-        // TODO(단계 3b): PayPal createOrder → 승인 → captureOrder → 서버 GEM 지급. sandbox 키 연결 후 구현.
-        // 문구는 결제 수단을 노출하지 않는다(연동 전 사용자 혼선 방지).
-        ShowFeedback(Loc.T("gacha.msgPaymentSoon", p.label), true);
+
+        // 에디터 등 WebGL이 아닌 환경에서는 결제창을 띄울 수 없다.
+        if (!PaypalCheckout.IsSupported)
+        {
+            ShowFeedback(Loc.T("gacha.msgPaymentSoon", p.label), true);
+            return;
+        }
+
+        // 주문 생성 → 결제창 → 서버 확정·지급까지 PaypalCheckout이 처리한다.
+        PaypalCheckout.Result r = await PaypalCheckout.PurchaseAsync(p.sku);
+        if (this == null) return; // 씬 이탈 방어
+
+        if (r != null && r.ok)
+        {
+            if (overlay != null) Destroy(overlay.gameObject);
+            await PlayerProfileService.RefreshAsync(); // 서버 잔액으로 갱신(진실은 서버)
+            RefreshCurrency();
+            // 재시도로 확인된 기지급 건(alreadyPaid)은 granted가 0으로 온다.
+            // 그대로 쓰면 "0젬 지급 완료"가 되므로 상품 수량으로 표시한다.
+            int shown = r.granted > 0 ? r.granted : p.gem;
+            ShowFeedback(Loc.T("gacha.msgPurchased", shown), true);
+            return;
+        }
+
+        string err = r != null ? r.error : "unknown";
+        if (err == "cancelled") return;                       // 사용자가 닫음 — 조용히 종료
+        if (err == "capture-failed")
+        {
+            // 결제는 됐는데 지급이 안 된 상태 — 반드시 알려야 한다(재시도 시 서버가 멱등 처리).
+            ShowFeedback(Loc.T("gacha.msgPayCaptureFail"));
+            return;
+        }
+        ShowFeedback(Loc.T("gacha.msgPayFail"));
     }
 
     // ── 갱신/헬퍼 ─────────────────────────────────────────

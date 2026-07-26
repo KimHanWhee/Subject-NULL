@@ -58,7 +58,11 @@ public static class WalletService
     // GEM/조각의 진실은 서버(Economy/Cloud Save)이며, 여기 저장은 UI 표시용 캐시일 뿐이다.
     public static void SetFromServer(long gem, int shards)
     {
-        PlayerPrefs.SetInt(AccountScope.Key(GemBase), (int)gem);
+        // PlayerPrefs는 int만 저장하므로 그냥 캐스팅하면 21억 초과분이 음수로 뒤집힌다.
+        // Economy의 GEM 상한도 int.MaxValue라 정상 경로에선 넘칠 일이 없지만,
+        // 넘어오더라도 최대치에 머무르게 잘라 UI가 깨지지 않도록 한다.
+        long clamped = gem < 0 ? 0 : (gem > int.MaxValue ? int.MaxValue : gem);
+        PlayerPrefs.SetInt(AccountScope.Key(GemBase), (int)clamped);
         PlayerPrefs.SetInt(AccountScope.Key(ShardBase), shards);
         PlayerPrefs.SetInt(AccountScope.Key(InitBase), 1); // 서버값이 있으니 스타터 지급 방지
         PlayerPrefs.Save();

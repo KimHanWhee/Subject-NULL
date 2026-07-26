@@ -244,6 +244,10 @@ public static class Loc
         { "gacha.msgNeedAccount",new[] { "구매하려면 계정이 필요합니다 — 계정 화면으로 이동합니다",
             "An account is required to purchase — opening the account screen" } },
         { "gacha.msgPaymentSoon",new[] { "결제 서비스 준비 중입니다 ({0})", "Payment service coming soon ({0})" } },
+        { "gacha.msgPurchased",  new[] { "결제 완료! GEM {0} 지급되었습니다", "Purchase complete! {0} GEM added" } },
+        { "gacha.msgPayFail",    new[] { "결제에 실패했습니다", "Payment failed" } },
+        { "gacha.msgPayCaptureFail", new[] { "결제는 완료됐지만 지급에 실패했습니다 — 잠시 후 다시 시도해 주세요",
+            "Payment went through but the reward failed — please try again shortly" } },
 
         // ── 슈트(타입) 역할 ──
         { "suit.spade",   new[] { "공격", "Attack" } },

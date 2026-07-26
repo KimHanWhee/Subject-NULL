@@ -8,7 +8,6 @@ public class GhostStepStatus : MonoBehaviour, IPlayerDamageModifier, IBuffDispla
     private PlayerController pc;
     private SpriteRenderer sr;
     private Collider2D myCol;
-    private float originalSpeed;
     private Color originalColor;
     private float remain;
     private SpellMarble marble;
@@ -34,8 +33,6 @@ public class GhostStepStatus : MonoBehaviour, IPlayerDamageModifier, IBuffDispla
             s = player.AddComponent<GhostStepStatus>();
             s.pc = player.GetComponent<PlayerController>();
             if (s.pc == null) { Destroy(s); return; }
-            s.originalSpeed = s.pc.speed;
-            s.pc.speed = s.originalSpeed * Mathf.Max(1f, speedMult);
             s.pc.attackLocked = true; // 무적의 대가 — 공격 불가
             s.sr = player.GetComponent<SpriteRenderer>();
             if (s.sr != null)
@@ -47,6 +44,8 @@ public class GhostStepStatus : MonoBehaviour, IPlayerDamageModifier, IBuffDispla
             s.ScanIgnoreEnemies(); // 유령화 — 현재 적들과의 물리 충돌 해제(통과)
             s.lastGhostPos = player.transform.position;
         }
+        // 이동속도 증가는 배율로 등록(다른 속도 버프와 곱연산, 해제 순서 무관)
+        PlayerSpeedModifiers.Set(s, Mathf.Max(1f, speedMult));
         s.marble = marble;
         s.remain = Mathf.Max(s.remain, duration);
     }
@@ -89,11 +88,8 @@ public class GhostStepStatus : MonoBehaviour, IPlayerDamageModifier, IBuffDispla
 
     void Restore()
     {
-        if (pc != null)
-        {
-            pc.speed = originalSpeed;
-            pc.attackLocked = false;
-        }
+        PlayerSpeedModifiers.Clear(this);
+        if (pc != null) pc.attackLocked = false;
         pc = null;
         if (sr != null) sr.color = originalColor;
         sr = null;

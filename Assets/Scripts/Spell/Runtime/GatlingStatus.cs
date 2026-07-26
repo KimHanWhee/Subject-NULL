@@ -16,6 +16,11 @@ public class GatlingStatus : MonoBehaviour, IBuffDisplay
     public float BuffRemaining { get { return remain; } }
     public int BuffCharges { get { return 0; } }
 
+    // 대체 발사(레일건/비격진천뢰)도 연사시키기 위한 정보.
+    // 게틀링은 "클릭 1회 = 3회 발사"이므로, 대체 발사 역시 3번 반복해야 일관된다.
+    public int ExtraShots { get { return extraBullets; } }
+    public float BurstInterval { get { return burstInterval; } }
+
     public static void Apply(GameObject player, int extraBullets, float burstInterval, float duration, SpellMarble marble = null)
     {
         GatlingStatus s = player.GetComponent<GatlingStatus>();

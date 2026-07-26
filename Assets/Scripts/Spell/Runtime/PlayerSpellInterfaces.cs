@@ -40,6 +40,15 @@ public interface IPlayerBulletModifier
 public interface IPlayerShotOverride
 {
     bool TryOverrideShot(Vector2 origin, Vector2 direction);
+
+    // 직전 TryOverrideShot이 "실제로 발사했는지".
+    // true를 돌려줬어도 쿨다운/충전 중이라 클릭만 흡수한 경우가 있어서 구분이 필요하다.
+    // (이걸 안 보고 연사를 이어붙이면 쿨다운 중 연타로 무한 발사가 된다)
+    bool DidFire { get; }
+
+    // ♠ Gatling 연사용 추가 발사. 클릭 1회가 3연발이 되므로 대체 발사도 같은 횟수로 반복한다.
+    // 실제 발사가 성립한 뒤에만 호출되므로, 여기서는 연타 방지 게이트를 건너뛴다.
+    void FireBurstShot(Vector2 origin, Vector2 direction);
 }
 
 // 버프 HUD 표시용 — 플레이어 자기버프 상태 컴포넌트가 구현하면 PlayerBuffHUD가 GetComponents로

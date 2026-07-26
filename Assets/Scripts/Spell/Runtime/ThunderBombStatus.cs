@@ -37,11 +37,16 @@ public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDispla
         s.remain = Mathf.Max(s.remain, duration);
     }
 
+    private bool didFire;
+    public bool DidFire { get { return didFire; } }
+
     // 기본 발사 대체 — 버프 동안 총알은 나가지 않고 폭탄만 떨어진다
     public bool TryOverrideShot(Vector2 origin, Vector2 direction)
     {
+        didFire = false;
         if (Time.time < nextDrop) return true; // 과열 구간에도 기본탄 억제(클릭 소비)
         nextDrop = Time.time + minInterval;
+        didFire = true;
 
         Vector2 target = origin + direction * 3f; // 커서 미확인 시 폴백(전방)
         if (Camera.main != null && Mouse.current != null)
@@ -51,6 +56,18 @@ public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDispla
         }
         ThunderBomb.Spawn(target, radius, damage, explosionPrefab);
         return true;
+    }
+
+    // ♠ Gatling 연사 — 투하 쿨다운을 건너뛰고 즉시 한 발 더 떨어뜨린다.
+    public void FireBurstShot(Vector2 origin, Vector2 direction)
+    {
+        Vector2 target = origin + direction * 3f;
+        if (Camera.main != null && Mouse.current != null)
+        {
+            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            target = new Vector2(c.x, c.y);
+        }
+        ThunderBomb.Spawn(target, radius, damage, explosionPrefab);
     }
 
     void Update()

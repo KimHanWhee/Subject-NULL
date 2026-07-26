@@ -95,6 +95,7 @@ public class GameManager : MonoBehaviour
     {
         Instance = this;
         HardshipSystem.ResetAll(); // 고난은 판 단위 — 새 게임 시작 시 누적 초기화
+        PlayerSpeedModifiers.ResetAll(); // 이전 판의 속도 버프 배율이 남지 않게
     }
 
     void OnDestroy()

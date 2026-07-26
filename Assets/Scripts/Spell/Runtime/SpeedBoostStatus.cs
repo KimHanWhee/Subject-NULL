@@ -5,7 +5,6 @@ using UnityEngine;
 public class SpeedBoostStatus : MonoBehaviour, IBuffDisplay
 {
     private PlayerController pc;
-    private float originalSpeed;
     private float remain;
     private SpellMarble marble;
 
@@ -30,8 +29,8 @@ public class SpeedBoostStatus : MonoBehaviour, IBuffDisplay
     {
         pc = GetComponent<PlayerController>();
         if (pc == null) return false;
-        originalSpeed = pc.speed;
-        pc.speed = originalSpeed * Mathf.Max(1f, multiplier);
+        // 배율로 등록 — speed 필드를 덮어쓰지 않으므로 다른 속도 버프와 안전하게 공존
+        PlayerSpeedModifiers.Set(this, Mathf.Max(1f, multiplier));
         return true;
     }
 
@@ -43,7 +42,7 @@ public class SpeedBoostStatus : MonoBehaviour, IBuffDisplay
 
     void Restore()
     {
-        if (pc != null) pc.speed = originalSpeed;
+        PlayerSpeedModifiers.Clear(this);
         pc = null;
     }
 

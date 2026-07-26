@@ -47,14 +47,61 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
         s.marble = marble;
     }
 
+    private bool didFire;
+    public bool DidFire { get { return didFire; } }
+
     public bool TryOverrideShot(Vector2 origin, Vector2 direction)
     {
+        didFire = false;
         if (charging) return true;      // 충전 중 클릭은 소비만(기본탄도 안 나감)
         if (charges <= 0) return false;
         charges--;
         charging = true;
+        didFire = true;
         StartCoroutine(ChargeAndFire());
         return true;
+    }
+
+    // 진행 중인 연사 코루틴 수 — 남은 횟수가 0이어도 이게 남아 있으면 컴포넌트를 지우면 안 된다
+    // (지우면 코루틴이 같이 죽어서 쏘기로 한 발이 사라진다).
+    private int pendingBursts;
+
+    // ♠ Gatling 연사 — 충전 게이트를 건너뛰고 즉시 한 발 더 쏜다.
+    // 횟수는 추가로 깎지 않는다: 게틀링과 함께 쓰면 "레일건 1회 소모 = 3발"이 되는
+    // 조합 보너스다(3회 보유 시 총 9발). 소모는 TryOverrideShot에서 이미 1회 처리됐다.
+    public void FireBurstShot(Vector2 origin, Vector2 direction)
+    {
+        pendingBursts++;
+        StartCoroutine(BurstFire(direction));
+    }
+
+    IEnumerator BurstFire(Vector2 dir)
+    {
+        // 연사분은 충전을 짧게(원 충전의 절반) — 3연발의 리듬을 살린다.
+        Transform anchor = SpellVfx.VisualAnchor(gameObject);
+        float t = chargeTime * 0.5f;
+        SpellParticleVfx.SpawnImplode(anchor.position, 1.2f, beamColor, t, 20, 0.3f, anchor);
+        yield return new WaitForSeconds(t);
+        if (pc == null) { pendingBursts--; yield break; }
+
+        Vector2 origin = (Vector2)pc.transform.position + pc.muzzleOffset;
+        Vector2 aim = dir;
+        if (Camera.main != null && Mouse.current != null)
+        {
+            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            Vector2 to = (Vector2)c - origin;
+            if (to.sqrMagnitude > 0.0001f) aim = to.normalized;
+        }
+        FireBeam(origin, aim);
+
+        pendingBursts--;
+        TryFinish();
+    }
+
+    // 남은 횟수도 없고 진행 중인 발사도 없을 때만 정리한다.
+    void TryFinish()
+    {
+        if (charges <= 0 && !charging && pendingBursts <= 0) Destroy(this);
     }
 
     IEnumerator ChargeAndFire()
@@ -79,7 +126,7 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
 
         FireBeam(origin, dir);
         charging = false;
-        if (charges <= 0) Destroy(this);
+        TryFinish(); // 연사분이 남아 있으면 그게 끝난 뒤에 정리된다
     }
 
     void FireBeam(Vector2 origin, Vector2 dir)

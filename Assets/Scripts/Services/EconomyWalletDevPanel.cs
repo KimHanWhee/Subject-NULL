@@ -8,10 +8,9 @@ public class EconomyWalletDevPanel : MonoBehaviour
     void Awake()
     {
         // 릴리스 빌드에선 스스로 제거 — 에디터/개발(Development) 빌드, 또는 웹 주소에
-        // ?dev=1 이 붙은 경우에만 표시(운영자 GEM 충전용 — 레코드 생성 겸용).
-        // ⚠️ 이건 UI만 숨길 뿐이다. Cloud Code의 DevGrantGem 함수 자체가 플레이어 호출
-        //    가능하므로, 라이브 전 반드시 대시보드에서 DevGrantGem을 삭제/차단할 것(치트 통로).
-        //    그때 이 파일도 같이 삭제.
+        // ?dev=1 이 붙은 경우에만 표시.
+        // 이 게이트는 UI만 가릴 뿐이라는 점을 기억할 것. 지급 기능은 더 이상 없지만,
+        // 앞으로도 "여기서 숨겼으니 안전하다"고 여기지 말고 서버 쪽에서 막아야 한다.
         if (!Application.isEditor && !Debug.isDebugBuild && !HasDevQuery())
         {
             Destroy(this);
@@ -50,8 +49,8 @@ public class EconomyWalletDevPanel : MonoBehaviour
         if (GUI.Button(new Rect(20, 82, 110, 30), "새로고침"))
             _ = EconomyWallet.RefreshAsync();
 
-        if (GUI.Button(new Rect(140, 82, 110, 30), "+1000 (DEV)"))
-            _ = EconomyWallet.DevGrantAsync(1000);
+        // "+1000 (DEV)" 버튼은 제거했다 — 호출하던 Cloud Code DevGrantGem이 호출자 제한 없는
+        // 치트 통로여서 서버에서 삭제했기 때문. 이 패널은 이제 읽기/점검 전용이다.
 
         // 치트 차단 검증용: 클라가 직접 increment 시도 → Access Control Deny면 실패해야 정상.
         if (GUI.Button(new Rect(20, 116, 230, 26), "클라 직접 +500 (막혀야 정상)"))

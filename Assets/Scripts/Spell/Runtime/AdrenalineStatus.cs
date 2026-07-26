@@ -6,7 +6,7 @@ public class AdrenalineStatus : MonoBehaviour, IBuffDisplay
 {
     private PlayerController pc;
     private Character ch;
-    private float originalSpeed;
+
     private float maxBonus;
     private float remain;
     private SpellMarble marble;
@@ -25,7 +25,6 @@ public class AdrenalineStatus : MonoBehaviour, IBuffDisplay
             s.pc = player.GetComponent<PlayerController>();
             s.ch = player.GetComponent<Character>();
             if (s.pc == null || s.ch == null) { Destroy(s); return; }
-            s.originalSpeed = s.pc.speed;
         }
         s.maxBonus = maxBonus;
         s.marble = marble;
@@ -38,17 +37,14 @@ public class AdrenalineStatus : MonoBehaviour, IBuffDisplay
         if (remain <= 0f) { Restore(); Destroy(this); return; }
 
         float mult = 1f + (1f - ch.HpRatio) * maxBonus; // 저체력일수록 커짐
-        pc.speed = originalSpeed * mult;
+        PlayerSpeedModifiers.Set(this, mult);
         pc.fireRateMultiplier = mult;
     }
 
     void Restore()
     {
-        if (pc != null)
-        {
-            pc.speed = originalSpeed;
-            pc.fireRateMultiplier = 1f;
-        }
+        PlayerSpeedModifiers.Clear(this);
+        if (pc != null) pc.fireRateMultiplier = 1f;
         pc = null;
     }
 

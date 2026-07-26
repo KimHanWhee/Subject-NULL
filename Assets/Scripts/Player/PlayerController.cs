@@ -265,11 +265,37 @@ public class PlayerController : MonoBehaviour
         IPlayerShotOverride[] overrides = GetComponents<IPlayerShotOverride>();
         for (int i = 0; i < overrides.Length; i++)
             if (overrides[i].TryOverrideShot(muzzle, ((Vector2)baseDir).normalized))
+            {
+                // ♠ Gatling과 함께라면 대체 발사도 연사한다(레일건 1발 = 게틀링 3발 취급).
+                // 단, 쿨다운/충전 중이라 클릭만 흡수된 경우(DidFire=false)엔 연사하지 않는다 —
+                // 그러면 연타로 쿨다운을 통째로 무시할 수 있다.
+                GatlingStatus g = GetComponent<GatlingStatus>();
+                if (g != null && g.ExtraShots > 0 && overrides[i].DidFire)
+                    StartCoroutine(BurstOverride(overrides[i], g.ExtraShots, g.BurstInterval));
                 return;
+            }
 
         // 기본 공격 발사 통지(♠ Gatling 연사 등) — 대체되지 않은 실제 발사에만
         PlayerBulletEvents.NotifyPlayerShot(cursor);
         FireBullet(muzzle, baseDir);
+    }
+
+    // 대체 발사(레일건/폭탄)를 게틀링 연사에 맞춰 추가로 반복한다.
+    // 매번 커서를 다시 읽어 조준하므로 연사 중에도 겨냥을 바꿀 수 있다.
+    System.Collections.IEnumerator BurstOverride(IPlayerShotOverride ov, int extra, float interval)
+    {
+        for (int i = 0; i < extra; i++)
+        {
+            yield return new WaitForSeconds(interval);
+            if (this == null || attackLocked || currentWeapon == null) yield break;
+            // 상태가 사라졌으면(지속 종료 등) 중단
+            if (ov == null || (ov as MonoBehaviour) == null) yield break;
+
+            Vector3 m = transform.position + (Vector3)muzzleOffset;
+            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            c.z = 0;
+            ov.FireBurstShot(m, ((Vector2)(c - m)).normalized);
+        }
     }
 
     // ♠ Gatling 연사 등 — 현재 커서를 다시 조준해 추가 1발.
@@ -326,7 +352,8 @@ public class PlayerController : MonoBehaviour
         // 대시와 동일하게 MovePosition으로 이동한다.
         // transform.Translate는 물리 솔버를 건너뛰고 좌표를 직접 옮기기 때문에,
         // 적(슬라임 등)이 벽 쪽으로 밀어붙이면 벽 안으로 파고들다 반대편으로 빠져나간다.
-        Vector2 delta = (Vector2)move * (speed * Time.fixedDeltaTime);
+        // 버프 배율은 speed 필드를 덮어쓰지 않고 여기서만 곱한다(중첩/해제 순서 안전).
+        Vector2 delta = (Vector2)move * (speed * PlayerSpeedModifiers.Current * Time.fixedDeltaTime);
         if (rb != null) rb.MovePosition(rb.position + delta);
         else transform.Translate(delta);
     }
