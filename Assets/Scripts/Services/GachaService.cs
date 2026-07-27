@@ -89,6 +89,50 @@ public static class GachaService
         public bool alreadyProcessed; // 이미 지급된 주문(멱등)
     }
 
+    [System.Serializable]
+    public class PendingOrder { public string orderId; public string sku; }
+
+    // ── 청약철회 ────────────────────────────────────────────
+    // 철회 가능 여부(canWithdraw)와 사유(reason)는 서버가 판단해서 내려준다.
+    // 클라이언트는 표시만 하고, 실제 실행도 서버가 다시 검증한다.
+    [System.Serializable]
+    public class PurchaseItem
+    {
+        public string orderId;
+        public string sku;
+        public int gem;
+        public string amount;      // "0.99"
+        public string currency;    // "USD"
+        public string capturedAt;  // ISO8601
+        public bool canWithdraw;
+        public string reason;      // ok | used | expired | refunded | processing | no-capture | no-baseline
+    }
+
+    [System.Serializable]
+    public class PurchaseHistory { public List<PurchaseItem> items; public long gem; }
+
+    [System.Serializable]
+    public class WithdrawResult { public bool ok; public int gem; public string amount; public string currency; }
+
+    public static async Task<PurchaseHistory> GetPurchaseHistoryAsync()
+    {
+        return await CloudCodeService.Instance.CallEndpointAsync<PurchaseHistory>("GetPurchaseHistory", new Dictionary<string, object>());
+    }
+
+    // 실패 시 예외. 메시지에 서버 사유(gem-already-used 등)가 실려 온다.
+    public static async Task<WithdrawResult> WithdrawPurchaseAsync(string orderId)
+    {
+        var args = new Dictionary<string, object> { { "orderId", orderId } };
+        return await CloudCodeService.Instance.CallEndpointAsync<WithdrawResult>("WithdrawPurchase", args);
+    }
+
+    // 아직 정리되지 않은 주문 조회 — 새 구매 전에 반드시 확인한다.
+    // 결제만 되고 지급이 안 된 주문을 이어받지 않으면 재구매 시 이중 결제가 된다.
+    public static async Task<PendingOrder> GetPendingOrderAsync()
+    {
+        return await CloudCodeService.Instance.CallEndpointAsync<PendingOrder>("GetPendingOrder", new Dictionary<string, object>());
+    }
+
     // 주문 생성 → PayPal 결제창에 넘길 orderId 반환
     public static async Task<PaypalOrder> CreatePaypalOrderAsync(string sku)
     {

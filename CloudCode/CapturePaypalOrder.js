@@ -24,8 +24,17 @@ const PACKAGES = {
   gem_25000: { gem: 25000, priceUsd: "19.99" }
 };
 
+// 청약철회 화면이 읽는 결제 내역(배열). ledger 키는 개별 조회만 되고 목록화가 안 되므로 따로 둔다.
+const HISTORY_KEY = "purchase_history";
+const MAX_HISTORY = 50;
+
+// 대소문자·공백 정규화 — CreatePaypalOrder와 동일 규약(불일치하면 주문을 못 찾는다).
+function normalizeEnv(v) {
+  return String(v || "").trim().toLowerCase() === "live" ? "live" : "sandbox";
+}
+
 function apiBase(env) {
-  return env === "live"
+  return normalizeEnv(env) === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
 }
@@ -56,15 +65,25 @@ module.exports = async ({ params, context, logger, secretManager }) => {
 
   const cloudSave = new DataApi(context);
   const ledgerKey = "paypal_order_" + orderId;
+  const PENDING_KEY = "paypal_pending";
+
+  // 미해결 주문 기록 비우기. 삭제 대신 빈 값으로 덮는다(삭제 API 시그니처 의존을 피함).
+  // 실패해도 지급 자체를 막지 않는다 — 남아 있어도 다음 정리 때 멱등하게 처리된다.
+  const clearPending = async function () {
+    try {
+      await cloudSave.setItem(projectId, playerId, { key: PENDING_KEY, value: { orderId: "" } });
+    } catch (e) {
+      logger.error("pending 정리 실패", { orderId: orderId, "error.message": describe(e) });
+    }
+  };
 
   // ③ 멱등 — 이미 지급한 주문이면 재지급 없이 종료.
   //    Cloud Save에 처리 기록을 남기고, 다음 요청부터 이 기록으로 걸러낸다.
   try {
     const prev = await cloudSave.getItems(projectId, playerId, [ledgerKey]);
     if (prev.data && prev.data.results && prev.data.results.length > 0) {
-      const currencies0 = new CurrenciesApi(context);
-      const bal = await currencies0.getPlayerCurrencies({ projectId, playerId });
-      return { alreadyProcessed: true, granted: 0, balances: bal.data };
+      await clearPending();
+      return { alreadyProcessed: true, granted: 0, sku: "" };
     }
   } catch (e) { /* 조회 실패는 아래 capture로 진행 — 최종 지급 전 다시 기록 확인 */ }
 
@@ -167,13 +186,14 @@ module.exports = async ({ params, context, logger, secretManager }) => {
   try {
     const prev2 = await cloudSave.getItems(projectId, playerId, [ledgerKey]);
     if (prev2.data && prev2.data.results && prev2.data.results.length > 0) {
+      await clearPending();
       return { alreadyProcessed: true, granted: 0, sku: sku };
     }
   } catch (e) {}
 
   // ④ GEM 지급(서비스 계정) — Access Control에서 Player 증액이 Deny여도 통과.
   const currencies = new CurrenciesApi(context);
-  await currencies.incrementPlayerCurrencyBalance({
+  const incRes = await currencies.incrementPlayerCurrencyBalance({
     projectId, playerId, currencyId: "GEM",
     currencyModifyBalanceRequest: { amount: pkg.gem }
   });
@@ -183,12 +203,23 @@ module.exports = async ({ params, context, logger, secretManager }) => {
   // 던지는 순간 클라이언트는 지급 실패로 표시하는데, 실제로는 젬이 들어가 있어서
   // "결제 실패라더니 젬은 있네" 같은 모순된 화면이 나온다.
 
+  // 지급 직후 잔액 — 청약철회 시 "이 결제분을 썼는지" 판정 기준이 된다.
+  // 젬은 사용으로만 줄어드므로, 나중에 잔액이 이 값 이상이면 소비하지 않은 것이고
+  // 동시에 차감해도 음수가 되지 않는 것까지 보장된다. (증액 응답의 잔액을 그대로 사용 —
+  // 여기서 또 조회하면 왕복이 늘어 스크립트 제한 시간을 잡아먹는다)
+  let balanceAfter = -1;
+  try { if (incRes && incRes.data && typeof incRes.data.balance === "number") balanceAfter = incRes.data.balance; } catch (e) {}
+
+  // 환불에 필요한 capture ID — PayPal Refund API가 이 값을 받는다. 없으면 자동 철회 불가.
+  const captureId = capture && capture.id ? capture.id : "";
+
   // 처리 기록 남기기(멱등 근거). 지급 후 기록 — 지급 전에 남기면 지급 실패 시 영영 못 받는다.
   // 실패해도 응답은 성공으로 돌려주되, 중복 지급 위험이 생기므로 로그로 크게 남긴다.
+  const capturedAt = new Date().toISOString();
   try {
     await cloudSave.setItem(projectId, playerId, {
       key: ledgerKey,
-      value: { sku: sku, gem: pkg.gem, capturedAt: new Date().toISOString() }
+      value: { sku: sku, gem: pkg.gem, capturedAt: capturedAt }
     });
   } catch (e) {
     logger.error("ledger write failed AFTER grant — 재요청 시 중복 지급 위험", {
@@ -196,8 +227,38 @@ module.exports = async ({ params, context, logger, secretManager }) => {
     });
   }
 
+  // 청약철회 화면용 결제 내역. 개별 ledger 키는 목록 조회가 안 되므로 배열로 따로 쌓는다.
+  try {
+    const prevHist = await cloudSave.getItems(projectId, playerId, [HISTORY_KEY]);
+    let list = [];
+    if (prevHist.data && prevHist.data.results && prevHist.data.results.length > 0) {
+      const v = prevHist.data.results[0].value;
+      if (Array.isArray(v)) list = v;
+    }
+    if (!list.some(function (e) { return e.orderId === orderId; })) {
+      list.push({
+        orderId: orderId,
+        captureId: captureId,
+        sku: sku,
+        gem: pkg.gem,
+        amount: pkg.priceUsd,
+        currency: "USD",
+        capturedAt: capturedAt,
+        balanceAfter: balanceAfter,
+        status: "completed"
+      });
+    }
+    if (list.length > MAX_HISTORY) list = list.slice(list.length - MAX_HISTORY); // 무한 증가 방지
+    await cloudSave.setItem(projectId, playerId, { key: HISTORY_KEY, value: list });
+  } catch (e) {
+    logger.error("purchase history write failed — 청약철회 목록에 안 뜸", {
+      orderId: orderId, "error.message": describe(e)
+    });
+  }
+
   // 잔액은 반환하지 않는다. 클라이언트가 성공 후 프로필을 새로 받아가고(진실은 서버),
   // 여기서 한 번 더 조회하면 왕복만 늘어 스크립트 제한 시간을 잡아먹는다.
+  await clearPending();   // 지급 완료 — 미해결 주문 아님
   return { granted: pkg.gem, sku: sku, alreadyProcessed: false };
 };
 

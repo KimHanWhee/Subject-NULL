@@ -58,7 +58,7 @@ public class SpellSelectionUI : MonoBehaviour
                 {
                     nextOverloadNotice = Time.unscaledTime + 1f;
                     Vector2 pos = Camera.main != null ? (Vector2)Camera.main.transform.position : Vector2.zero;
-                    FloatingText.Show(pos + Vector2.down * 1.5f, "스펠 마블 과부하 상태입니다!", new Color(1f, 0.4f, 0.35f), 4.5f, 1.2f);
+                    FloatingText.Show(pos + Vector2.down * 1.5f, "스펠 오브 과부하 상태입니다!", new Color(1f, 0.4f, 0.35f), 4.5f, 1.2f);
                 }
             }
             else Enter();

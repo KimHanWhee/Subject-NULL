@@ -58,6 +58,45 @@ public class PaypalCheckout : MonoBehaviour
         public string error;     // "cancelled" | "editor-unsupported" | 기타
     }
 
+    // 아직 정리되지 않은 주문을 이어받아 확정·지급한다.
+    // 반환: 실제로 지급이 이뤄졌으면 Result(ok=true), 정리할 게 없으면 null.
+    //
+    // 이게 없으면 "결제는 됐는데 지급 실패" 뒤 사용자가 재구매할 때 새 주문이 생겨
+    // 같은 상품을 두 번 결제하게 된다(멱등은 같은 주문에만 걸린다).
+    public static async Task<Result> ResolvePendingAsync()
+    {
+        GachaService.PendingOrder pending;
+        try
+        {
+            pending = await GachaService.GetPendingOrderAsync();
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[PayPal] 미해결 주문 조회 실패(무시하고 진행): " + e);
+            return null;
+        }
+        if (pending == null || string.IsNullOrEmpty(pending.orderId)) return null;
+
+        try
+        {
+            GachaService.PaypalCapture cap = await GachaService.CapturePaypalOrderAsync(pending.orderId);
+            // 여기 도달 = 그 주문은 실제로 결제된 것이었고, 지급까지 끝났다.
+            return new Result
+            {
+                ok = true,
+                granted = cap != null ? cap.granted : 0,
+                alreadyPaid = cap != null && cap.alreadyProcessed
+            };
+        }
+        catch (Exception e)
+        {
+            // 대부분 payment-not-completed — 승인 전에 닫은 주문이라 결제된 적이 없다.
+            // 돈이 오간 게 아니므로 그냥 두고 새 구매를 진행하면 된다(주문은 PayPal에서 만료).
+            Debug.Log("[PayPal] 미해결 주문 정리 불필요: " + e.Message);
+            return null;
+        }
+    }
+
     // 상품 구매 — 성공 시 서버가 GEM을 지급한 뒤 결과를 반환.
     public static async Task<Result> PurchaseAsync(string sku)
     {

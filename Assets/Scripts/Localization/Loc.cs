@@ -11,7 +11,7 @@ public enum Language { Ko = 0, En = 1 }
 //  - 키가 없으면 키 자체를 반환한다 → 누락돼도 화면이 비지 않고 어디가 빠졌는지 바로 보인다.
 //
 // 현재 범위: 핵심 UI(메인메뉴·설정·일시정지·게임오버·고난 선택).
-// 스펠 마블 이름/설명, 플레이 방법 본문, 가챠·덱 화면은 아직 한국어 고정 — 단계적으로 확장.
+// 스펠 오브 이름/설명, 플레이 방법 본문, 가챠·덱 화면은 아직 한국어 고정 — 단계적으로 확장.
 public static class Loc
 {
     public static Language Current { get; private set; } = Language.Ko;
@@ -49,7 +49,7 @@ public static class Loc
         // ── 메인 메뉴 ──
         { "menu.start",      new[] { "게임 시작", "START" } },
         { "menu.deck",       new[] { "덱 구성", "DECK" } },
-        { "menu.gacha",      new[] { "마블 뽑기", "GACHA" } },
+        { "menu.gacha",      new[] { "오브 뽑기", "GACHA" } },
         { "menu.howto",      new[] { "플레이 방법", "HOW TO PLAY" } },
         { "menu.ranking",    new[] { "랭킹", "RANKING" } },
         { "menu.settings",   new[] { "설정", "SETTINGS" } },
@@ -103,7 +103,7 @@ public static class Loc
         { "hs.velocity.n", new[] { "탄속 개선", "Muzzle Velocity" } },
         { "hs.velocity.d", new[] { "적 탄속 +25%", "Enemy bullet speed +25%" } },
 
-        // ── 스펠 마블 설명 (키 = "spell." + SpellAbility.id + ".d") ──
+        // ── 스펠 오브 설명 (키 = "spell." + SpellAbility.id + ".d") ──
         // 이름(abilityName)은 이미 영문 고유명이라 번역 대상이 아니다.
         { "spell.Adrenaline.d", new[] { "10초간 체력이 낮을수록 이동속도와 공격속도가 증가한다.",
             "For 10s, the lower your HP the faster you move and attack." } },
@@ -178,8 +178,8 @@ public static class Loc
         { "grade.legend",  new[] { "레전드", "Legend" } },
 
         // ── 덱 편성 ──
-        { "deck.title",       new[] { "스펠 마블 덱 편성", "SPELL MARBLE DECK" } },
-        { "deck.catalog",     new[] { "마블 카탈로그", "MARBLE CATALOG" } },
+        { "deck.title",       new[] { "스펠 오브 덱 편성", "SPELL ORB DECK" } },
+        { "deck.catalog",     new[] { "오브 카탈로그", "ORB CATALOG" } },
         { "deck.catalogHint", new[] { "카드 클릭=덱 추가 · <b>스킬마다</b> 개별 중복 제한(등급 높을수록 적게: 일반6/골드3/다이아2/레전드1)",
             "Click a card to add · <b>per-skill</b> copy limit (higher grade = fewer: Normal 6 / Gold 3 / Diamond 2 / Legend 1)" } },
         { "deck.mydeck",      new[] { "내 덱", "MY DECK" } },
@@ -189,7 +189,7 @@ public static class Loc
         { "deck.clear",       new[] { "비우기", "CLEAR" } },
         { "deck.locked",      new[] { "미보유", "LOCKED" } },
         { "deck.lockedHint",  new[] { "뽑기로 획득", "Unlock via gacha" } },
-        { "deck.msgNotOwned", new[] { "미보유 마블입니다 — 뽑기로 획득하세요",
+        { "deck.msgNotOwned", new[] { "미보유 오브입니다 — 뽑기로 획득하세요",
             "You don't own this marble — get it from the gacha" } },
         { "deck.msgFull",     new[] { "덱이 가득 찼습니다 (최대 {0}개)", "Deck is full (max {0})" } },
         { "deck.msgMaxCopies",new[] { "'{0}'은(는) 최대 {1}개까지 ({2} 등급)",
@@ -199,7 +199,7 @@ public static class Loc
         { "deck.msgFilled",   new[] { "남은 칸을 무작위로 채웠습니다", "Filled the remaining slots at random" } },
 
         // ── 가챠 / 도감 ──
-        { "gacha.title",       new[] { "마블 뽑기", "MARBLE GACHA" } },
+        { "gacha.title",       new[] { "오브 뽑기", "ORB GACHA" } },
         { "gacha.charge",      new[] { "＋ GEM 충전", "＋ BUY GEM" } },
         { "gacha.pullPanel",   new[] { "뽑기", "PULL" } },
         { "gacha.resultHint",  new[] { "여기에 결과가 표시됩니다", "Results appear here" } },
@@ -245,7 +245,61 @@ public static class Loc
             "An account is required to purchase — opening the account screen" } },
         { "gacha.msgPaymentSoon",new[] { "결제 서비스 준비 중입니다 ({0})", "Payment service coming soon ({0})" } },
         { "gacha.msgPurchased",  new[] { "결제 완료! GEM {0} 지급되었습니다", "Purchase complete! {0} GEM added" } },
-        { "gacha.msgPayFail",    new[] { "결제에 실패했습니다", "Payment failed" } },
+        // ── 청약철회 ──
+        { "wd.open",       new[] { "결제 내역 · 청약철회", "Purchases · Withdrawal" } },
+        { "wd.title",      new[] { "결제 내역", "PURCHASES" } },
+        { "wd.empty",      new[] { "결제 내역이 없습니다.", "No purchases yet." } },
+        { "wd.loading",    new[] { "불러오는 중…", "Loading…" } },
+        { "wd.button",     new[] { "청약철회", "Withdraw" } },
+        { "wd.note",       new[] { "결제일로부터 7일 이내, GEM을 사용하지 않은 결제만 철회할 수 있습니다.",
+            "Only purchases made within 7 days with unused GEM can be withdrawn." } },
+        // 자동 철회 대상이 아닌 건(사용함·기간 만료·오류)의 출구. 없으면 사용자가 연락할 방법이 없다.
+        { "wd.support",    new[] { "철회가 불가능한 건은 <b>subjectnull.game@gmail.com</b> 으로 문의해 주세요.\n계정 ID는 위 [계정] 화면에서 복사할 수 있습니다.",
+            "For purchases that cannot be withdrawn here, contact <b>subjectnull.game@gmail.com</b>.\nYou can copy your account ID from the [Account] screen." } },
+        // 비활성 사유 — 왜 안 되는지 보여줘야 문의가 줄어든다
+        { "wd.r.used",     new[] { "GEM 사용됨", "GEM used" } },
+        { "wd.r.expired",  new[] { "기간 만료(7일)", "Period expired (7d)" } },
+        { "wd.r.refunded", new[] { "환불 완료", "Refunded" } },
+        { "wd.r.processing", new[] { "처리 중", "Processing" } },
+        { "wd.r.nocapture",new[] { "자동 철회 불가 — 문의 바랍니다", "Not eligible — please contact support" } },
+        { "wd.confirmTitle", new[] { "청약철회 하시겠습니까?", "Withdraw this purchase?" } },
+        { "wd.confirmBody",  new[] { "<b>{0}</b> 결제를 철회합니다.\nGEM {1} 가 회수되고 결제 금액이 환불됩니다.",
+            "Withdrawing <b>{0}</b>.\n{1} GEM will be removed and the payment refunded." } },
+        { "wd.done",       new[] { "청약철회 완료 — {0} 환불 처리되었습니다", "Withdrawal complete — {0} refunded" } },
+        { "wd.failed",     new[] { "청약철회에 실패했습니다 ({0})", "Withdrawal failed ({0})" } },
+
+        // ── 자산 소모 확인 팝업 ──
+        { "confirm.yes",        new[] { "확인", "Confirm" } },
+        { "confirm.no",         new[] { "취소", "Cancel" } },
+        { "confirm.pullTitle",  new[] { "오브를 뽑으시겠습니까?", "Pull orbs?" } },
+        { "confirm.pullBody",   new[] { "GEM {0} 를 사용해 {1}회 뽑기를 진행합니다.\n보유 GEM: {2}",
+            "This will spend {0} GEM for {1} pull(s).\nYour GEM: {2}" } },
+        { "confirm.exchTitle",  new[] { "조각으로 교환하시겠습니까?", "Exchange shards?" } },
+        { "confirm.exchBody",   new[] { "구슬 조각 {0} 를 사용해\n<b>{1}</b> 를 획득합니다.\n보유 조각: {2}",
+            "This will spend {0} shards to obtain\n<b>{1}</b>.\nYour shards: {2}" } },
+        { "confirm.buyTitle",   new[] { "결제하시겠습니까?", "Confirm purchase" } },
+        { "confirm.buyBody",    new[] { "<b>{0}</b>\n결제 금액 <b>{1}</b> · GEM <b>{2}</b> 지급",
+            "<b>{0}</b>\nAmount <b>{1}</b> · <b>{2}</b> GEM" } },
+        // 결제 전 고지 — 이 안내를 미리 보여줘야 "사용한 GEM 환불 제한"이 효력을 갖는다.
+        // ⚠️ 실제 구현(WithdrawPurchase)과 문구가 어긋나면 안 된다.
+        //    구현 규칙: 7일 이내 + 결제 후 GEM 잔액이 그대로일 때만 전액 철회.
+        //    한 번이라도 사용하면 그 결제는 통째로 철회 불가(부분 환불 없음).
+        { "confirm.buyNotice",  new[] {
+            "• GEM은 게임 내에서만 사용할 수 있으며 현금으로 환전되지 않습니다.\n" +
+            "• 결제일로부터 <b>7일 이내</b>, GEM을 <b>사용하지 않은 경우에 한해</b> 청약철회할 수 있습니다.\n" +
+            "• <color=#FFAF6A>결제 후 GEM을 한 번이라도 사용하면 해당 결제는 청약철회할 수 없습니다.</color>\n" +
+            "• 철회는 [계정] 화면의 [결제 내역]에서 직접 하실 수 있습니다.\n" +
+            "• 확인을 누르면 위 내용에 동의하는 것으로 봅니다.",
+            "• GEM can only be used in-game and cannot be exchanged for cash.\n" +
+            "• Withdrawal is available <b>within 7 days</b>, and only if the GEM is <b>still unused</b>.\n" +
+            "• <color=#FFAF6A>Once you spend any GEM, this purchase can no longer be withdrawn.</color>\n" +
+            "• You can withdraw it yourself from [Account] → [Purchases].\n" +
+            "• Pressing Confirm means you agree to the above." } },
+
+        // 실패 코드를 함께 보여준다 — 원인이 전부 한 문구로 뭉개지면 문의가 와도 특정할 수 없다.
+        { "gacha.msgPayFail",    new[] { "결제에 실패했습니다 ({0})", "Payment failed ({0})" } },
+        { "gacha.msgLoadFail",   new[] { "정보를 불러오지 못했습니다 — 잠시 후 다시 열어 주세요",
+            "Couldn't load your data — please reopen in a moment" } },
         { "gacha.msgPayCaptureFail", new[] { "결제는 완료됐지만 지급에 실패했습니다 — 잠시 후 다시 시도해 주세요",
             "Payment went through but the reward failed — please try again shortly" } },
 
@@ -258,7 +312,7 @@ public static class Loc
         // ── 플레이 방법 ──
         { "howto.title", new[] { "게임 방법", "HOW TO PLAY" } },
         { "howto.tab0",  new[] { "조작", "Controls" } },
-        { "howto.tab1",  new[] { "스펠 마블", "Spell Marbles" } },
+        { "howto.tab1",  new[] { "스펠 오브", "Spell Orbs" } },
         { "howto.tab2",  new[] { "조커", "Joker" } },
 
         { "howto.body0", new[] {
@@ -267,26 +321,26 @@ public static class Loc
             "<b>대시</b>   SPACE\n" +
             "     스태미너 소모\n" +
             "     원거리 공격 회피 · 쿨타임 1초\n\n" +
-            "<b>Shift</b>   스펠 마블",
+            "<b>Shift</b>   스펠 오브",
 
             "<b>Move</b>   WASD / Arrow Keys\n\n" +
             "<b>Attack</b>   Left Click (toward cursor)\n\n" +
             "<b>Dash</b>   SPACE\n" +
             "     Consumes stamina\n" +
             "     Dodges ranged attacks · 1s cooldown\n\n" +
-            "<b>Shift</b>   Spell Marbles" } },
+            "<b>Shift</b>   Spell Orbs" } },
 
         { "howto.body1", new[] {
-            "스펠 마블은 특수 능력을 발동시키는 마법 구슬입니다.\n" +
-            "덱에서 직접 원하는 스펠 마블을 편성하여 사용할 수 있습니다.\n\n" +
+            "스펠 오브는 특수 능력을 발동시키는 마법 구슬입니다.\n" +
+            "덱에서 직접 원하는 스펠 오브를 편성하여 사용할 수 있습니다.\n\n" +
             "<b>타입</b>\n" +
             "   <color=#7FB0FF>스페이드 (공격)</color>   <color=#FF7F8A>하트 (버프)</color>\n" +
             "   <color=#7FE08A>클로버 (유틸)</color>   <color=#C8A0FF>다이아몬드 (방어)</color>\n\n" +
             "<b>등급</b>   일반 → <color=#FFD24A>골드</color> → <color=#66D0FF>다이아</color> → <color=#FF8AF0>레전드</color>\n" +
             "   높은 등급일수록 강한 능력.\n" +
-            "   골드 이상은 <b>마블 뽑기</b> 및 구슬 조각 교환으로 획득.\n\n" +
-            "<b>사용</b>   Shift 홀드 시 스펠 마블 벨트 팝업\n" +
-            "        Shift 홀드 + 마블 드래그 & 드롭 시 사용",
+            "   골드 이상은 <b>오브 뽑기</b> 및 구슬 조각 교환으로 획득.\n\n" +
+            "<b>사용</b>   Shift 홀드 시 스펠 오브 벨트 팝업\n" +
+            "        Shift 홀드 + 오브 드래그 & 드롭 시 사용",
 
             "Spell marbles are orbs that trigger special abilities.\n" +
             "Build your own deck from the marbles you own.\n\n" +
@@ -295,12 +349,12 @@ public static class Loc
             "   <color=#7FE08A>Club (Utility)</color>   <color=#C8A0FF>Diamond (Defense)</color>\n\n" +
             "<b>Grades</b>   Normal → <color=#FFD24A>Gold</color> → <color=#66D0FF>Diamond</color> → <color=#FF8AF0>Legend</color>\n" +
             "   Higher grades hold stronger abilities.\n" +
-            "   Gold and above come from <b>Marble Gacha</b> or shard exchange.\n\n" +
+            "   Gold and above come from <b>Orb Gacha</b> or shard exchange.\n\n" +
             "<b>Use</b>   Hold Shift to open the marble belt\n" +
             "        Hold Shift + drag & drop a marble to cast" } },
 
         { "howto.body2", new[] {
-            "덱에 편성된 스펠 마블을 <b>모두 사용</b>하면\n" +
+            "덱에 편성된 스펠 오브를 <b>모두 사용</b>하면\n" +
             "<color=#FFD24A><b>JOKER</b></color> 가 발동됩니다.\n\n" +
             "<b>조커의 장난</b>   적을 강화합니다\n" +
             "   플레이어는 제시된 <b>3가지 중 하나</b>를 직접 고를 수 있습니다.\n" +
@@ -334,7 +388,7 @@ public static class Loc
         { "acc.title",        new[] { "계정", "ACCOUNT" } },
         { "acc.connecting",   new[] { "서버 연결 중...", "Connecting to server..." } },
         { "acc.failed",       new[] { "서버에 연결하지 못했습니다", "Could not connect to the server" } },
-        { "acc.guestNotice",  new[] { "게스트 진행상황(GEM·마블)은 이 브라우저에만 저장됩니다.\nGoogle 계정을 연결하면 어떤 기기에서든 이어할 수 있습니다.",
+        { "acc.guestNotice",  new[] { "게스트 진행상황(GEM·오브)은 이 브라우저에만 저장됩니다.\nGoogle 계정을 연결하면 어떤 기기에서든 이어할 수 있습니다.",
             "Guest progress (GEM & marbles) is stored only in this browser.\nLink a Google account to continue on any device." } },
         { "acc.linked",       new[] { "현재 계정: <b><color=#7FE08A>Google 연결됨</color></b> (영구 · 어느 기기서든 복구 가능)",
             "Account: <b><color=#7FE08A>Google linked</color></b> (permanent · restorable on any device)" } },
@@ -353,7 +407,7 @@ public static class Loc
         { "acc.msgIdCopied",  new[] { "플레이어 ID를 복사했습니다", "Player ID copied" } },
         { "acc.warnSwitch",   new[] { "지금 게스트 진행상황을 잃습니다 — 한 번 더 클릭",
             "You will lose this guest progress — click once more" } },
-        { "acc.warnSwitch2",  new[] { "이 브라우저의 게스트 계정(GEM·마블)은 복구할 수 없게 됩니다.",
+        { "acc.warnSwitch2",  new[] { "이 브라우저의 게스트 계정(GEM·오브)은 복구할 수 없게 됩니다.",
             "This browser's guest account (GEM & marbles) becomes unrecoverable." } },
         { "acc.msgLinked",    new[] { "Google 계정 연결 완료! 이제 어느 기기에서든 이어할 수 있어요.",
             "Google account linked! You can now continue on any device." } },

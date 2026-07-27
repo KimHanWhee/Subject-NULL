@@ -18,7 +18,22 @@ public static class PlayerProfileService
     public static event Action OnChanged;
 
     // 서버에서 프로필을 읽어 로컬 미러에 반영.
+    //
+    // 로그인 직후 첫 호출이 간헐적으로 실패한다(토큰이 Cloud Code까지 자리잡기 전).
+    // 실패하면 화면이 "젬 0 · 미보유"로 보여서 사용자가 재화를 잃은 줄 알게 되므로
+    // 몇 번 더 시도한다. ⚠️ WebGL에서는 Task.Delay가 동작하지 않아 대기 없이 재시도하는데,
+    // 호출 자체가 왕복이라 자연스레 간격이 생긴다.
     public static async Task<bool> RefreshAsync()
+    {
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            if (await TryRefreshOnceAsync()) return true;
+            if (!ServicesBootstrap.IsSignedIn) return false; // 로그인 자체가 안 된 상태면 재시도 무의미
+        }
+        return false;
+    }
+
+    static async Task<bool> TryRefreshOnceAsync()
     {
         if (!ServicesBootstrap.IsSignedIn) return false;
         try

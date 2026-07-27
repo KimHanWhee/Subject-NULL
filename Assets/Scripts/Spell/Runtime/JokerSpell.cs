@@ -91,7 +91,7 @@ public class JokerSpell : MonoBehaviour
             label = lg.AddComponent<TMPro.TextMeshPro>();
             TMPro.TMP_FontAsset kf = FloatingText.KoreanFont();
             if (kf != null) label.font = kf; // 한글 글리프(기본 폰트엔 없음)
-            label.text = "!! 스펠 마블 과부하 !!";
+            label.text = "!! 스펠 오브 과부하 !!";
             label.fontSize = 6f;
             label.alignment = TMPro.TextAlignmentOptions.Center;
             MeshRenderer mr = lg.GetComponent<MeshRenderer>();

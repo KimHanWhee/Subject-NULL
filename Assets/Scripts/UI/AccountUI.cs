@@ -15,7 +15,7 @@ public class AccountUI : MonoBehaviour
 
     RectTransform canvasRoot;
     Text statusText, feedbackText, playerIdText, nickText;
-    Button linkBtn, logoutBtn, switchBtn, copyIdBtn, nickBtn;
+    Button linkBtn, logoutBtn, switchBtn, copyIdBtn, nickBtn, withdrawBtn;
     InputField nickInput;
     bool editingNick;
     float feedbackUntil;
@@ -87,7 +87,13 @@ public class AccountUI : MonoBehaviour
         switchBtn = MakeButton(panel, "SwitchAccount", new Vector2(0f, -70f), new Vector2(460f, 64f), Loc.T("acc.switch"), new Color(0.3f, 0.32f, 0.44f), OnSwitchAccount);
         logoutBtn = MakeButton(panel, "Logout", new Vector2(0f, -80f), new Vector2(460f, 64f), Loc.T("acc.logout"), new Color(0.42f, 0.28f, 0.28f), OnLogout);
 
-        feedbackText = MakeText(canvasRoot, "Feedback", new Vector2(0f, -360f), new Vector2(1200f, 40f), 22, TextAnchor.MiddleCenter, "", new Color(1f, 0.6f, 0.55f));
+        // 결제 내역 · 청약철회 — 계정에 귀속되는 정보라 여기에 둔다.
+        // 게스트는 결제 자체가 불가하므로 연결된 계정에서만 노출한다(UpdateUI에서 제어).
+        withdrawBtn = MakeButton(canvasRoot, "Withdraw", new Vector2(0f, -300f), new Vector2(460f, 60f),
+                                 Loc.T("wd.open"), new Color(0.30f, 0.34f, 0.42f),
+                                 () => WithdrawUI.Show(canvasRoot));
+
+        feedbackText = MakeText(canvasRoot, "Feedback", new Vector2(0f, -370f), new Vector2(1200f, 40f), 22, TextAnchor.MiddleCenter, "", new Color(1f, 0.6f, 0.55f));
         feedbackText.enabled = false;
 
         MakeButton(canvasRoot, "Back", new Vector2(-810f, 476f), new Vector2(220f, 68f), Loc.T("common.back"), new Color(0.25f, 0.25f, 0.32f), () => SceneLoader.Load("MainMenuScene"));
@@ -110,6 +116,10 @@ public class AccountUI : MonoBehaviour
                 statusText.text = Loc.T("acc.guest");
         }
         bool signedIn = ServicesBootstrap.IsSignedIn;
+
+        // 결제는 연결된 계정에서만 가능하므로, 게스트에게는 결제 내역을 보여줄 이유가 없다.
+        if (withdrawBtn != null) withdrawBtn.gameObject.SetActive(signedIn && googleLinked);
+
         if (linkBtn != null)
         {
             linkBtn.gameObject.SetActive(signedIn && !googleLinked);

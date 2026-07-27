@@ -11,7 +11,7 @@ public class SpellMiniIndicator : MonoBehaviour
     public float iconSize = 34f;
     public float spacing = 40f;
 
-    [Header("Refill Anim — 1단: 흰 점 수렴(시전 텔레그래프 컨셉) → 2단: 마블 팝 생성")]
+    [Header("Refill Anim — 1단: 흰 점 수렴(시전 텔레그래프 컨셉) → 2단: 오브 팝 생성")]
     public float convergeDuration = 0.25f;                   // 흰 점이 모이는 시간(초, unscaled)
     public int convergeDotCount = 8;                         // 수렴 점 개수
     public float convergeRadius = 30f;                       // 수렴 시작 반경(px)
@@ -108,7 +108,7 @@ public class SpellMiniIndicator : MonoBehaviour
                         EndConverge(i);
                         icons[i].sprite = s;
                         icons[i].color = Color.white;
-                        StartSpawn(i); // 2단: 마블 팝 생성 + 플래시
+                        StartSpawn(i); // 2단: 오브 팝 생성 + 플래시
                     }
                 }
                 else

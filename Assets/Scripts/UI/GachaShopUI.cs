@@ -62,9 +62,22 @@ public class GachaShopUI : MonoBehaviour
 
         // 서버 프로필 최신화 → 재표시(진실은 서버)
         await ServicesBootstrap.WaitSignedInAsync(); // WebGL 안전(Task.Delay 금지)
-        await PlayerProfileService.RefreshAsync();
-        RefreshCurrency();
-        RebuildCollection();
+        bool ok = await PlayerProfileService.RefreshAsync();
+        if (this == null) return; // 씬 이탈 방어
+
+        if (ok)
+        {
+            RefreshCurrency();
+            RebuildCollection();
+            return;
+        }
+
+        // 조회 실패 시 화면을 다시 그리지 않는다.
+        // 여기서 갱신하면 "젬 0 · 전부 미보유"가 확정된 사실처럼 보여서
+        // 사용자가 재화를 잃은 줄 알고 중복 구매를 할 수 있다.
+        // (DeckBuilderUI·SpellCaster도 성공했을 때만 다시 그린다 — 같은 규약)
+        Debug.LogError("[Gacha] 프로필 조회 실패 — 화면 갱신 보류");
+        ShowFeedback(Loc.T("gacha.msgLoadFail"));
     }
 
     // 서버 결과(marbleName/grade 문자열)를 카드 UI가 쓰는 형태로 변환.
@@ -399,6 +412,17 @@ public class GachaShopUI : MonoBehaviour
         if (pulling) return;
         int unit = GachaConfig.Instance.pullCostGem;
         int cost = unit * count;
+        if (PlayerProfileService.Gem < cost) { ShowFeedback(Loc.T("gacha.msgNoGem", cost)); return; }
+
+        // 자산이 나가기 전 확인 — 오조작으로 GEM이 소모되는 일을 막는다.
+        bool ok = await ConfirmDialog.ShowAsync(canvasRoot,
+            Loc.T("confirm.pullTitle"),
+            Loc.T("confirm.pullBody", cost, count, PlayerProfileService.Gem),
+            Loc.T("confirm.yes"), Loc.T("confirm.no"));
+        if (this == null) return;
+        if (!ok) return;
+
+        // 확인하는 동안 잔액이 바뀌었을 수 있다(다른 탭·이전 요청) — 다시 검사한다.
         if (PlayerProfileService.Gem < cost) { ShowFeedback(Loc.T("gacha.msgNoGem", cost)); return; }
 
         pulling = true;
@@ -806,6 +830,20 @@ public class GachaShopUI : MonoBehaviour
         if (OwnedMarblesService.IsOwned(m)) return;
         int cost = GachaConfig.Instance.ExchangeCost(m.grade);
         if (PlayerProfileService.Shards < cost) { ShowFeedback(Loc.T("gacha.msgNoShard", cost)); return; }
+
+        // 자산이 나가기 전 확인
+        string exchName = m.ability != null ? SpellText.Name(m.ability) : m.marbleName;
+        bool ok = await ConfirmDialog.ShowAsync(canvasRoot,
+            Loc.T("confirm.exchTitle"),
+            Loc.T("confirm.exchBody", cost, exchName, PlayerProfileService.Shards),
+            Loc.T("confirm.yes"), Loc.T("confirm.no"));
+        if (this == null) return;
+        if (!ok) return;
+
+        // 확인하는 동안 상태가 바뀌었을 수 있다 — 다시 검사한다.
+        if (OwnedMarblesService.IsOwned(m)) return;
+        if (PlayerProfileService.Shards < cost) { ShowFeedback(Loc.T("gacha.msgNoShard", cost)); return; }
+
         try
         {
             GachaService.ExchangeResult res = await GachaService.ExchangeAsync(m.marbleName);
@@ -878,6 +916,35 @@ public class GachaShopUI : MonoBehaviour
             return;
         }
 
+        // 결제 확인 + 법적 고지.
+        // "이미 사용한 GEM은 환불 제한"은 결제 전에 고지했을 때만 효력이 있으므로,
+        // PayPal 창을 띄우기 전에 반드시 이 단계를 거쳐야 한다.
+        bool agreed = await ConfirmDialog.ShowAsync(canvasRoot,
+            Loc.T("confirm.buyTitle"),
+            Loc.T("confirm.buyBody", p.label, "$" + p.priceUsd, p.gem),
+            Loc.T("confirm.yes"), Loc.T("confirm.no"),
+            Loc.T("confirm.buyNotice"));
+        if (this == null) return;
+        if (!agreed) return;
+
+        // ⚠️ 새 주문을 만들기 전에 미해결 주문부터 정리한다.
+        //    결제만 되고 지급이 안 된 주문이 남아 있는데 새로 결제하면 이중 결제가 된다.
+        PaypalCheckout.Result pend = await PaypalCheckout.ResolvePendingAsync();
+        if (this == null) return;
+        if (pend != null && pend.ok && pend.granted > 0)
+        {
+            // 이전 결제분이 이제서야 지급됨 — 이번 구매는 진행하지 않고 알린다.
+            // (여기서 그냥 새 결제를 이어가면 사용자는 두 번 낸 셈이 된다)
+            if (overlay != null) Destroy(overlay.gameObject);
+            await PlayerProfileService.RefreshAsync();
+            if (this == null) return;
+            RefreshCurrency();
+            ShowFeedback(Loc.T("gacha.msgPurchased", pend.granted), true);
+            return;
+        }
+        // pend.granted == 0 이면 이미 지급이 끝났던 주문의 잔재였을 뿐이다.
+        // 기록만 정리된 상태이므로 이번 구매는 그대로 진행한다.
+
         // 주문 생성 → 결제창 → 서버 확정·지급까지 PaypalCheckout이 처리한다.
         PaypalCheckout.Result r = await PaypalCheckout.PurchaseAsync(p.sku);
         if (this == null) return; // 씬 이탈 방어
@@ -902,7 +969,9 @@ public class GachaShopUI : MonoBehaviour
             ShowFeedback(Loc.T("gacha.msgPayCaptureFail"));
             return;
         }
-        ShowFeedback(Loc.T("gacha.msgPayFail"));
+        // 실패 코드를 함께 노출한다. paypal-oauth-failed / paypal-create-failed /
+        // sdk-not-loaded 등이 전부 같은 문구로 보이면, 문의가 들어와도 원인을 못 밝힌다.
+        ShowFeedback(Loc.T("gacha.msgPayFail", err));
     }
 
     // ── 갱신/헬퍼 ─────────────────────────────────────────

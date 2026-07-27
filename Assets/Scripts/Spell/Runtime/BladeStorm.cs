@@ -1,8 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// ♠ Blade Storm 런타임 — 플레이어 주변을 도는 칼날들. 닿는 적에게 피해(적별 재타격 쿨다운).
+// ♠ Blade Storm 런타임 — 플레이어 주변을 도는 칼날들. 닿는 적에게 피해.
 // 회전/피해는 게임 시간(scaled) 기준. 시각은 코드 생성 스프라이트(최상단 정렬 — SpellVfx 선례).
+//
+// 타격 규칙: "칼날 하나가 스쳐 지나갈 때마다 1대". 쿨다운은 칼날별로 따로 센다.
+//   예전에는 적 하나당 쿨다운 하나(0.4초)를 모든 칼날이 공유해서, 칼이 5자루든 1자루든
+//   같은 적에게 들어가는 피해가 똑같았고 눈에 보이는 칼날이 그냥 통과하는 구간이 생겼다.
+//   지금은 각 칼날이 독립적으로 판정하므로 보이는 대로 맞는다.
 public class BladeStorm : MonoBehaviour
 {
     private Transform owner;
@@ -14,7 +19,9 @@ public class BladeStorm : MonoBehaviour
     private float angularSpeed; // deg/sec
     private float angle;
     private Transform[] blades;
-    private readonly Dictionary<int, float> lastHit = new Dictionary<int, float>(); // 적 instanceID → 마지막 타격 시각
+    // 칼날별 재타격 기록: lastHit[칼날 index][적 instanceID] = 마지막 타격 시각.
+    // 칼날마다 따로 두어야 각 칼날이 지나갈 때마다 피해가 들어간다.
+    private Dictionary<int, float>[] lastHit;
 
     private static Sprite bladeSprite;
     private static bool usingArtSprite; // true면 Resources 도트 에셋 사용(틴트 없이 원색)
@@ -35,7 +42,10 @@ public class BladeStorm : MonoBehaviour
         b.orbitRadius = orbitRadius;
         b.damage = damage;
         b.hitRadius = 0.35f;
-        b.rehitCooldown = 0.4f;
+        // 한 번 스쳐 지나가는 동안(약 0.05초, 여러 프레임) 중복 타격만 막는 최소값.
+        // 같은 칼날이 한 바퀴 돌아오는 데는 훨씬 오래 걸리므로(400deg/s 기준 0.9초)
+        // 다음 바퀴 타격을 가로막지 않는다. = 사실상 "피격 딜레이 없음"
+        b.rehitCooldown = 0.15f;
         b.endTime = Time.time + duration;
         b.angularSpeed = angularSpeed;
         b.BuildBlades(Mathf.Max(1, bladeCount));
@@ -45,8 +55,10 @@ public class BladeStorm : MonoBehaviour
     void BuildBlades(int count)
     {
         blades = new Transform[count];
+        lastHit = new Dictionary<int, float>[count];
         for (int i = 0; i < count; i++)
         {
+            lastHit[i] = new Dictionary<int, float>();
             GameObject go = new GameObject("Blade");
             go.transform.SetParent(transform, false);
             SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
@@ -88,15 +100,17 @@ public class BladeStorm : MonoBehaviour
                 blades[i].rotation = Quaternion.Euler(0f, 0f, deg);
             }
 
-            // 칼날 위치에서 적 타격(적별 재타격 쿨다운으로 다단히트 방지)
+            // 이 칼날에 닿은 적 타격. 쿨다운은 이 칼날 기준이므로 다른 칼날은 막지 않는다
+            // (한 번 스치는 동안의 프레임 중복만 걸러진다).
+            Dictionary<int, float> seen = lastHit[i];
             Collider2D[] hits = Physics2D.OverlapCircleAll(blades[i].position, hitRadius);
             for (int h = 0; h < hits.Length; h++)
             {
                 if (!hits[h].CompareTag("Enemy")) continue;
                 int id = hits[h].gameObject.GetInstanceID();
                 float last;
-                if (lastHit.TryGetValue(id, out last) && Time.time - last < rehitCooldown) continue;
-                lastHit[id] = Time.time;
+                if (seen.TryGetValue(id, out last) && Time.time - last < rehitCooldown) continue;
+                seen[id] = Time.time;
 
                 // 타격 스파크(재타격 쿨다운으로 빈도 제한됨 → 부담 없음)
                 SpellParticleVfx.SpawnBurst(hits[h].transform.position, 0.35f, new Color(0.9f, 0.95f, 1f, 1f), 6, 0.18f);
