@@ -47,6 +47,12 @@ public class SpellDragHandler : MonoBehaviour
 
     private int dragSlot = -1;
     private int lastHovered = -1;       // 호버 사운드 1회 재생용
+
+    // 현재 마우스가 올라간 슬롯(없으면 -1). 홀로그램(SpellOrbHologram)이 이 값을 읽어
+    // 해당 슬롯의 아이콘 표시를 끄고 툴팁으로 자리를 넘긴다.
+    // 판정 로직을 두 곳에서 중복 구현하지 않도록 여기서만 계산해 공개한다.
+    public int HoveredSlot { get; private set; } = -1;
+
     private float dragStartTime;        // 집는 팝 애니 기준 시각(unscaled)
     private Vector3[] slotBaseScale;    // 각 슬롯 기본 스케일(최초 1회 캡처)
 
@@ -69,6 +75,14 @@ public class SpellDragHandler : MonoBehaviour
             Font kr = Resources.Load<Font>("Fonts/Pretendard-Regular");
             if (kr != null) tooltipText.font = kr;
         }
+
+        // 툴팁 정렬용 Canvas는 여기서 "부착만" 한다.
+        // ⚠️ overrideSorting은 여기서 켜도 꺼진다 — 이 시점의 tooltipRoot는 비활성이라
+        //    Unity가 부모 캔버스를 찾지 못하고 이 캔버스를 루트로 판단해(isRootCanvas=true)
+        //    루트에는 무의미한 overrideSorting을 강제로 false로 되돌린다.
+        //    그래서 실제 설정은 활성화 직후(EnsureTooltipOnTop)에 한다.
+        if (tooltipRoot != null && tooltipRoot.GetComponent<Canvas>() == null)
+            tooltipRoot.AddComponent<Canvas>();
     }
 
     void Update()
@@ -81,6 +95,8 @@ public class SpellDragHandler : MonoBehaviour
 
         Vector2 mouse = Mouse.current.position.ReadValue();
         int hovered = SlotUnderPoint(mouse);
+        // 드래그 중에는 툴팁을 띄우지 않으므로 홀로그램도 아이콘 상태를 유지해야 한다.
+        HoveredSlot = dragSlot < 0 ? hovered : -1;
 
         // 호버 사운드: 드래그 중이 아닐 때, 마블이 있는 슬롯에 처음 올라오면 1회(빈 슬롯 제외)
         if (dragSlot < 0 && hovered != lastHovered)
@@ -208,10 +224,24 @@ public class SpellDragHandler : MonoBehaviour
         go.SetActive(false);
     }
 
+    // 툴팁을 홀로그램보다 앞에 그리게 만든다.
+    // ⚠️ 반드시 tooltipRoot가 활성인 상태에서 호출할 것.
+    //    비활성이면 Unity가 부모 캔버스를 찾지 못해 overrideSorting이 false로 되돌아간다.
+    public void EnsureTooltipOnTop()
+    {
+        if (tooltipRoot == null || !tooltipRoot.activeInHierarchy) return;
+        Canvas tc = tooltipRoot.GetComponent<Canvas>();
+        if (tc == null) tc = tooltipRoot.AddComponent<Canvas>();
+        tc.overrideSorting = true;
+        tc.sortingOrder = TooltipSortingOrder;
+        tooltipRoot.transform.SetAsLastSibling(); // 정렬 순서와 계층 순서 둘 다 맞춘다
+    }
+
     void EndAll()
     {
         EndDrag();
         lastHovered = -1;
+        HoveredSlot = -1;
         if (tooltipRoot != null) tooltipRoot.SetActive(false);
         ResetHoverScales(); // 선택 모드 벗어나면 슬롯 크기 원복
     }
@@ -311,7 +341,9 @@ public class SpellDragHandler : MonoBehaviour
         SpellMarble m = (slot >= 0 && slot < caster.Slots.Count) ? caster.Slots[slot] : null;
         if (m == null || m.ability == null) { tooltipRoot.SetActive(false); return; }
 
+        bool wasHidden = !tooltipRoot.activeSelf;
         tooltipRoot.SetActive(true);
+        if (wasHidden) EnsureTooltipOnTop();
         if (tooltipText != null)
             tooltipText.text =
                 "<b>" + SpellText.Name(m.ability) + "</b>\n" +
@@ -325,6 +357,30 @@ public class SpellDragHandler : MonoBehaviour
         }
         RectTransform rrt = (RectTransform)tooltipRoot.transform;
         UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(rrt); // 설명 길이에 맞춰 박스 높이 즉시 반영
-        rrt.position = mouse;
+
+        // 커서를 따라다니지 않고 해당 구슬 바로 위에 고정한다.
+        // 그 자리에 아이콘 홀로그램이 떠 있다가 툴팁으로 바뀌는 연출이라,
+        // 위치가 어긋나면 "확장"이 아니라 "다른 창이 뜬 것"으로 보인다.
+        RectTransform slotRect = hud != null ? hud.GetSlotRect(slot) : null;
+        if (slotRect != null)
+        {
+            Vector3[] c = new Vector3[4];
+            slotRect.GetWorldCorners(c);
+            float topY = Mathf.Max(c[1].y, c[2].y);
+            float midX = (c[0].x + c[3].x) * 0.5f;
+            // 박스 아래변이 구슬 위에 오도록 — 피벗과 무관하게 맞춘다.
+            Vector3[] t = new Vector3[4];
+            rrt.GetWorldCorners(t);
+            float halfH = (Mathf.Max(t[1].y, t[2].y) - Mathf.Min(t[0].y, t[3].y)) * 0.5f;
+            rrt.position = new Vector3(midX, topY + halfH + HologramGap * rrt.lossyScale.y, rrt.position.z);
+        }
+        else rrt.position = mouse; // 슬롯을 못 찾으면 기존 동작 유지
     }
+
+    // 구슬과 홀로그램/툴팁 사이 간격(px, 캔버스 기준). SpellOrbHologram과 같은 값을 써야
+    // 아이콘이 툴팁으로 바뀔 때 위치가 튀지 않는다.
+    public const float HologramGap = 14f;
+
+    // 툴팁 정렬 순서. 홀로그램(HologramSortingOrder)보다 높아야 가려지지 않는다.
+    public const int TooltipSortingOrder = 310;
 }
