@@ -42,6 +42,8 @@ public class SpellOrbHologram : MonoBehaviour
     // 툴팁(SpellDragHandler.TooltipSortingOrder)보다 낮아야 툴팁이 가려지지 않는다.
     const int HologramSortingOrder = 300;
 
+    float curPanelSize;      // 이번 프레임에 적용할 패널 폭(슬롯 간격에서 매번 산출)
+
     RectTransform[] panels;
     Image[] icons;
     RawImage[] scans;
@@ -81,6 +83,12 @@ public class SpellOrbHologram : MonoBehaviour
 
         bool selecting = selection.IsSelecting;
         int hovered = drag != null ? drag.HoveredSlot : -1;
+
+        // 패널 폭을 매 프레임 다시 계산한다.
+        // Build() 시점에 한 번만 재면, 그때 벨트 레이아웃이 아직 확정되지 않은 경우
+        // 측정에 실패해 상한값(54)이 그대로 남고 이웃과 겹친다. 실제로 그렇게 배포됐다.
+        float spacing = MeasureSlotSpacing(panels.Length);
+        curPanelSize = spacing > 1f ? Mathf.Min(panelSize, spacing * panelGapRatio) : panelSize;
 
         for (int i = 0; i < panels.Length; i++)
         {
@@ -126,17 +134,29 @@ public class SpellOrbHologram : MonoBehaviour
         RectTransform slot = hud.GetSlotRect(i);
         if (slot == null) { panels[i].gameObject.SetActive(false); return; }
 
+        // 폭을 매 프레임 반영 — 해상도/전체화면 전환으로 벨트 간격이 바뀌어도 겹치지 않는다.
+        if (curPanelSize > 1f) panels[i].sizeDelta = new Vector2(curPanelSize, curPanelSize);
+
         Vector3[] c = new Vector3[4];
         slot.GetWorldCorners(c);
         float topY = Mathf.Max(c[1].y, c[2].y);
         float midX = (c[0].x + c[3].x) * 0.5f;
 
         // 벨트가 확대되면 홀로그램도 같은 배율로 커져야 어색하지 않다.
-        float scale = slot.lossyScale.y;
-        panels[i].localScale = Vector3.one * scale;
+        //
+        // ⚠️ lossyScale을 그대로 쓰면 안 된다. 그 값에는 CanvasScaler 배율이 이미 들어 있는데,
+        //    홀로그램의 부모(캔버스 루트)도 같은 배율을 갖고 있어 곱이 두 번 적용된다.
+        //    기준 해상도(1920x1080)에서는 캔버스 배율이 1이라 드러나지 않다가,
+        //    전체 화면에서 배율이 1.5가 되면 2.25배로 커져 이웃과 겹친다.
+        //    부모 배율로 나눠 "벨트 자체의 확대분"만 남긴다.
+        float worldScale = slot.lossyScale.y;                                    // 캔버스 배율 포함(월드 기준)
+        float parentScale = panels[i].parent != null ? panels[i].parent.lossyScale.y : 1f;
+        panels[i].localScale = Vector3.one * (worldScale / Mathf.Max(0.0001f, parentScale));
 
-        float halfH = panelSize * 0.5f * scale;
-        panels[i].position = new Vector3(midX, topY + halfH + SpellDragHandler.HologramGap * scale, panels[i].position.z);
+        // 위치는 월드 좌표이므로 여기서는 캔버스 배율이 포함된 worldScale을 써야 한다.
+        // (localScale과 서로 다른 배율을 쓰는 게 맞다 — 좌표계가 다르다)
+        float halfH = (curPanelSize > 1f ? curPanelSize : panelSize) * 0.5f * worldScale;
+        panels[i].position = new Vector3(midX, topY + halfH + SpellDragHandler.HologramGap * worldScale, panels[i].position.z);
     }
 
     void Build()
@@ -149,11 +169,6 @@ public class SpellOrbHologram : MonoBehaviour
         Canvas canvas = parent != null ? parent.GetComponentInParent<Canvas>() : null;
         if (canvas == null) return;
         RectTransform root = canvas.GetComponent<RectTransform>();
-
-        // 슬롯 간격을 실측해 패널 폭을 정한다.
-        // 상수로 박아두면 벨트 배치를 바꿀 때마다 겹침이 재발한다.
-        float spacing = MeasureSlotSpacing(n);
-        if (spacing > 1f) panelSize = Mathf.Min(panelSize, spacing * panelGapRatio);
 
         panels = new RectTransform[n];
         icons = new Image[n];

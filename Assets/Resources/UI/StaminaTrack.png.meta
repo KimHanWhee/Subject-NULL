@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 807b88e24784e734cbe739efac5aefb3
+guid: a17622757639f5d4aa6661687391ad83
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8376428917731722207
-    second: Marble_31_0
+      213: -1750883629064287392
+    second: StaminaTrack_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -24,7 +24,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -48,11 +48,11 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 32
-  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 200
+  spriteBorder: {x: 20, y: 16, z: 20, w: 16}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Marble_31_0
+      name: StaminaTrack_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 32
-        height: 32
+        width: 550
+        height: 99
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 12c7a409742f0cb80800000000000000
-      internalID: -8376428917731722207
+      spriteID: 06b839ead9c93b7e0800000000000000
+      internalID: -1750883629064287392
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Marble_31_0: -8376428917731722207
+      StaminaTrack_0: -1750883629064287392
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
