@@ -131,6 +131,8 @@ public class JokerSpell : MonoBehaviour
         if (tapeBotMat != null) Destroy(tapeBotMat);
         if (siren != null) { siren.Stop(); Destroy(siren); }
 
+        StartSiren(); // 기믹이 끝날 때까지 붉은 점멸 — "지금 조커 진행 중"을 계속 알린다
+
         onGimmickStart?.Invoke(); // 덱 재셔플·리필·Ctrl 잠금 해제(SpellCaster)
         // 조커 시 랜덤 테마 전환은 제거 — 불/눈/풀 테마의 틴트·오버레이가
         // 배경 대비를 떨어뜨려 적이 잘 보이지 않는 문제가 있었다.
@@ -163,8 +165,53 @@ public class JokerSpell : MonoBehaviour
     // 회피가 사실상 불가능했다. 심판(원 밖 즉사) 직전에 반드시 해제된다.
     public static bool EnemyAttacksSuppressed { get; private set; }
 
+    // ── 조커 진행 중 사이렌(붉은 화면 점멸) ────────────────────────────
+    // 기믹이 시작될 때 켜고, 이 컴포넌트가 파괴될 때(=기믹 종료) 함께 사라진다.
+    // 각 기믹이 Destroy(gameObject, n)으로 스스로 끝내므로 지속시간을 따로 관리하지 않는다.
+    private SpriteRenderer sirenOverlay;
+
+    void StartSiren()
+    {
+        Camera c = Camera.main;
+        if (c == null) return;
+
+        float h = c.orthographicSize * 2f;
+        GameObject go = new GameObject("JokerActiveSiren");
+        go.transform.SetParent(c.transform, false);
+        go.transform.localPosition = new Vector3(0f, 0f, 10f);
+        go.transform.localScale = new Vector3(h * c.aspect + 2f, h + 2f, 1f);
+
+        sirenOverlay = go.AddComponent<SpriteRenderer>();
+        sirenOverlay.sprite = WhiteSprite();
+        sirenOverlay.color = Color.clear;   // 흰색 노출 금지 — 루프가 색을 입힌다
+        SetTopLayer(sirenOverlay, 30500);   // 경고 오버레이와 같은 층(파티클 31000 아래)
+
+        StartCoroutine(SirenLoop());
+    }
+
+    IEnumerator SirenLoop()
+    {
+        // 화면 가장자리만 물들이지 않고 전체를 얇게 덮는다. 알파 상한을 낮게 잡아
+        // 적·총알 시인성을 해치지 않으면서 "경보 중"이라는 신호만 준다.
+        const float maxAlpha = 0.20f;
+        const float hz = 1.6f;              // 초당 점멸 횟수(사이렌 리듬)
+        float t = 0f;
+        while (sirenOverlay != null)
+        {
+            t += Time.unscaledDeltaTime;    // 슬로우·정지와 무관하게 일정한 리듬
+            // PingPong보다 sin이 부드럽다 — 급하게 껌뻑이면 눈이 아프다.
+            float pulse = 0.5f - 0.5f * Mathf.Cos(t * hz * Mathf.PI * 2f);
+            sirenOverlay.color = new Color(1f, 0.12f, 0.12f, pulse * maxAlpha);
+            yield return null;
+        }
+    }
+
     // 안전망 — 씬 전환·재시작 등으로 코루틴이 중간에 끊겨도 무적 상태가 남지 않게 한다.
-    void OnDestroy() { EnemyAttacksSuppressed = false; }
+    void OnDestroy()
+    {
+        EnemyAttacksSuppressed = false;
+        if (sirenOverlay != null) Destroy(sirenOverlay.gameObject); // 카메라 자식이라 직접 정리
+    }
 
     IEnumerator Purge(GameObject player)
     {

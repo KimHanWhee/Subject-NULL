@@ -51,6 +51,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 dashDir;
     private Vector3 lastMoveDir = Vector3.right; // 입력 없을 때 폴백 방향
 
+    // 마지막으로 향한 방향 — 방향이 필요한 스펠(♠ Void Slash 등)이 폴백으로 쓴다
+    public Vector3 LastMoveDir => lastMoveDir;
+
     // 대시 v2: 스태미너 상태
     private float currentStamina;   // 현재 스태미너
     private float staminaRegenTime; // 이 시각 이후부터 회복 시작 (대시 후 지연)
@@ -186,7 +189,12 @@ public class PlayerController : MonoBehaviour
             && (IsStaminaFree || currentStamina >= dashStaminaCost)) // 무한 질주 중엔 스태미너 무관
         {
             dashDir = (move.magnitude > 0 ? move : lastMoveDir).normalized; // Plan SC: FR-02
-            isDashing = true;
+
+            // ♠ Void Slash 등 — 대시를 다른 이동으로 대체.
+            // 비용(스태미너)과 쿨다운은 아래에서 그대로 치르므로 연타로 남발되지 않는다.
+            bool overridden = TryOverrideDash();
+
+            isDashing = !overridden;   // 대체됐으면 일반 대시 이동은 돌리지 않는다
             dashEndTime = Time.time + dashDuration;
             nextDashTime = Time.time + (IsStaminaFree ? staminaFreeCooldown : dashCooldown); // 무한 질주 중 쿨타임 단축
 
@@ -199,12 +207,24 @@ public class PlayerController : MonoBehaviour
             if (dashSound != null)
                 GetComponent<AudioSource>().PlayOneShot(dashSound); // 대시 시작음
 
+            // 대체된 경우 잔상·버스트는 대체 쪽이 자기 색으로 낸다(여기서 내면 두 겹으로 겹친다)
+            if (overridden) return;
+
             // 대시 가시성: 시작 버스트 + 잔상 트레일 시작
             if (bodySprite == null) bodySprite = GetComponent<SpriteRenderer>();
             DashGhost.Spawn(bodySprite, dashGhostTint);
             nextGhostTime = Time.time + dashGhostInterval;
             SpellParticleVfx.SpawnBurst(SpellVfx.VisualAnchor(gameObject).position, 0.55f, dashGhostTint, 12, 0.25f);
         }
+    }
+
+    // 대시 대체 훅 — 먼저 성공한 하나만 발동(발사 오버라이드와 같은 규약)
+    bool TryOverrideDash()
+    {
+        IPlayerDashOverride[] ovs = GetComponents<IPlayerDashOverride>();
+        for (int i = 0; i < ovs.Length; i++)
+            if (ovs[i].TryOverrideDash(transform.position, dashDir)) return true;
+        return false;
     }
 
     // 대시 v2: 회복 지연이 지난 뒤 초당 staminaRegenRate만큼 회복

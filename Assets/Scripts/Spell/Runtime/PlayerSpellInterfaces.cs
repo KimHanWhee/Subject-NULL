@@ -51,6 +51,14 @@ public interface IPlayerShotOverride
     void FireBurstShot(Vector2 origin, Vector2 direction);
 }
 
+// ♠ Void Slash — 대시를 통째로 대체(true 반환 시 일반 대시 이동 생략).
+// 스태미너 소모·쿨다운은 대시 규칙을 그대로 따르므로, 여기서는 "이동을 무엇으로 바꿀지"만 정한다.
+// 여러 개면 먼저 성공한 하나만 발동.
+public interface IPlayerDashOverride
+{
+    bool TryOverrideDash(Vector2 origin, Vector2 direction);
+}
+
 // 버프 HUD 표시용 — 플레이어 자기버프 상태 컴포넌트가 구현하면 PlayerBuffHUD가 GetComponents로
 // 수집해 HP바 아래에 아이콘+숫자로 표시. (허브 없이 인터페이스만 — 기존 규약과 동일)
 public interface IBuffDisplay

@@ -141,8 +141,12 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         GetComponent<Character>().Initialize();
         anim.SetTrigger("Spawn");
         GetComponent<Collider2D>().enabled = false;
-        Invoke(nameof(StartMoving), 1f);
+        spawnTimer = SpawnDuration;
     }
+
+    // 등장 연출 길이(초). 이 시간이 지나면 콜라이더가 켜지고 실제로 움직인다.
+    const float SpawnDuration = 1f;
+    private float spawnTimer;
 
     protected virtual void StartMoving()
     {
@@ -155,6 +159,20 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         // 이동은 Translate 전담 — 충돌(플레이어 대시 등)로 물리 엔진이 준 밀림 속도가
         // 잔류하면 멀리 날아가므로 매 프레임 제거
         if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        // 등장 카운트다운.
+        // ⚠️ 예전에는 Invoke(StartMoving, 1f)를 썼는데, Invoke는 컴포넌트를 비활성화해도
+        //    계속 진행된다. ♣ Time Stop은 EnemyBase를 비활성화해 적을 멈추는 방식이라,
+        //    정지된 세상에서도 1초 뒤 콜라이더가 켜져 버렸다. 그 결과 등장 연출 중(반투명)인
+        //    적이 총알에 맞고, 플레이어도 그 적에 닿아 갑자기 피해를 입었다.
+        //    FixedUpdate에서 세면 컴포넌트가 꺼진 동안 카운트다운도 함께 멈춘다.
+        //    TimeMult를 곱해 빙결·감속 중에는 등장도 느려진다(정지 = 0).
+        if (phase == Phase.Spawning)
+        {
+            spawnTimer -= Time.fixedDeltaTime * TimeMult;
+            if (spawnTimer <= 0f) StartMoving();
+            return;
+        }
 
         if (phase != Phase.Active || target == null) return;
         float dt = Time.fixedDeltaTime * TimeMult;

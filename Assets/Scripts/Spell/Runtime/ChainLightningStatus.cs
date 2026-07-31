@@ -3,21 +3,30 @@ using UnityEngine;
 
 // ♠ Chain Lightning 상태 — 지속시간 동안 총알이 적에게 명중하면 주변 적으로 번개가 연쇄.
 // PlayerBulletEvents.EnemyHit 구독. 연쇄: 맞은 적 → 반경 내 미방문 적 → ... 최대 jumps회.
-public class ChainLightningStatus : MonoBehaviour
+public class ChainLightningStatus : MonoBehaviour, IBuffDisplay
 {
     private float chainDamage;
     private float jumpRadius;
     private int maxJumps;
     private float remain;
     private bool subscribed;
+    private SpellMarble marble;
 
-    public static void Apply(GameObject player, float chainDamage, float jumpRadius, int maxJumps, float duration)
+    // 버프 HUD 표시 — 다른 지속형 스펠과 동일 규약(남은 시간 게이지)
+    public SpellMarble BuffMarble { get { return marble; } }
+    public bool BuffTimed { get { return true; } }
+    public float BuffRemaining { get { return remain; } }
+    public int BuffCharges { get { return 0; } }
+
+    public static void Apply(GameObject player, float chainDamage, float jumpRadius, int maxJumps,
+                             float duration, SpellMarble marble = null)
     {
         ChainLightningStatus s = player.GetComponent<ChainLightningStatus>();
         if (s == null) s = player.AddComponent<ChainLightningStatus>();
         s.chainDamage = chainDamage;
         s.jumpRadius = jumpRadius;
         s.maxJumps = maxJumps;
+        s.marble = marble;
         s.remain = Mathf.Max(s.remain, duration);
         s.Subscribe();
     }

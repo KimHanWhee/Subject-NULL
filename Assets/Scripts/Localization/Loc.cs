@@ -113,6 +113,8 @@ public static class Loc
             "Creates a black hole that violently pulls in nearby enemies, then detonates after 3s, annihilating everything caught inside." } },
         { "spell.BladeStorm.d", new[] { "플레이어 주변을 칼날이 회전하며 닿는 적에게 피해를 준다.",
             "Blades orbit the player, damaging any enemy they touch." } },
+        { "spell.VoidSlash.d", new[] { "10초간 대시가 공허를 가르는 참격으로 바뀐다. 대시 방향으로 파고들며 경로의 적을 베고, 그동안 무적이며 적과 충돌하지 않는다.",
+            "For 10s, your dash becomes a void-cutting slash: cut down every enemy along the path, invulnerable and non-colliding." } },
         { "spell.ChainLightning.d", new[] { "10초간 총알이 적에게 명중하면 주변 적에게 번개가 연쇄적으로 전가한다.",
             "For 10s, bullet hits arc lightning to nearby enemies." } },
         { "spell.Confusion.d", new[] { "드롭한 위치 주변 범위의 모든 적이 5초간 방향 감각을 잃고 무작위로 움직인다.",
