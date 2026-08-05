@@ -30,6 +30,7 @@ public class DeckBuilderUI : MonoBehaviour
 
     // ── 런타임 상태 ─────────────────────────────────────────
     private readonly List<SpellMarble> deckList = new List<SpellMarble>();
+    private readonly List<SpellMarble> passiveList = new List<SpellMarble>(); // 패시브 칸(중복 불가)
     private List<SpellMarble> catalog;            // registry 정렬본(슈트→등급→이름)
     private Suit currentSuit = Suit.Spade;        // 현재 탭
 
@@ -44,6 +45,13 @@ public class DeckBuilderUI : MonoBehaviour
     private Image[] slotFrames;                   // 덱 슬롯 카드 프레임(슈트색)
     private Image[] slotArts;                     // 덱 슬롯 스킬 아이콘
     private Image[] slotSuitTags;                 // 덱 슬롯 좌상단 슈트 아이콘(스프라이트)
+
+    private Image[] passiveRings;                 // 패시브 칸(덱 아래 별도 줄)
+    private Image[] passiveFrames;
+    private Image[] passiveArts;
+    private Image[] passiveSuitTags;
+    private Text passiveCounterText;
+
     private Text counterText;
     private Text feedbackText;
     private Button saveButton;
@@ -150,16 +158,32 @@ public class DeckBuilderUI : MonoBehaviour
 
     void LoadInitialDeck()
     {
+        // 패시브로 바뀐 오브를 옮기고 모자란 덱을 채운다(멱등 — 정상 덱이면 아무 일 없음)
+        DeckSaveService.Repair(registry);
+
         deckList.Clear();
         if (DeckSaveService.HasSave())
             deckList.AddRange(DeckSaveService.Load(registry));
         if (deckList.Count == 0 && defaultDeck != null && defaultDeck.marbles != null)
             foreach (SpellMarble m in defaultDeck.marbles)
                 if (m != null && deckList.Count < DeckSaveService.MaxSize) deckList.Add(m);
-        deckList.RemoveAll(m => m == null || !OwnedMarblesService.IsOwned(m)); // 미보유 마블 제외
+        // 미보유 제외 + 패시브 오브 제외(편성 칸이 다르다 — 기본덱에 섞여 있어도 걸러낸다)
+        deckList.RemoveAll(m => m == null || m.isPassive || !OwnedMarblesService.IsOwned(m));
         TrimToLimits(); // 등급별 한도 초과분 정리(구버전 저장/기본덱 방어)
         deckList.Sort(CompareMarble);
+
+        passiveList.Clear();
+        if (DeckSaveService.HasSave())
+            foreach (SpellMarble m in DeckSaveService.LoadPassives(registry))
+            {
+                if (m == null || !m.isPassive || !OwnedMarblesService.IsOwned(m)) continue;
+                if (passiveList.Contains(m)) continue;              // 중복 편성 불가
+                if (passiveList.Count >= PassiveSlotCount) break;
+                passiveList.Add(m);
+            }
     }
+
+    int PassiveSlotCount { get { return DeckRules.Instance.PassiveSlots; } }
 
     // 등급별 최대 중복 수를 넘는 복사본 제거(한도만큼만 유지)
     void TrimToLimits()
@@ -182,8 +206,13 @@ public class DeckBuilderUI : MonoBehaviour
         return n;
     }
 
+    // 카탈로그 카드 클릭 — 오브 성격에 따라 편성될 칸이 갈린다.
+    // 사용자가 칸을 고르지 않는 이유: 애초에 갈 수 있는 칸이 하나뿐이라 선택지가 아니다.
     void AddToDeck(SpellMarble m)
     {
+        if (m == null) return;
+        if (m.isPassive) { AddToPassive(m); return; }
+
         if (!OwnedMarblesService.IsOwned(m))
         {
             ShowFeedback(Loc.T("deck.msgNotOwned"), false);
@@ -217,11 +246,40 @@ public class DeckBuilderUI : MonoBehaviour
         }
     }
 
+    void AddToPassive(SpellMarble m)
+    {
+        if (!OwnedMarblesService.IsOwned(m))
+        {
+            ShowFeedback(Loc.T("deck.msgNotOwned"), false);
+            return;
+        }
+        if (passiveList.Contains(m))
+        {
+            ShowFeedback(Loc.T("deck.msgPassiveDup", SpellText.Name(m)), false);
+            return;
+        }
+        if (passiveList.Count >= PassiveSlotCount)
+        {
+            ShowFeedback(Loc.T("deck.msgPassiveFull", PassiveSlotCount), false);
+            return;
+        }
+        passiveList.Add(m);
+        RefreshAll();
+    }
+
     void RemoveAt(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= deckList.Count) return;
         deckList.RemoveAt(slotIndex);
         HideTooltip(); // 제거된 마블 툴팁 잔상 방지
+        RefreshAll();
+    }
+
+    void RemovePassiveAt(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= passiveList.Count) return;
+        passiveList.RemoveAt(slotIndex);
+        HideTooltip();
         RefreshAll();
     }
 
@@ -232,7 +290,8 @@ public class DeckBuilderUI : MonoBehaviour
             ShowFeedback(Loc.T("deck.msgSize", DeckSaveService.MinSize, DeckSaveService.MaxSize), false);
             return;
         }
-        DeckSaveService.Save(deckList);
+        // 패시브는 비워도 저장 가능 — 없어도 게임이 성립하므로 크기 제한을 두지 않는다.
+        DeckSaveService.Save(deckList, passiveList);
         ShowFeedback(Loc.T("deck.msgSaved"), true);
     }
 
@@ -247,12 +306,22 @@ public class DeckBuilderUI : MonoBehaviour
             for (int k = 0; k < catalog.Count; k++) // 한도 안 찬 마블만 후보
             {
                 SpellMarble c = catalog[(start + k) % catalog.Count];
+                if (c.isPassive) continue; // 패시브는 일반 덱에 못 들어간다
                 if (OwnedMarblesService.IsOwned(c) && CountInDeck(c) < DeckRules.Instance.MaxCopies(c.grade)) { pick = c; break; }
             }
             if (pick == null) break; // 더 넣을 수 있는 마블 없음
             deckList.Add(pick);
         }
         deckList.Sort(CompareMarble);
+
+        // 패시브 칸도 보유분에서 채운다(중복 불가라 서로 다른 것만)
+        foreach (SpellMarble c in catalog)
+        {
+            if (passiveList.Count >= PassiveSlotCount) break;
+            if (!c.isPassive || !OwnedMarblesService.IsOwned(c) || passiveList.Contains(c)) continue;
+            passiveList.Add(c);
+        }
+
         RefreshAll();
         ShowFeedback(Loc.T("deck.msgFilled"), true);
     }
@@ -260,6 +329,7 @@ public class DeckBuilderUI : MonoBehaviour
     void ClearDeck()
     {
         deckList.Clear();
+        passiveList.Clear();
         HideTooltip();
         RefreshAll();
     }
@@ -588,16 +658,72 @@ public class DeckBuilderUI : MonoBehaviour
             ev.onExit = HideTooltip;
         }
 
-        // 하단 버튼들
-        saveButton = MakeButton(panel, "SaveBtn", new Vector2(-150f, -350f), new Vector2(220f, 62f), Loc.T("deck.save"), new Color(0.22f, 0.5f, 0.3f), SaveDeck);
-        MakeButton(panel, "AutoBtn", new Vector2(90f, -350f), new Vector2(200f, 62f), Loc.T("deck.autofill"), new Color(0.28f, 0.3f, 0.45f), AutoFill);
-        MakeButton(panel, "ClearBtn", new Vector2(240f, -350f), new Vector2(80f, 62f), Loc.T("deck.clear"), new Color(0.45f, 0.25f, 0.25f), ClearDeck);
+        BuildPassiveRow(panel);
+
+        // 하단 버튼들 — 패시브 줄이 들어오면서 아래로 내렸다
+        saveButton = MakeButton(panel, "SaveBtn", new Vector2(-150f, -382f), new Vector2(220f, 62f), Loc.T("deck.save"), new Color(0.22f, 0.5f, 0.3f), SaveDeck);
+        MakeButton(panel, "AutoBtn", new Vector2(90f, -382f), new Vector2(200f, 62f), Loc.T("deck.autofill"), new Color(0.28f, 0.3f, 0.45f), AutoFill);
+        MakeButton(panel, "ClearBtn", new Vector2(240f, -382f), new Vector2(80f, 62f), Loc.T("deck.clear"), new Color(0.45f, 0.25f, 0.25f), ClearDeck);
         // 뒤로 버튼: 좌상단 통일 규격(덱/가챠/플레이방법 동일)
         MakeButton(root, "BackBtn", new Vector2(-810f, 476f), new Vector2(220f, 68f), Loc.T("common.back"), new Color(0.28f, 0.3f, 0.36f), () => SceneLoader.Load("MainMenuScene"));
 
         // 저장/오류 피드백(버튼 위)
-        feedbackText = MakeText(panel, "Feedback", new Vector2(0f, -298f), new Vector2(540f, 30f), 18, TextAnchor.MiddleCenter);
+        feedbackText = MakeText(panel, "Feedback", new Vector2(0f, -338f), new Vector2(540f, 28f), 18, TextAnchor.MiddleCenter);
         feedbackText.enabled = false;
+    }
+
+    // 덱 그리드 아래 패시브 편성 줄.
+    // 일반 슬롯보다 작게(78) 만들어 "덱의 일부가 아니라 별개 칸"으로 읽히게 했다.
+    void BuildPassiveRow(RectTransform panel)
+    {
+        int n = PassiveSlotCount;
+        passiveFrames = new Image[n];
+        passiveRings = new Image[n];
+        passiveArts = new Image[n];
+        passiveSuitTags = new Image[n];
+        if (n <= 0) return;
+
+        // 덱 마지막 줄(-126)과 피드백(-338) 사이 구간을 쓴다
+        const float headerY = -196f;
+        const float rowY = -262f;
+        const float pSize = 78f;
+        const float pSpacing = 92f;
+
+        Text head = MakeText(panel, "PassiveHeader", new Vector2(0f, headerY), new Vector2(540f, 26f), 17, TextAnchor.MiddleLeft);
+        head.text = "<b>" + Loc.T("deck.passive") + "</b>  <size=14><color=#9999AA>" + Loc.T("deck.passiveHint") + "</color></size>";
+
+        passiveCounterText = MakeText(panel, "PassiveCounter", new Vector2(0f, headerY), new Vector2(540f, 26f), 18, TextAnchor.MiddleRight);
+
+        float x0 = -pSpacing * (n - 1) * 0.5f; // 가운데 정렬
+        for (int i = 0; i < n; i++)
+        {
+            Vector2 pos = new Vector2(x0 + i * pSpacing, rowY);
+
+            Image ring = MakeImage(panel, "PassiveRing" + i, pos, new Vector2(pSize + 8f, pSize + 8f), new Color(1f, 1f, 1f, 0.06f));
+            ring.sprite = RoundedSprite();
+            ring.type = Image.Type.Sliced;
+            passiveRings[i] = ring;
+
+            Image frame = MakeImage(panel, "PassiveSlot" + i, pos, new Vector2(pSize, pSize), new Color(1f, 1f, 1f, 0.04f));
+            frame.sprite = RoundedSprite();
+            frame.type = Image.Type.Sliced;
+            frame.raycastTarget = true;
+            passiveFrames[i] = frame;
+
+            Image art = MakeImage(frame.rectTransform, "Art", new Vector2(0f, -3f), new Vector2(pSize - 24f, pSize - 24f), Color.white);
+            art.preserveAspect = true;
+            passiveArts[i] = art;
+
+            Image tag = MakeImage(frame.rectTransform, "SuitTag", new Vector2(-pSize * 0.5f + 12f, pSize * 0.5f - 11f), new Vector2(14f, 14f), Color.white);
+            tag.raycastTarget = false;
+            passiveSuitTags[i] = tag;
+
+            int captured = i;
+            DeckItemEvents ev = frame.gameObject.AddComponent<DeckItemEvents>();
+            ev.onClick = () => RemovePassiveAt(captured);
+            ev.onEnter = () => { if (captured < passiveList.Count) ShowTooltip(passiveList[captured]); };
+            ev.onExit = HideTooltip;
+        }
     }
 
     void BuildTooltip(RectTransform root)
@@ -657,9 +783,44 @@ public class DeckBuilderUI : MonoBehaviour
             }
         }
 
-        // 현재 탭 카드들의 ×N/최대 뱃지 (한도 도달 시 붉게)
+        // 패시브 칸
+        if (passiveFrames != null)
+            for (int i = 0; i < passiveFrames.Length; i++)
+            {
+                if (i < passiveList.Count)
+                {
+                    SpellMarble m = passiveList[i];
+                    passiveFrames[i].color = SuitCardColor(m.suit);
+                    passiveRings[i].color = GradePalette.ColorOf(m.grade);
+                    passiveArts[i].sprite = ArtOf(m);
+                    passiveArts[i].enabled = passiveArts[i].sprite != null;
+                    passiveArts[i].color = Color.white;
+                    passiveSuitTags[i].sprite = SuitInfo.Icon(m.suit);
+                    passiveSuitTags[i].color = SuitInfo.ColorOf(m.suit);
+                    passiveSuitTags[i].enabled = true;
+                }
+                else
+                {
+                    passiveFrames[i].color = new Color(1f, 1f, 1f, 0.04f);
+                    passiveRings[i].color = new Color(1f, 1f, 1f, 0.06f);
+                    passiveArts[i].enabled = false;
+                    passiveSuitTags[i].enabled = false;
+                }
+            }
+        if (passiveCounterText != null)
+            passiveCounterText.text = "<color=#9BC8FF><b>" + passiveList.Count + "</b></color> / " + PassiveSlotCount;
+
+        // 현재 탭 카드들의 뱃지.
+        // 패시브는 "몇 장까지"가 아니라 "넣었나 안 넣었나"라서 표기를 달리한다.
         foreach (KeyValuePair<SpellMarble, Text> kv in cardBadges)
         {
+            if (kv.Key.isPassive)
+            {
+                bool inDeck = passiveList.Contains(kv.Key);
+                kv.Value.text = inDeck ? Loc.T("deck.passiveOn") : Loc.T("deck.passiveTag");
+                kv.Value.color = inDeck ? new Color(0.55f, 0.8f, 1f) : new Color(0.6f, 0.65f, 0.75f);
+                continue;
+            }
             int cnt = CountInDeck(kv.Key);
             int max = DeckRules.Instance.MaxCopies(kv.Key.grade);
             kv.Value.text = "×" + cnt + "/" + max;

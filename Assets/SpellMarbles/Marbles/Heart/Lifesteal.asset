@@ -17,3 +17,7 @@ MonoBehaviour:
   grade: 0
   ability: {fileID: 11400000, guid: ae636f910c5492b48b5d2e5895957a52, type: 2}
   icon: {fileID: -7077532598614423147, guid: 12ec250cde6edb24e9286da3fd4d2676, type: 3}
+  isPassive: 1
+  passiveMode: 2
+  passiveInterval: 5
+  passiveKillCount: 300

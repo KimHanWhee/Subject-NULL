@@ -56,6 +56,10 @@ public class SpellCaster : MonoBehaviour
 
     async void Start()
     {
+        // 오브가 패시브로 바뀐 뒤 첫 실행이면 저장 덱을 복구한다(패시브 이동 + 부족분 보충).
+        // 안 하면 걸러진 만큼 덱이 짧아진 채로 게임이 시작된다.
+        DeckSaveService.Repair(registry);
+
         // 복사본을 셔플 — 원본(DeckData 에셋/저장 덱 리스트)의 순서를 건드리지 않기 위함
         // 우선 로컬 미러(마지막 서버 소유)로 즉시 시작 → 게임 시작 지연 없음.
         List<SpellMarble> source = BuildDrawList();
@@ -63,6 +67,8 @@ public class SpellCaster : MonoBehaviour
         Shuffle(drawList);
         for (int i = 0; i < slots.Length; i++) slots[i] = DrawNext();
         OnHandChanged?.Invoke();
+
+        SetupPassives();
 
         // 서버 소유 최신화 → 이후 리필 드로우풀만 보정(현재 손패는 유지). 씬 이탈 시 가드.
         await ServicesBootstrap.WaitSignedInAsync(5f); // WebGL 안전(Task.Delay 금지)
@@ -98,6 +104,25 @@ public class SpellCaster : MonoBehaviour
 
     // 저장 덱(DeckSaveService) 우선, 비었거나 registry 미연결이면 기본 DeckData 폴백.
     // 소유(OwnedMarblesService)한 마블만 사용 — 미보유 Gold+(기본덱 포함)는 제외.
+    // 패시브 칸 편성분을 구동기에 넘긴다. 손패(drawList)와는 완전히 별개.
+    // 구동기는 플레이어에 붙인다 — 능력들이 caster를 기준으로 상태를 건다.
+    void SetupPassives()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player == null || registry == null) return;
+
+        List<SpellMarble> passives = DeckSaveService.LoadPassives(registry);
+        if (passives == null || passives.Count == 0) return;
+
+        // 미보유분 제외(가챠로 얻기 전 저장분 방어)
+        passives.RemoveAll(m => m == null || !OwnedMarblesService.IsOwned(m));
+        if (passives.Count == 0) return;
+
+        PassiveRunner runner = player.GetComponent<PassiveRunner>();
+        if (runner == null) runner = player.AddComponent<PassiveRunner>();
+        runner.Setup(passives);
+    }
+
     List<SpellMarble> BuildDrawList()
     {
         List<SpellMarble> src = null;
@@ -111,7 +136,11 @@ public class SpellCaster : MonoBehaviour
 
         List<SpellMarble> owned = new List<SpellMarble>(); // 원본(에셋 리스트) 훼손 방지 위해 새 리스트
         foreach (SpellMarble m in src)
-            if (m != null && OwnedMarblesService.IsOwned(m)) owned.Add(m);
+        {
+            if (m == null || !OwnedMarblesService.IsOwned(m)) continue;
+            if (m.isPassive) continue; // 패시브는 손패로 뽑히지 않는다(패시브 칸 전용)
+            owned.Add(m);
+        }
         return owned;
     }
 

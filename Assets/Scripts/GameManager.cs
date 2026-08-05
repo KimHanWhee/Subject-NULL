@@ -139,8 +139,11 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        // 콤보 만료
-        if (comboTimer > 0f)
+        // 콤보 만료.
+        // ♣ Time Stop 중에는 세지 않는다 — 적이 멈춰 있어 처치가 불가능한 구간이라
+        // 그동안 시간이 흐르면 플레이어 잘못 없이 콤보가 끊긴다.
+        // (정지가 풀리는 순간 대기하던 총알이 일제히 적중하므로, 콤보는 그때 이어져야 맞다)
+        if (comboTimer > 0f && !TimeStopField.Active)
         {
             comboTimer -= Time.deltaTime;
             if (comboTimer <= 0f) combo = 0;
@@ -167,9 +170,13 @@ public class GameManager : MonoBehaviour
         if (scoreText != null) scoreText.text = score.ToString();
     }
 
+    // 처치 알림 — 패시브(♥ Lifesteal 등)가 구독. 구독 해제는 구독자 OnDisable 책임.
+    public static System.Action EnemyKilled;
+
     // ♦ 처치 보고 — 콤보 배수 적용해 점수 가산 (EnemyBase.Die 공통 호출)
     public void ReportKill(int baseValue, Vector3 worldPos)
     {
+        if (EnemyKilled != null) EnemyKilled();
         combo = comboTimer > 0f ? combo + 1 : 1;
         comboTimer = comboWindow;
         float mult = 1f + comboBonus * (combo - 1);

@@ -20,7 +20,7 @@ MonoBehaviour:
   effectPrefab: {fileID: 8289331407968083852, guid: 6230561afe86da94796a255d29da5d90, type: 3}
   activationSound: {fileID: 8300000, guid: 4d71d4e81f325b844834706b6cfecd71, type: 3}
   soundVolume: 1
-  reduction: 0.5
+  reduction: 0.2
   duration: 10
   vfxColor: {r: 0.75, g: 0.75, b: 0.8, a: 1}
   vfxRadius: 0.75

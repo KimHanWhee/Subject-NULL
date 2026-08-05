@@ -12,6 +12,7 @@ using Unity.Services.CloudSave;
 public static class CloudSyncService
 {
     const string DeckKey = "deck";        // List<string> marbleNames
+    const string PassiveKey = "passives"; // List<string> marbleNames (패시브 칸)
     const string ScoreKey = "highScore";  // int
 
     // 로그인 직후 호출(ServicesBootstrap.SignedIn 이벤트).
@@ -20,13 +21,17 @@ public static class CloudSyncService
         if (!ServicesBootstrap.IsSignedIn) return;
         try
         {
-            var keys = new HashSet<string> { DeckKey, ScoreKey };
+            var keys = new HashSet<string> { DeckKey, PassiveKey, ScoreKey };
             var data = await CloudSaveService.Instance.Data.Player.LoadAsync(keys);
 
             if (data.TryGetValue(DeckKey, out var deckItem))
             {
                 List<string> names = deckItem.Value.GetAs<List<string>>();
-                if (names != null) DeckSaveService.OverwriteLocal(names);
+                // 패시브는 별도 키 — 구버전 계정엔 없으므로 없으면 빈 리스트로 둔다.
+                List<string> passives = null;
+                if (data.TryGetValue(PassiveKey, out var passiveItem))
+                    passives = passiveItem.Value.GetAs<List<string>>();
+                if (names != null) DeckSaveService.OverwriteLocal(names, passives);
             }
             if (data.TryGetValue(ScoreKey, out var scoreItem))
             {
@@ -43,10 +48,11 @@ public static class CloudSyncService
         }
     }
 
-    public static void PushDeck(List<string> names)
+    public static void PushDeck(List<string> names, List<string> passives = null)
     {
         if (names == null) return;
         Push(DeckKey, new List<string>(names)); // 호출자 리스트 변형 방지용 복사
+        if (passives != null) Push(PassiveKey, new List<string>(passives));
     }
 
     public static void PushScore(int score) => Push(ScoreKey, score);

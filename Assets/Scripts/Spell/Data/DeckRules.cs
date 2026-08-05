@@ -11,6 +11,12 @@ public class DeckRules : ScriptableObject
     public int diamondMax = 2;
     public int legendMax = 1;
 
+    [Header("패시브")]
+    [Tooltip("패시브 오브 편성 칸 수. 패시브는 중복 편성 불가라 등급 한도와 무관하게 각 1개.")]
+    public int passiveSlots = 3;
+
+    public int PassiveSlots { get { return Mathf.Max(0, passiveSlots); } }
+
     public int MaxCopies(Grade grade)
     {
         switch (grade)

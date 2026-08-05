@@ -48,6 +48,9 @@ public class PlayerBuffHUD : MonoBehaviour
         {
             IBuffDisplay b = bufTmp[i];
             if (b == null) continue;
+            // 패시브는 전용 HUD(PassiveHUD)가 따로 표시한다. 여기 끼면 중복이고,
+            // 상시 패시브는 지속시간이 무한이라 남은 초 표기도 의미가 없다.
+            if (b.BuffMarble != null && b.BuffMarble.isPassive) continue;
             bool active = b.BuffTimed ? b.BuffRemaining > 0.05f : b.BuffCharges > 0;
             if (active) buf.Add(b);
         }

@@ -24,5 +24,5 @@ MonoBehaviour:
   bladeCount: 3
   orbitRadius: 2.1
   damagePerHit: 1
-  duration: 5
+  duration: 3
   angularSpeed: 400
