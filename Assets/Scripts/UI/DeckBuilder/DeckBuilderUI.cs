@@ -585,8 +585,10 @@ public class DeckBuilderUI : MonoBehaviour
         desc.color = new Color(0.82f, 0.82f, 0.88f);
         desc.verticalOverflow = VerticalWrapMode.Truncate;
 
-        // 덱 포함 수(우하단 ×N)
-        Text count = MakeText(card, "Count", new Vector2(w * 0.5f - 34f, -h * 0.5f + 20f), new Vector2(52f, 26f), 17, TextAnchor.MiddleRight);
+        // 덱 포함 수 / 패시브 장착 여부 — 카드 "밖 아래"에 가운데 정렬.
+        // 카드 모서리에 넣으면 프레임·설명과 겹쳐 잘 안 읽힌다.
+        // 행 간격(330)과 카드 높이(300) 사이 여백 30px 안에 들어간다.
+        Text count = MakeText(card, "Count", new Vector2(0f, -h * 0.5f - 15f), new Vector2(w, 24f), 17, TextAnchor.MiddleCenter);
         count.color = new Color(1f, 0.84f, 0.3f);
         cardBadges[m] = count;
 
