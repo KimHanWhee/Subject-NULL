@@ -47,6 +47,15 @@ public class GoogleAuth : MonoBehaviour
         return instance;
     }
 
+    // GIS 초기화만 먼저 시작한다(오버레이는 띄우지 않음).
+    // 로그인 선택 화면이 뜨는 순간 불러두면, 사용자가 버튼을 누를 때쯤엔 준비가 끝나 있다.
+    // 느린 회선에서 첫 시도가 "준비 중"으로 튕기는 걸 막는다.
+    public static void Warmup()
+    {
+        if (!IsSupported) return;
+        Ensure();
+    }
+
     // 구글 로그인 오버레이 표시 → 성공 시 id_token(JWT) 전달. 실패/취소 시 error("cancelled" 등).
     public static void RequestIdToken(Action<string> token, Action<string> error)
     {

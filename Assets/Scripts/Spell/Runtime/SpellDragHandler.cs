@@ -91,9 +91,13 @@ public class SpellDragHandler : MonoBehaviour
 
         // 선택 모드가 아니면 모든 상태 정리
         if (!selection.IsSelecting) { EndAll(); return; }
-        if (Mouse.current == null) return;
 
-        Vector2 mouse = Mouse.current.position.ReadValue();
+        // 포인터는 마우스 커서 또는 끌고 있는 손가락 — GameInput이 골라서 준다.
+        // 판정 로직(SlotUnderPoint / IsOverBelt)은 화면 좌표만 쓰므로 그대로 재사용된다.
+        Vector2 mouse = GameInput.PointerScreen;
+        if (!GameInput.PointerDown && !GameInput.PointerReleasedThisFrame && dragSlot < 0
+            && !GameInput.PointerPressedThisFrame && GameInput.TouchMode)
+            { HoveredSlot = -1; UpdateTooltip(-1, mouse); ApplyHoverScale(-1); return; }
         int hovered = SlotUnderPoint(mouse);
         // 드래그 중에는 툴팁을 띄우지 않으므로 홀로그램도 아이콘 상태를 유지해야 한다.
         HoveredSlot = dragSlot < 0 ? hovered : -1;
@@ -112,7 +116,7 @@ public class SpellDragHandler : MonoBehaviour
         ApplyHoverScale(dragSlot >= 0 ? dragSlot : hovered);
 
         // 드래그 시작
-        if (dragSlot < 0 && hovered >= 0 && Mouse.current.leftButton.wasPressedThisFrame)
+        if (dragSlot < 0 && hovered >= 0 && GameInput.PointerPressedThisFrame)
         {
             SpellMarble m = hovered < caster.Slots.Count ? caster.Slots[hovered] : null;
             if (m != null) BeginDrag(hovered, m, mouse);
@@ -133,7 +137,7 @@ public class SpellDragHandler : MonoBehaviour
                 dragGhost.localScale = Vector3.one * Mathf.Lerp(dragPopScale, 1f, ease);
             }
 
-            if (Mouse.current.leftButton.wasReleasedThisFrame)
+            if (GameInput.PointerReleasedThisFrame)
             {
                 if (overBelt)
                 {

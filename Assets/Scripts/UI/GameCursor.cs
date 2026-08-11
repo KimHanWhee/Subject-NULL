@@ -31,7 +31,9 @@ public static class GameCursor
 
     static void Apply(string sceneName)
     {
-        if (sceneName == GameSceneName) SetCrosshair();
+        // 터치 기기에는 커서 자체가 없다 — 십자선을 걸어봐야 보이지 않고,
+        // 마우스가 붙은 기기에서만 의미가 있다.
+        if (sceneName == GameSceneName && !GameInput.TouchMode) SetCrosshair();
         else Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); // 기본 포인터로 복귀
     }
 

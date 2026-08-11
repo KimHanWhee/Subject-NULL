@@ -48,26 +48,14 @@ public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDispla
         nextDrop = Time.time + minInterval;
         didFire = true;
 
-        Vector2 target = origin + direction * 3f; // 커서 미확인 시 폴백(전방)
-        if (Camera.main != null && Mouse.current != null)
-        {
-            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            target = new Vector2(c.x, c.y);
-        }
-        ThunderBomb.Spawn(target, radius, damage, explosionPrefab);
+        ThunderBomb.Spawn(PickTarget(origin, direction), radius, damage, explosionPrefab);
         return true;
     }
 
     // ♠ Gatling 연사 — 투하 쿨다운을 건너뛰고 즉시 한 발 더 떨어뜨린다.
     public void FireBurstShot(Vector2 origin, Vector2 direction)
     {
-        Vector2 target = origin + direction * 3f;
-        if (Camera.main != null && Mouse.current != null)
-        {
-            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            target = new Vector2(c.x, c.y);
-        }
-        ThunderBomb.Spawn(target, radius, damage, explosionPrefab);
+        ThunderBomb.Spawn(PickTarget(origin, direction), radius, damage, explosionPrefab);
     }
 
     void Update()
@@ -77,4 +65,17 @@ public class ThunderBombStatus : MonoBehaviour, IPlayerShotOverride, IBuffDispla
     }
 
     void OnDisable() { CameraZoom.Release(this); }
+
+    // 착탄점 — 이 스펠만 유일하게 "방향"이 아니라 절대 좌표가 필요하다.
+    //   마우스: 커서 위치
+    //   터치  : 화면을 탭한 자리 (조준 스틱은 방향만 주므로 별도 경로)
+    // 탭이 없으면 조준 방향 앞으로 떨어뜨린다.
+    Vector2 PickTarget(Vector2 origin, Vector2 direction)
+    {
+        Vector2 tap;
+        if (GameInput.TouchMode && GameInput.TryConsumeFieldTap(out tap)) return tap;
+        Vector2 aim = GameInput.AimWorld;
+        if (((Vector2)aim - origin).sqrMagnitude > 0.0001f) return aim;
+        return origin + direction * 3f;
+    }
 }

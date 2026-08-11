@@ -103,6 +103,11 @@ public static class Loc
         { "hs.velocity.n", new[] { "탄속 개선", "Muzzle Velocity" } },
         { "hs.velocity.d", new[] { "적 탄속 +25%", "Enemy bullet speed +25%" } },
 
+        // ── 스펠 벨트 안내 탭 ──
+        // 조작 방식에 따라 바뀐다(TouchControls가 교체). 없애면 여는 방법을 알 수 없다.
+        { "hint.spellKey",   new[] { "▲\nShift", "▲\nShift" } },
+        { "hint.spellTouch", new[] { "▲\n위로 밀기", "▲\nSWIPE UP" } },
+
         // ── 스펠 오브 설명 (키 = "spell." + SpellAbility.id + ".d") ──
         // 이름(abilityName)은 이미 영문 고유명이라 번역 대상이 아니다.
         { "spell.Adrenaline.d", new[] { "[패시브] 체력이 낮을수록 이동속도와 공격속도가 증가한다. 상시 적용.",

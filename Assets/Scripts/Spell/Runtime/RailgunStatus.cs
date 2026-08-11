@@ -86,10 +86,9 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
 
         Vector2 origin = (Vector2)pc.transform.position + pc.muzzleOffset;
         Vector2 aim = dir;
-        if (Camera.main != null && Mouse.current != null)
+        // 조준 방향 — 마우스면 커서 쪽, 터치면 조준 스틱 방향
         {
-            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            Vector2 to = (Vector2)c - origin;
+            Vector2 to = GameInput.AimWorld - origin;
             if (to.sqrMagnitude > 0.0001f) aim = to.normalized;
         }
         FireBeam(origin, aim);
@@ -117,10 +116,9 @@ public class RailgunStatus : MonoBehaviour, IPlayerShotOverride, IBuffDisplay
         // 발사 시점 재조준 — 충전하는 동안 커서를 따라갈 수 있다
         Vector2 origin = (Vector2)pc.transform.position + pc.muzzleOffset;
         Vector2 dir = Vector2.right;
-        if (Camera.main != null && Mouse.current != null)
+        // 조준 방향 — 마우스면 커서 쪽, 터치면 조준 스틱 방향
         {
-            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            Vector2 to = (Vector2)c - origin;
+            Vector2 to = GameInput.AimWorld - origin;
             if (to.sqrMagnitude > 0.0001f) dir = to.normalized;
         }
 

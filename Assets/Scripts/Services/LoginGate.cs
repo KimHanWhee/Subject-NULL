@@ -81,6 +81,11 @@ public class LoginGate : MonoBehaviour
         if (promptBox != null) promptBox.SetActive(false);
         if (choiceRoot == null) BuildChoiceButtons();
         choiceRoot.SetActive(true);
+
+        // Google 로그인을 미리 데워둔다. 이 호출이 GIS 스크립트 초기화를 시작시키는데,
+        // 예전에는 버튼을 누른 뒤에야 시작돼서 회선이 느린 모바일에서는 첫 시도가
+        // "준비 중"으로 튕겼다. 선택 화면이 떠 있는 동안 미리 끝내둔다.
+        GoogleAuth.Warmup();
     }
 
     async void OnGuest()
@@ -117,8 +122,19 @@ public class LoginGate : MonoBehaviour
     {
         Keyboard kb = Keyboard.current;
         Mouse mouse = Mouse.current;
-        return (kb != null && kb.anyKey.wasPressedThisFrame) ||
-               (mouse != null && mouse.leftButton.wasPressedThisFrame);
+        if (kb != null && kb.anyKey.wasPressedThisFrame) return true;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+
+        // 터치 — 없으면 모바일에서 화면을 눌러도 다음으로 못 넘어간다.
+        // (Input System은 터치를 마우스 클릭으로 바꿔주지 않는다)
+        Touchscreen ts = Touchscreen.current;
+        if (ts != null)
+        {
+            var touches = ts.touches;
+            for (int i = 0; i < touches.Count; i++)
+                if (touches[i].phase.ReadValue() == UnityEngine.InputSystem.TouchPhase.Began) return true;
+        }
+        return false;
     }
 
     void SetPrompt(string s)

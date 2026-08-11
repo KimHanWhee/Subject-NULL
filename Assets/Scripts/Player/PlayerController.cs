@@ -125,30 +125,11 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        move = Vector3.zero;
-        
-        if (Keyboard.current.leftArrowKey.isPressed || Keyboard.current.aKey.isPressed)
-        {
-            move += new Vector3(-1, 0, 0);
-            // transform.Translate(new Vector3(speed * Time.deltaTime, 0, 0));
-        } 
-        if (Keyboard.current.rightArrowKey.isPressed || Keyboard.current.dKey.isPressed)
-        {
-            move += new Vector3(1, 0, 0);
-            // transform.Translate(new Vector3(-speed * Time.deltaTime, 0, 0));
-        } 
-        if (Keyboard.current.upArrowKey.isPressed || Keyboard.current.wKey.isPressed)
-        {
-            move += new Vector3(0, 1, 0);
-            // transform.Translate(new Vector3(speed * Time.deltaTime, 0, 0));
-        } 
-        if (Keyboard.current.downArrowKey.isPressed || Keyboard.current.sKey.isPressed)
-        {
-            move += new Vector3(0, -1, 0);
-            // transform.Translate(new Vector3(speed * Time.deltaTime, 0, 0));
-        } 
-        
-        move = move.normalized;
+        // 이동 입력 — 키보드/터치 조이스틱을 GameInput이 합쳐서 준다.
+        // ⚠️ 예전에는 여기서 Keyboard.current를 null 검사 없이 읽었다. 터치 전용 기기에는
+        //    Keyboard.current가 null이라 첫 프레임부터 예외가 터져 아무것도 못 움직였다.
+        // 정규화도 GameInput이 한다 — 조이스틱은 미는 세기가 있어서 여기서 normalize하면 죽는다.
+        move = GameInput.Move;
 
         if (ControlsInverted && move.magnitude > 0f) move = -move; // 조작 반전 훅(ApplyControlInvert)
 
@@ -160,7 +141,7 @@ public class PlayerController : MonoBehaviour
 
         panim.SetMoving(move.magnitude > 0);
 
-        if (Mouse.current.leftButton.isPressed
+        if (GameInput.FireHeld
             && currentWeapon != null
             && Time.time >= nextFireTime
             && !attackLocked            // 스펠 마블 ♦ Ghost Step — 무적 동안 공격 불가
@@ -182,7 +163,7 @@ public class PlayerController : MonoBehaviour
     // Design Ref: §4.1 — Space 입력 감지 + 쿨다운/스태미너 게이트로 대시 시작
     void TryStartDash()
     {
-        if (Keyboard.current.spaceKey.wasPressedThisFrame
+        if (GameInput.DashPressed
             && !movementLocked                   // 스펠 마블 ♦ Fortress — 대시도 불가
             && !isDashing                        // Plan SC: FR-05 — 대시 중 재입력 무시
             && Time.time >= nextDashTime          // Plan SC: FR-04 — 쿨다운
@@ -268,8 +249,7 @@ public class PlayerController : MonoBehaviour
     // (Ctrl → Shift: WebGL에서 Ctrl+W 등 브라우저 단축키 충돌 방지, SpellSelectionUI와 동일 판정)
     bool IsSpellSelecting()
     {
-        return Keyboard.current != null &&
-               (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
+        return GameInput.SpellSelecting;
     }
 
     void Shoot()
@@ -277,7 +257,7 @@ public class PlayerController : MonoBehaviour
         GetComponent<AudioSource>().PlayOneShot(currentWeapon.shotSound);
 
         Vector3 muzzle = transform.position + (Vector3)muzzleOffset; // 총구(팔/몸통 높이)
-        Vector3 cursor = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        Vector3 cursor = GameInput.AimWorld; // 마우스면 커서, 터치면 조준 스틱 방향 앞
         cursor.z = 0;
         Vector3 baseDir = cursor - muzzle;
 
@@ -312,7 +292,7 @@ public class PlayerController : MonoBehaviour
             if (ov == null || (ov as MonoBehaviour) == null) yield break;
 
             Vector3 m = transform.position + (Vector3)muzzleOffset;
-            Vector3 c = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            Vector3 c = GameInput.AimWorld;
             c.z = 0;
             ov.FireBurstShot(m, ((Vector2)(c - m)).normalized);
         }
@@ -324,7 +304,7 @@ public class PlayerController : MonoBehaviour
     {
         if (currentWeapon == null || attackLocked) return;
         Vector3 muzzle = transform.position + (Vector3)muzzleOffset;
-        Vector3 cursor = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        Vector3 cursor = GameInput.AimWorld;
         cursor.z = 0;
         FireBullet(muzzle, cursor - muzzle);
         GetComponent<AudioSource>().PlayOneShot(currentWeapon.shotSound, 0.75f);

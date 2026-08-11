@@ -43,12 +43,17 @@ public class SpellSelectionUI : MonoBehaviour
 
     void Update()
     {
-        bool ctrl = Keyboard.current != null &&
-                    (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed);
+        // 키보드는 Shift 홀드, 터치는 하단 스와이프 토글 — GameInput이 합쳐서 준다.
+        // (예전엔 여기와 PlayerController가 각자 Shift를 읽어서, 판정이 어긋날 여지가 있었다)
+        bool ctrl = GameInput.SpellSelecting;
 
         // 과부하(조커 경고~발동 전) 중엔 벨트 잠금 — Shift 선택 불가 + 알림
         bool overloaded = caster != null && caster.IsOverloaded;
-        if (overloaded && selecting) Exit(); // 과부하 진입 순간 선택 중이었으면 강제 해제
+        if (overloaded && selecting)
+        {
+            Exit(); // 과부하 진입 순간 선택 중이었으면 강제 해제
+            GameInput.SetSpellSelectToggle(false); // 터치 토글도 내린다(안 내리면 곧바로 다시 열린다)
+        }
 
         if (ctrl && !selecting)
         {
