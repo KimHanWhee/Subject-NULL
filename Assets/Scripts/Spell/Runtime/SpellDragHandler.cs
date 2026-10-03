@@ -99,8 +99,19 @@ public class SpellDragHandler : MonoBehaviour
             && !GameInput.PointerPressedThisFrame && GameInput.TouchMode)
             { HoveredSlot = -1; UpdateTooltip(-1, mouse); ApplyHoverScale(-1); return; }
         int hovered = SlotUnderPoint(mouse);
-        // 드래그 중에는 툴팁을 띄우지 않으므로 홀로그램도 아이콘 상태를 유지해야 한다.
-        HoveredSlot = dragSlot < 0 ? hovered : -1;
+
+        // 설명을 띄울 슬롯.
+        //
+        // 터치에는 호버 구간이 없다 — 손가락을 대는 순간 아래 "드래그 시작"이 바로 걸리므로,
+        // PC와 같은 규칙(드래그 중에는 숨김)을 쓰면 설명이 뜰 수 있는 프레임이 아예 없다.
+        // 그래서 터치에서만 집어든 슬롯의 설명을 드래그 내내 띄운다.
+        // 집는 게 곧 소모가 아니라서(벨트에 다시 놓으면 취소) "잡고 → 읽고 → 취소"가 성립한다.
+        //
+        // PC는 종전과 동일 — 호버로 읽고 나서 끌기 때문에 드래그 중에는 가려야 한다.
+        int tipSlot = dragSlot >= 0 ? (GameInput.TouchMode ? dragSlot : -1) : hovered;
+
+        // 홀로그램 아이콘은 설명이 뜬 슬롯에서 비켜야 한다 — 둘이 같은 자리를 쓴다.
+        HoveredSlot = tipSlot;
 
         // 호버 사운드: 드래그 중이 아닐 때, 마블이 있는 슬롯에 처음 올라오면 1회(빈 슬롯 제외)
         if (dragSlot < 0 && hovered != lastHovered)
@@ -109,8 +120,7 @@ public class SpellDragHandler : MonoBehaviour
             lastHovered = hovered;
         }
 
-        // 툴팁: 드래그 중이 아닐 때만 호버 슬롯 표시
-        UpdateTooltip(dragSlot < 0 ? hovered : -1, mouse);
+        UpdateTooltip(tipSlot, mouse);
 
         // 호버(또는 드래그 중인) 슬롯만 살짝 확대
         ApplyHoverScale(dragSlot >= 0 ? dragSlot : hovered);
@@ -173,7 +183,8 @@ public class SpellDragHandler : MonoBehaviour
             if (dragGhostImage != null) { dragGhostImage.sprite = s; dragGhostImage.enabled = s != null; }
         }
         hud.SetDragSuppressed(slot);     // 집어든 구슬은 벨트에서 잠시 숨김(이동 느낌)
-        if (tooltipRoot != null) tooltipRoot.SetActive(false);
+        // 터치는 집어든 동안 설명을 계속 띄운다(Update의 tipSlot) — 여기서 끄면 한 프레임 깜빡인다.
+        if (tooltipRoot != null && !GameInput.TouchMode) tooltipRoot.SetActive(false);
     }
 
     void EndDrag()
